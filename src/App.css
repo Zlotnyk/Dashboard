@@ -1,0 +1,258 @@
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&display=swap');
+@import 'tailwindcss';
+
+/* Base container for the flip clock */
+.flip-clock-container {
+	display: flex; /* Включаємо Flexbox */
+	gap: 10px; /* Відстань між елементами */
+}
+
+@media (max-width: 640px) {
+	.flip-clock-container {
+		gap: 8px;
+	}
+}
+
+/* Flip unit container */
+.flip-unit-container {
+	position: relative;
+	width: 160px;
+	height: 190px;
+	border-radius: 8px;
+	font-family: 'Bebas Neue';
+	perspective: 600px;
+	background-color: hsl(134, 63%, 75%);
+	box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+}
+
+@media (max-width: 768px) {
+	.flip-unit-container {
+		width: 100px;
+		height: 100px;
+	}
+}
+
+@media (max-width: 640px) {
+	.flip-unit-container {
+		width: 80px;
+		height: 80px;
+	}
+}
+
+/* Card styles (base) */
+.static-card,
+.animated-card {
+	position: absolute;
+	left: 0;
+	width: 100%;
+	height: 50%;
+	overflow: hidden;
+	display: flex;
+	justify-content: center;
+	background-color: hsl(134, 63%, 75%);
+	color: #ffffff;
+	border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+/* Upper and lower static cards */
+.static-card {
+	backface-visibility: hidden;
+}
+
+.static-card.upper-card {
+	top: 0;
+	align-items: flex-end;
+	border-top-left-radius: 8px;
+	border-top-right-radius: 8px;
+	border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.static-card.lower-card {
+	bottom: 0;
+	align-items: flex-start;
+	border-bottom-left-radius: 8px;
+	border-bottom-right-radius: 8px;
+	border-top: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+/* Add a subtle inner shadow to both cards */
+.static-card.upper-card::after {
+	content: '';
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	box-shadow: inset 0 8px 8px -8px rgba(0, 0, 0, 0.4);
+	pointer-events: none;
+}
+
+.static-card.lower-card::after {
+	content: '';
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	box-shadow: inset 0 -8px 8px -8px rgba(0, 0, 0, 0.4);
+	pointer-events: none;
+}
+
+/* Animated cards */
+.animated-card {
+	backface-visibility: hidden;
+	transform-style: preserve-3d;
+	transform-origin: bottom;
+}
+
+.animated-card.fold {
+	top: 0;
+	align-items: flex-end;
+	transform-origin: bottom;
+	transform: rotateX(0deg);
+	border-top-left-radius: 8px;
+	border-top-right-radius: 8px;
+	animation: fold 0.6s cubic-bezier(0.455, 0.03, 0.515, 0.955) forwards;
+	z-index: 2;
+}
+
+.animated-card.unfold {
+	top: 49%;
+	align-items: flex-start;
+	transform-origin: top;
+	transform: rotateX(180deg);
+	border-bottom-left-radius: 8px;
+	border-bottom-right-radius: 8px;
+	animation: unfold 0.6s cubic-bezier(0.455, 0.03, 0.515, 0.955) forwards;
+	z-index: 3;
+}
+
+/* Digit styling */
+.animated-card span,
+.static-card span {
+	font-size: 8rem;
+	font-weight: 700;
+	line-height: 1;
+	color: #ffffff;
+	transform: translateY(var(--digit-offset, 0));
+}
+
+.static-card.upper-card span {
+	--digit-offset: 50%;
+}
+
+.static-card.lower-card span {
+	--digit-offset: -50%;
+}
+
+.animated-card.fold span {
+	--digit-offset: 50%;
+}
+
+.animated-card.unfold span {
+	--digit-offset: -50%;
+}
+
+@media (max-width: 768px) {
+	.animated-card span,
+	.static-card span {
+		font-size: 4rem;
+	}
+}
+
+@media (max-width: 640px) {
+	.animated-card span,
+	.static-card span {
+		font-size: 3rem;
+	}
+}
+
+/* Card flip animations */
+@keyframes fold {
+	0% {
+		transform: rotateX(0deg);
+	}
+	100% {
+		transform: rotateX(-180deg);
+	}
+}
+
+@keyframes unfold {
+	0% {
+		transform: rotateX(180deg);
+	}
+	100% {
+		transform: rotateX(0deg);
+	}
+}
+
+/* Day of week styling inside minutes block */
+.day-of-week {
+	position: absolute;
+	bottom: -2px;
+	right: 6px;
+	font-family: 'Bebas Neue';
+	font-size: 1.8rem;
+	font-weight: 700;
+	color: #ffffff;
+	z-index: 4;
+}
+
+@media (max-width: 768px) {
+	.day-of-week {
+		font-size: 1.2rem;
+		bottom: -2px;
+		right: 6px;
+	}
+}
+
+@media (max-width: 640px) {
+	.day-of-week {
+		font-size: 1rem;
+		bottom: 4px;
+		right: 4px;
+	}
+}
+
+/* GIF контейнер */
+.gif-container {
+	width: 100%;
+	height: 300px;
+	overflow: hidden;
+	position: relative;
+}
+
+.gif-container img {
+	width: 100%;
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%); /* Центрує зображення */
+}
+
+/* Custom scrollbar styling */
+.custom-scrollbar::-webkit-scrollbar {
+	width: 8px;
+	height: 8px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+	background: transparent;
+	border-radius: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+	background: #97e7aa;
+	border-radius: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+	background: #75b384;
+}
+
+/* Firefox scrollbar styling */
+.custom-scrollbar {
+	scrollbar-width: thin;
+	scrollbar-color: #97e7aa transparent;
+}

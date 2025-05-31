@@ -1,0 +1,21 @@
+@import url('https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css');
+@import 'tailwindcss';
+
+/* *,
+*::before,
+*::after {
+	margin: 0;
+	padding: 0;
+	box-sizing: border-box;
+} */
+
+body {
+	background-color: hsl(0, 0%, 10%);
+	overflow: auto;
+	margin: 0;
+	--halfHeight: 1.1em;
+	--borderRadius: 8px;
+	height: 100vh;
+	color: white;
+	/* text-transform: uppercase; */
+}
