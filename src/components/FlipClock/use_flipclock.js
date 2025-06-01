@@ -19,27 +19,21 @@ export const useFlipClock = () => {
 			const newMinutes = now.getMinutes()
 			const newDayOfWeek = now.toLocaleString('en-US', { weekday: 'long' })
 
-			// Only update time state if values have actually changed
-			if (newHours !== time.hours || 
-				newMinutes !== time.minutes || 
-				newDayOfWeek !== time.dayOfWeek) {
-				
-				// Update flip animations if hours or minutes changed
-				if (newHours !== time.hours) {
-					setFlips(prev => ({ ...prev, hoursShuffle: !prev.hoursShuffle }))
-				}
-
-				if (newMinutes !== time.minutes) {
-					setFlips(prev => ({ ...prev, minutesShuffle: !prev.minutesShuffle }))
-				}
-
-				// Update time values
-				setTime({
-					hours: newHours,
-					minutes: newMinutes,
-					dayOfWeek: newDayOfWeek,
-				})
+			// Check if time values have changed
+			if (newHours !== time.hours) {
+				setFlips(prev => ({ ...prev, hoursShuffle: !prev.hoursShuffle }))
 			}
+
+			if (newMinutes !== time.minutes) {
+				setFlips(prev => ({ ...prev, minutesShuffle: !prev.minutesShuffle }))
+			}
+
+			// Update time values
+			setTime({
+				hours: newHours,
+				minutes: newMinutes,
+				dayOfWeek: newDayOfWeek,
+			})
 		}
 
 		updateTime() // Initial update
@@ -47,7 +41,7 @@ export const useFlipClock = () => {
 		const timerID = setInterval(updateTime, 1000)
 
 		return () => clearInterval(timerID) // Cleanup
-	}, []) // Remove time from dependencies since we're accessing it inside updateTime
+	}, [time])
 
 	return { time, flips }
 }
