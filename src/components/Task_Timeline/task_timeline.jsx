@@ -5,11 +5,11 @@ import TimelineToolbar from './timeline_toolbar'
 import { formatShortDate } from './timeline_utils'
 
 const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
-  const [currentDate, setCurrentDate] = useState(new Date(2025, 4, 12))
+  const [currentDate, setCurrentDate] = useState(new Date(2025, 4, 1)) // Set to first day of month
   const [viewMode, setViewMode] = useState('month')
-  const [selectedDate, setSelectedDate] = useState(new Date(2025, 4, 12))
+  const [selectedDate, setSelectedDate] = useState(new Date(2025, 4, 1))
   const [draggingTask, setDraggingTask] = useState(null)
-  const [dragType, setDragType] = useState(null) // 'move', 'start', or 'end'
+  const [dragType, setDragType] = useState(null)
   const timelineRef = useRef(null)
 
   const handlePrevMonth = () => {
@@ -26,7 +26,7 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
 
   const handleToday = () => {
     const today = new Date()
-    setCurrentDate(today)
+    setCurrentDate(new Date(today.getFullYear(), today.getMonth(), 1))
     setSelectedDate(today)
   }
 
@@ -63,11 +63,11 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
     const timeline = timelineRef.current
     const rect = timeline.getBoundingClientRect()
     const x = e.clientX - rect.left
-    const dayWidth = 40 // Width of each day column
+    const dayWidth = 40
     const daysFromStart = Math.floor(x / dayWidth)
 
     const newDate = new Date(currentDate)
-    newDate.setDate(newDate.getDate() + daysFromStart)
+    newDate.setDate(1 + daysFromStart)
 
     if (dragType === 'move') {
       const duration = (draggingTask.end - draggingTask.start) / (1000 * 60 * 60 * 24)
@@ -102,15 +102,28 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
     const endDate = task.end
     const dayWidth = 40
 
-    const diffStart = Math.floor(
-      (startDate - currentDate) / (1000 * 60 * 60 * 24)
-    )
-    const diffEnd = Math.floor((endDate - currentDate) / (1000 * 60 * 60 * 24))
+    const startDay = startDate.getDate()
+    const endDay = endDate.getDate()
 
     return {
-      left: diffStart * dayWidth,
-      width: (diffEnd - diffStart + 1) * dayWidth,
+      left: (startDay - 1) * dayWidth,
+      width: (endDay - startDay + 1) * dayWidth,
     }
+  }
+
+  const getDaysInMonth = (year, month) => {
+    return new Date(year, month + 1, 0).getDate()
+  }
+
+  const renderVerticalLines = () => {
+    const daysInMonth = getDaysInMonth(currentDate.getFullYear(), currentDate.getMonth())
+    return Array.from({ length: daysInMonth }, (_, index) => (
+      <div
+        key={index}
+        className='absolute top-0 bottom-0 border-l border-gray-700'
+        style={{ left: `${index * 40}px` }}
+      ></div>
+    ))
   }
 
   return (
@@ -182,13 +195,13 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
               onDragOver={handleDragOver}
               onDrop={handleDragEnd}
             >
+              {renderVerticalLines()}
               {tasks.map((task, index) => {
                 const { left, width } = getTaskPosition(task)
                 return (
                   <div
                     key={task.id}
                     className='relative h-12 mb-2'
-                    style={{ marginLeft: '0px' }}
                   >
                     <div
                       className='absolute h-8 rounded-lg flex items-center cursor-move'
