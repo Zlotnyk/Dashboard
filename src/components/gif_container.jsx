@@ -3,7 +3,7 @@ import '../App.css'
 
 const GifContainer = () => {
 	return (
-		<div class='gif-container'>
+		<div className='gif-container'>
 			<img src='src\assets\img\Green2.gif' alt='Опис GIF' />
 		</div>
 	)
