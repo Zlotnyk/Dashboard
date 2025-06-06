@@ -34,8 +34,8 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
     setSelectedDate(date)
   }
 
-  const handleAddTask = () => {
-    const newTask = {
+  const handleAddTask = (taskData = null) => {
+    const newTask = taskData || {
       id: `task-${Date.now()}`,
       title: 'New Task',
       start: new Date(selectedDate),
@@ -66,11 +66,10 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
     const dayWidth = 40
     const daysFromStart = Math.floor(x / dayWidth)
 
-    const newDate = new Date(currentDate)
-    newDate.setDate(1 + daysFromStart)
+    const newDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1 + daysFromStart)
 
     if (dragType === 'move') {
-      const duration = (draggingTask.end - draggingTask.start) / (1000 * 60 * 60 * 24)
+      const duration = Math.ceil((draggingTask.end - draggingTask.start) / (1000 * 60 * 60 * 24))
       const updatedTask = {
         ...draggingTask,
         start: newDate,
@@ -102,12 +101,18 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
     const endDate = task.end
     const dayWidth = 40
 
-    const startDay = startDate.getDate()
-    const endDay = endDate.getDate()
+    // Calculate position relative to the first day of the current month
+    const monthStart = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1)
+    
+    // Calculate days from month start
+    const startDayFromMonth = Math.max(0, Math.ceil((startDate - monthStart) / (1000 * 60 * 60 * 24)))
+    const endDayFromMonth = Math.ceil((endDate - monthStart) / (1000 * 60 * 60 * 24))
+    
+    const width = Math.max(dayWidth, (endDayFromMonth - startDayFromMonth) * dayWidth)
 
     return {
-      left: (startDay - 1) * dayWidth,
-      width: (endDay - startDay + 1) * dayWidth,
+      left: startDayFromMonth * dayWidth,
+      width: width,
     }
   }
 
@@ -117,7 +122,7 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
 
   const renderVerticalLines = () => {
     const daysInMonth = getDaysInMonth(currentDate.getFullYear(), currentDate.getMonth())
-    return Array.from({ length: daysInMonth }, (_, index) => (
+    return Array.from({ length: daysInMonth + 1 }, (_, index) => (
       <div
         key={index}
         className='absolute top-0 bottom-0 border-l border-gray-700'
@@ -125,6 +130,14 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
       ></div>
     ))
   }
+
+  // Filter tasks that are visible in current month
+  const visibleTasks = tasks.filter(task => {
+    const monthStart = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1)
+    const monthEnd = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0)
+    
+    return (task.start <= monthEnd && task.end >= monthStart)
+  })
 
   return (
     <div className='flex flex-col text-gray-200 h-[500px]'>
@@ -162,7 +175,7 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
               onClick={handlePrevMonth}
               className='w-7 h-7 flex items-center justify-center rounded-lg text-gray-300 hover:bg-[#97e7aa] hover:text-white transition-colors'
             >
-              &lt;
+              ‹
             </button>
             <button
               onClick={handleToday}
@@ -174,7 +187,7 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
               onClick={handleNextMonth}
               className='w-7 h-7 flex items-center justify-center rounded-lg text-gray-300 hover:bg-[#97e7aa] hover:text-white transition-colors'
             >
-              &gt;
+              ›
             </button>
           </div>
         </div>
@@ -187,24 +200,25 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
               currentDate={currentDate}
               selectedDate={selectedDate}
               onDateSelect={handleDateSelect}
+              onAddTask={handleAddTask}
             />
             
             <div 
               ref={timelineRef}
-              className='relative min-h-[200px] pt-4'
+              className='relative min-h-[200px] pt-2'
               onDragOver={handleDragOver}
               onDrop={handleDragEnd}
             >
               {renderVerticalLines()}
-              {tasks.map((task, index) => {
+              {visibleTasks.map((task, index) => {
                 const { left, width } = getTaskPosition(task)
                 return (
                   <div
                     key={task.id}
-                    className='relative h-12 mb-2'
+                    className='relative h-8 mb-1'
                   >
                     <div
-                      className='absolute h-8 rounded-lg flex items-center cursor-move'
+                      className='absolute h-6 rounded-lg flex items-center cursor-move'
                       style={{
                         backgroundColor: task.color,
                         left: `${left}px`,
@@ -214,18 +228,18 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
                       onDragStart={e => handleDragStart(task, 'move', e)}
                     >
                       <div
-                        className='absolute left-0 w-4 h-full cursor-ew-resize'
+                        className='absolute left-0 w-3 h-full cursor-ew-resize'
                         draggable
                         onDragStart={e => handleDragStart(task, 'start', e)}
                       />
-                      <div className='px-3 truncate flex-1'>
-                        <span className='text-white'>{task.title}</span>
-                        <span className='text-white text-sm ml-2'>
+                      <div className='px-2 truncate flex-1'>
+                        <span className='text-white text-sm'>{task.title}</span>
+                        <span className='text-white text-xs ml-1'>
                           [{formatShortDate(task.start)} - {formatShortDate(task.end)}]
                         </span>
                       </div>
                       <div
-                        className='absolute right-0 w-4 h-full cursor-ew-resize'
+                        className='absolute right-0 w-3 h-full cursor-ew-resize'
                         draggable
                         onDragStart={e => handleDragStart(task, 'end', e)}
                       />
