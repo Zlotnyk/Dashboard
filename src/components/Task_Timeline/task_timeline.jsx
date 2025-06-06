@@ -12,7 +12,6 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
   const [draggingTask, setDraggingTask] = useState(null)
   const [dragType, setDragType] = useState(null)
   const [hoveredPosition, setHoveredPosition] = useState(null)
-  const [dragStartX, setDragStartX] = useState(0)
   const timelineRef = useRef(null)
 
   const handlePrevMonth = () => {
@@ -71,9 +70,7 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
   const handleDragStart = (task, type, e) => {
     setDraggingTask(task)
     setDragType(type)
-    setDragStartX(e.clientX)
     e.preventDefault()
-    e.stopPropagation()
   }
 
   const handleDragOver = e => {
@@ -86,8 +83,7 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
     const dayWidth = 40
     const daysFromStart = Math.floor(x / dayWidth)
 
-    const monthStart = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1)
-    const newDate = new Date(monthStart.getFullYear(), monthStart.getMonth(), daysFromStart + 1)
+    const newDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1 + daysFromStart)
 
     if (dragType === 'move') {
       const duration = Math.ceil((draggingTask.end - draggingTask.start) / (1000 * 60 * 60 * 24))
@@ -98,45 +94,33 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
       }
       onUpdateTask(updatedTask)
     } else if (dragType === 'start') {
-      if (newDate < draggingTask.end) {
-        const updatedTask = {
-          ...draggingTask,
-          start: newDate,
-        }
-        onUpdateTask(updatedTask)
+      const updatedTask = {
+        ...draggingTask,
+        start: newDate,
       }
+      onUpdateTask(updatedTask)
     } else if (dragType === 'end') {
-      if (newDate > draggingTask.start) {
-        const updatedTask = {
-          ...draggingTask,
-          end: newDate,
-        }
-        onUpdateTask(updatedTask)
+      const updatedTask = {
+        ...draggingTask,
+        end: newDate,
       }
+      onUpdateTask(updatedTask)
     }
   }
 
   const handleDragEnd = () => {
     setDraggingTask(null)
     setDragType(null)
-    setDragStartX(0)
   }
 
   const handleTimelineMouseMove = (e) => {
-    if (draggingTask) return // Don't show hover button while dragging
-    
     const timeline = timelineRef.current
     const rect = timeline.getBoundingClientRect()
     const x = e.clientX - rect.left
     const dayWidth = 40
     const dayIndex = Math.floor(x / dayWidth)
     
-    const daysInMonth = getDaysInMonth(currentDate.getFullYear(), currentDate.getMonth())
-    if (dayIndex >= 0 && dayIndex < daysInMonth) {
-      setHoveredPosition(dayIndex)
-    } else {
-      setHoveredPosition(null)
-    }
+    setHoveredPosition(dayIndex)
   }
 
   const handleTimelineMouseLeave = () => {
@@ -151,9 +135,9 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
     // Calculate position relative to the first day of the current month
     const monthStart = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1)
     
-    // Calculate days from month start (0-based for positioning)
-    const startDayFromMonth = Math.max(0, Math.floor((startDate - monthStart) / (1000 * 60 * 60 * 24)))
-    const endDayFromMonth = Math.floor((endDate - monthStart) / (1000 * 60 * 60 * 24)) + 1
+    // Calculate days from month start
+    const startDayFromMonth = Math.max(0, Math.ceil((startDate - monthStart) / (1000 * 60 * 60 * 24)))
+    const endDayFromMonth = Math.ceil((endDate - monthStart) / (1000 * 60 * 60 * 24))
     
     const width = Math.max(dayWidth, (endDayFromMonth - startDayFromMonth) * dayWidth)
 
@@ -256,7 +240,7 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
               {renderVerticalLines()}
               
               {/* Hover plus button */}
-              {hoveredPosition !== null && !draggingTask && (
+              {hoveredPosition !== null && (
                 <button
                   onClick={() => handleAddTaskAtPosition(hoveredPosition)}
                   className='absolute top-2 w-6 h-6 bg-gray-500 bg-opacity-70 hover:bg-opacity-90 rounded-full flex items-center justify-center transition-all z-20'
@@ -272,10 +256,10 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
                 return (
                   <div
                     key={task.id}
-                    className='relative h-6 mb-1'
+                    className='relative h-8 mb-1'
                   >
                     <div
-                      className='absolute h-5 rounded-lg flex items-center cursor-move group'
+                      className='absolute h-6 rounded-lg flex items-center cursor-move'
                       style={{
                         backgroundColor: task.color,
                         left: `${left}px`,
@@ -284,27 +268,21 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
                       draggable
                       onDragStart={e => handleDragStart(task, 'move', e)}
                     >
-                      {/* Left resize handle */}
                       <div
-                        className='absolute left-0 w-2 h-full cursor-ew-resize bg-black bg-opacity-20 opacity-0 group-hover:opacity-100 transition-opacity'
+                        className='absolute left-0 w-3 h-full cursor-ew-resize'
                         draggable
                         onDragStart={e => handleDragStart(task, 'start', e)}
-                        title='Resize start date'
                       />
-                      
-                      <div className='px-2 truncate flex-1 pointer-events-none'>
-                        <span className='text-white text-xs font-medium'>{task.title}</span>
-                        <span className='text-white text-xs ml-1 opacity-80'>
+                      <div className='px-2 truncate flex-1'>
+                        <span className='text-white text-sm'>{task.title}</span>
+                        <span className='text-white text-xs ml-1'>
                           [{formatShortDate(task.start)} - {formatShortDate(task.end)}]
                         </span>
                       </div>
-                      
-                      {/* Right resize handle */}
                       <div
-                        className='absolute right-0 w-2 h-full cursor-ew-resize bg-black bg-opacity-20 opacity-0 group-hover:opacity-100 transition-opacity'
+                        className='absolute right-0 w-3 h-full cursor-ew-resize'
                         draggable
                         onDragStart={e => handleDragStart(task, 'end', e)}
-                        title='Resize end date'
                       />
                     </div>
                   </div>
