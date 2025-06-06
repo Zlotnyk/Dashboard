@@ -3,6 +3,7 @@ import FlipClock from './components/FlipClock/'
 import GifContainer from './components/gif_container'
 import TodoList from './components/todo-list'
 import Notes from './components/notes'
+import Calendar from './components/Calendar/Calendar'
 import './App.css'
 import TaskTimeline from './components/Task_Timeline/task_timeline'
 import { generateMockTasks } from './components/Task_Timeline/timeline_utils'
@@ -61,7 +62,7 @@ function App() {
 						style={{ width: `${widths.left}%` }}
 					>
 						<FlipClock />
-						<div className='border-2 border-dashed border-gray-400 p-2'></div>
+						<Calendar />
 					</section>
 
 					{/* Центральна Секція */}
