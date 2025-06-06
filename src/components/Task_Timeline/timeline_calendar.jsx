@@ -1,9 +1,7 @@
 import React, { useMemo, useState } from 'react'
 import { getDaysInMonth, isSameDay } from './timeline_utils'
-import { Plus } from 'lucide-react'
 
 const TimelineCalendar = ({ currentDate, selectedDate, onDateSelect, onAddTask }) => {
-  const [hoveredDate, setHoveredDate] = useState(null)
   const currentMonth = currentDate.getMonth()
   const currentYear = currentDate.getFullYear()
 
@@ -26,19 +24,6 @@ const TimelineCalendar = ({ currentDate, selectedDate, onDateSelect, onAddTask }
     return result
   }, [currentYear, currentMonth])
 
-  const handleAddTaskOnDate = (date, e) => {
-    e.stopPropagation()
-    const newTask = {
-      id: `task-${Date.now()}`,
-      title: 'New Task',
-      start: new Date(date),
-      end: new Date(date.getFullYear(), date.getMonth(), date.getDate() + 1),
-      progress: 0,
-      color: '#3B82F6',
-    }
-    onAddTask(newTask)
-  }
-
   return (
     <div className='border-b border-gray-700'>
       <div className='flex'>
@@ -46,14 +31,11 @@ const TimelineCalendar = ({ currentDate, selectedDate, onDateSelect, onAddTask }
           {daysGrid.map((dayInfo, index) => {
             const isSelected = isSameDay(dayInfo.date, selectedDate)
             const isToday = isSameDay(dayInfo.date, new Date())
-            const isHovered = hoveredDate && isSameDay(hoveredDate, dayInfo.date)
 
             return (
               <div
                 key={`${dayInfo.year}-${dayInfo.month}-${dayInfo.day}`}
                 className='w-10 flex flex-col items-center border-r border-gray-700 relative'
-                onMouseEnter={() => setHoveredDate(dayInfo.date)}
-                onMouseLeave={() => setHoveredDate(null)}
               >
                 <button
                   onClick={() => onDateSelect(dayInfo.date)}
@@ -70,16 +52,6 @@ const TimelineCalendar = ({ currentDate, selectedDate, onDateSelect, onAddTask }
                     <div className='absolute bottom-1 w-1.5 h-1.5 bg-red-500 rounded-full'></div>
                   )}
                 </button>
-                
-                {isHovered && (
-                  <button
-                    onClick={(e) => handleAddTaskOnDate(dayInfo.date, e)}
-                    className='absolute top-10 w-6 h-6 bg-blue-500 bg-opacity-70 hover:bg-opacity-90 rounded-full flex items-center justify-center transition-all z-10'
-                    title='Add task on this date'
-                  >
-                    <Plus size={14} className='text-white' />
-                  </button>
-                )}
               </div>
             )
           })}

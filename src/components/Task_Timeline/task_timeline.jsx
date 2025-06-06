@@ -3,6 +3,7 @@ import TimelineHeader from './timeline_header'
 import TimelineCalendar from './timeline_calendar'
 import TimelineToolbar from './timeline_toolbar'
 import { formatShortDate } from './timeline_utils'
+import { Plus } from 'lucide-react'
 
 const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
   const [currentDate, setCurrentDate] = useState(new Date(2025, 4, 1)) // Set to first day of month
@@ -10,6 +11,7 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
   const [selectedDate, setSelectedDate] = useState(new Date(2025, 4, 1))
   const [draggingTask, setDraggingTask] = useState(null)
   const [dragType, setDragType] = useState(null)
+  const [hoveredPosition, setHoveredPosition] = useState(null)
   const timelineRef = useRef(null)
 
   const handlePrevMonth = () => {
@@ -44,6 +46,21 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
         selectedDate.getMonth(),
         selectedDate.getDate() + 3
       ),
+      progress: 0,
+      color: '#3B82F6',
+    }
+    onAddTask(newTask)
+  }
+
+  const handleAddTaskAtPosition = (dayIndex) => {
+    const monthStart = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1)
+    const taskDate = new Date(monthStart.getFullYear(), monthStart.getMonth(), dayIndex + 1)
+    
+    const newTask = {
+      id: `task-${Date.now()}`,
+      title: 'New Task',
+      start: taskDate,
+      end: new Date(taskDate.getFullYear(), taskDate.getMonth(), taskDate.getDate() + 3),
       progress: 0,
       color: '#3B82F6',
     }
@@ -94,6 +111,20 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
   const handleDragEnd = () => {
     setDraggingTask(null)
     setDragType(null)
+  }
+
+  const handleTimelineMouseMove = (e) => {
+    const timeline = timelineRef.current
+    const rect = timeline.getBoundingClientRect()
+    const x = e.clientX - rect.left
+    const dayWidth = 40
+    const dayIndex = Math.floor(x / dayWidth)
+    
+    setHoveredPosition(dayIndex)
+  }
+
+  const handleTimelineMouseLeave = () => {
+    setHoveredPosition(null)
   }
 
   const getTaskPosition = task => {
@@ -154,11 +185,6 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
         </div>
 
         <div className='flex items-center gap-2'>
-          <button className='flex items-center gap-1 px-3 py-1.5 rounded-lg border border-gray-500 text-gray-300 hover:bg-[#97e7aa] hover:text-white transition-colors'>
-            <span className='hidden sm:inline'>Open in Calendar</span>
-            <span className='sm:hidden'>Calendar</span>
-          </button>
-
           <div className='flex items-center gap-1 rounded-lg border border-gray-500'>
             <select
               className='bg-transparent border-none text-gray-300 py-1.5 px-3 rounded-lg focus:outline-none focus:ring-1 focus:ring-[#97e7aa] hover:bg-[#97e7aa] hover:text-white transition-colors'
@@ -208,8 +234,23 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
               className='relative min-h-[200px] pt-2'
               onDragOver={handleDragOver}
               onDrop={handleDragEnd}
+              onMouseMove={handleTimelineMouseMove}
+              onMouseLeave={handleTimelineMouseLeave}
             >
               {renderVerticalLines()}
+              
+              {/* Hover plus button */}
+              {hoveredPosition !== null && (
+                <button
+                  onClick={() => handleAddTaskAtPosition(hoveredPosition)}
+                  className='absolute top-2 w-6 h-6 bg-gray-500 bg-opacity-70 hover:bg-opacity-90 rounded-full flex items-center justify-center transition-all z-20'
+                  style={{ left: `${hoveredPosition * 40 + 17}px` }}
+                  title='Add task'
+                >
+                  <Plus size={14} className='text-white' />
+                </button>
+              )}
+              
               {visibleTasks.map((task, index) => {
                 const { left, width } = getTaskPosition(task)
                 return (
