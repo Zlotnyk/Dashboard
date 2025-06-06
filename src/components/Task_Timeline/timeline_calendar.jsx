@@ -74,10 +74,10 @@ const TimelineCalendar = ({ currentDate, selectedDate, onDateSelect, onAddTask }
                 {isHovered && (
                   <button
                     onClick={(e) => handleAddTaskOnDate(dayInfo.date, e)}
-                    className='absolute top-10 w-8 h-6 bg-gray-600 bg-opacity-70 hover:bg-opacity-90 rounded flex items-center justify-center transition-all z-10'
+                    className='absolute top-10 w-6 h-6 bg-blue-500 bg-opacity-70 hover:bg-opacity-90 rounded-full flex items-center justify-center transition-all z-10'
                     title='Add task on this date'
                   >
-                    <Plus size={12} className='text-white' />
+                    <Plus size={14} className='text-white' />
                   </button>
                 )}
               </div>
