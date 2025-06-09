@@ -12,6 +12,8 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false)
   const [drawerTask, setDrawerTask] = useState(null)
   const [isDragging, setIsDragging] = useState(false)
+  const [hoveredDay, setHoveredDay] = useState(null)
+  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 })
   const timelineRef = useRef(null)
   const scrollRef = useRef(null)
 
@@ -52,8 +54,8 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
   const daysToShow = getDaysToShow()
   const today = new Date()
   
-  // Fixed day width for consistent alignment
-  const dayWidth = viewMode === 'Week' ? 120 : 50
+  // Adjusted day width for better fit
+  const dayWidth = viewMode === 'Week' ? 180 : 40
   const totalWidth = daysToShow.length * dayWidth
 
   const navigateTime = (direction) => {
@@ -100,7 +102,11 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
       const dayIndex = daysToShow.findIndex(d => d.toDateString() === date.toDateString())
       return dayIndex >= 0 ? dayIndex * dayWidth : 0
     } else {
-      return (date.getDate() - 1) * dayWidth
+      // Fix for month view - ensure we're working with the same month
+      if (date.getMonth() === currentMonth && date.getFullYear() === currentYear) {
+        return (date.getDate() - 1) * dayWidth
+      }
+      return 0
     }
   }
 
@@ -113,9 +119,16 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
       }
       return dayWidth
     } else {
+      // Fix for month view - calculate duration properly
       const startDay = task.start.getDate()
       const endDay = task.end.getDate()
-      return (endDay - startDay + 1) * dayWidth
+      
+      // Ensure both dates are in the current month
+      if (task.start.getMonth() === currentMonth && task.end.getMonth() === currentMonth &&
+          task.start.getFullYear() === currentYear && task.end.getFullYear() === currentYear) {
+        return Math.max(1, (endDay - startDay + 1)) * dayWidth
+      }
+      return dayWidth
     }
   }
 
@@ -138,16 +151,18 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
   const handleAddTask = () => {
     const newTask = {
       id: crypto.randomUUID(),
-      title: 'New page',
+      title: 'New Task',
       start: viewMode === 'Week' ? daysToShow[0] : new Date(currentYear, currentMonth, 1),
       end: viewMode === 'Week' ? daysToShow[2] : new Date(currentYear, currentMonth, 3),
       progress: 0,
       status: 'Not started',
       priority: 'normal',
       description: '',
-      color: '#97e7aa'
+      color: 'var(--accent-color, #97e7aa)'
     }
     onAddTask(newTask)
+    setDrawerTask(newTask)
+    setIsDrawerOpen(true)
   }
 
   const handleMouseDown = (e, task) => {
@@ -196,7 +211,7 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
           status: 'Not started',
           priority: 'normal',
           description: '',
-          color: '#97e7aa'
+          color: 'var(--accent-color, #97e7aa)'
         }
         
         onAddTask(newTask)
@@ -206,8 +221,26 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
     }
   }
 
+  const handleMouseMove = (e) => {
+    if (timelineRef.current) {
+      const rect = timelineRef.current.getBoundingClientRect()
+      setMousePosition({
+        x: e.clientX - rect.left,
+        y: e.clientY - rect.top
+      })
+    }
+  }
+
+  const handleDayHover = (dayIndex) => {
+    setHoveredDay(dayIndex)
+  }
+
+  const handleDayLeave = () => {
+    setHoveredDay(null)
+  }
+
   useEffect(() => {
-    const handleMouseMove = (e) => {
+    const handleMouseMoveGlobal = (e) => {
       if (!draggedTask || !timelineRef.current) return
 
       const rect = timelineRef.current.getBoundingClientRect()
@@ -249,12 +282,12 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
     }
 
     if (draggedTask) {
-      document.addEventListener('mousemove', handleMouseMove)
+      document.addEventListener('mousemove', handleMouseMoveGlobal)
       document.addEventListener('mouseup', handleMouseUp)
     }
 
     return () => {
-      document.removeEventListener('mousemove', handleMouseMove)
+      document.removeEventListener('mousemove', handleMouseMoveGlobal)
       document.removeEventListener('mouseup', handleMouseUp)
     }
   }, [draggedTask, dragMode, daysToShow, onUpdateTask, dayWidth])
@@ -336,9 +369,10 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
               <button 
                 className={`px-3 py-1 text-sm rounded ${
                   viewMode === 'Month' 
-                    ? 'bg-[#97e7aa] text-white' 
+                    ? 'text-white' 
                     : 'text-gray-400 hover:text-white'
                 }`}
+                style={viewMode === 'Month' ? { backgroundColor: 'var(--accent-color, #97e7aa)' } : {}}
                 onClick={() => setViewMode('Month')}
               >
                 Month
@@ -346,9 +380,10 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
               <button 
                 className={`px-3 py-1 text-sm rounded ${
                   viewMode === 'Week' 
-                    ? 'bg-[#97e7aa] text-white' 
+                    ? 'text-white' 
                     : 'text-gray-400 hover:text-white'
                 }`}
+                style={viewMode === 'Week' ? { backgroundColor: 'var(--accent-color, #97e7aa)' } : {}}
                 onClick={() => setViewMode('Week')}
               >
                 Week
@@ -361,7 +396,8 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
               </button>
               <button
                 onClick={handleAddTask}
-                className="flex items-center gap-2 px-3 py-1 bg-[#97e7aa] text-white rounded text-sm hover:bg-[#75b384]"
+                className="flex items-center gap-2 px-3 py-1 text-white rounded text-sm hover:opacity-80"
+                style={{ backgroundColor: 'var(--accent-color, #97e7aa)' }}
               >
                 <Plus size={14} />
                 New
@@ -381,6 +417,7 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
               className="relative h-full timeline-background cursor-pointer"
               style={{ width: `${totalWidth}px` }}
               onClick={handleTimelineClick}
+              onMouseMove={handleMouseMove}
             >
               {/* Days Header */}
               <div 
@@ -396,12 +433,15 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
                   return (
                     <div
                       key={i}
-                      className={`flex items-center justify-center text-sm border-r border-gray-800 ${
+                      className={`flex items-center justify-center text-sm relative ${
                         isToday
-                          ? 'bg-[#97e7aa] text-white font-semibold' 
+                          ? 'text-white font-semibold' 
                           : 'text-gray-300'
                       }`}
-                      style={{ width: `${dayWidth}px` }}
+                      style={{ 
+                        width: `${dayWidth}px`,
+                        backgroundColor: isToday ? 'var(--accent-color, #97e7aa)' : 'transparent'
+                      }}
                     >
                       {dayText}
                     </div>
@@ -412,37 +452,64 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
               {/* Horizontal line under dates */}
               <div className="absolute top-8 left-0 right-0 h-px bg-gray-700 z-10" />
 
+              {/* Vertical lines for each day - background layer */}
+              {daysToShow.map((_, i) => (
+                <div
+                  key={`vertical-line-${i}`}
+                  className="absolute top-8 bottom-0 w-px bg-gray-800 z-0"
+                  style={{ left: `${(i + 1) * dayWidth}px` }}
+                />
+              ))}
+
               {/* Today Marker Line */}
               {(() => {
                 const todayPosition = getTodayPosition()
                 if (todayPosition >= 0) {
                   return (
                     <div
-                      className="absolute top-8 bottom-0 w-0.5 bg-[#97e7aa] z-20 pointer-events-none"
-                      style={{ left: `${todayPosition + dayWidth / 2}px` }}
+                      className="absolute top-8 bottom-0 w-0.5 z-20 pointer-events-none"
+                      style={{ 
+                        left: `${todayPosition + dayWidth / 2}px`,
+                        backgroundColor: 'var(--accent-color, #97e7aa)'
+                      }}
                     />
                   )
                 }
                 return null
               })()}
 
+              {/* Plus button on hover in timeline area */}
+              {!isDragging && mousePosition.y > 32 && (
+                <div
+                  className="absolute w-6 h-6 rounded-full flex items-center justify-center z-30 pointer-events-none opacity-60"
+                  style={{
+                    left: `${mousePosition.x - 12}px`,
+                    top: `${mousePosition.y - 12}px`,
+                    backgroundColor: 'var(--accent-color, #97e7aa)'
+                  }}
+                >
+                  <Plus size={12} className="text-white" />
+                </div>
+              )}
+
               {/* Tasks Area */}
-              <div className="relative h-full pt-4 pb-4 overflow-y-auto custom-scrollbar">
+              <div className="relative h-full pt-4 pb-4 overflow-y-auto custom-scrollbar z-10">
                 {visibleTasks.map((task, index) => {
                   const isUrgent = task.priority === 'urgent'
-                  const taskColor = isUrgent ? '#ff6b35' : '#97e7aa'
+                  const taskColor = isUrgent ? '#ff6b35' : 'var(--accent-color, #97e7aa)'
                   
                   return (
                     <div
                       key={task.id}
-                      className={`absolute h-8 rounded cursor-pointer transition-all duration-200 group ${
-                        selectedTask?.id === task.id ? 'ring-2 ring-[#97e7aa]' : ''
+                      className={`absolute h-8 rounded cursor-pointer transition-all duration-200 group z-20 ${
+                        selectedTask?.id === task.id ? 'ring-2' : ''
                       } ${draggedTask?.id === task.id ? 'opacity-80 shadow-lg' : ''}`}
                       style={{
                         left: `${getDayPosition(task.start)}px`,
                         width: `${getTaskWidth(task)}px`,
                         top: `${index * 36 + 8}px`,
-                        backgroundColor: taskColor
+                        backgroundColor: taskColor,
+                        '--tw-ring-color': 'var(--accent-color, #97e7aa)'
                       }}
                       onClick={(e) => handleTaskClick(task, e)}
                       onMouseDown={(e) => handleMouseDown(e, task)}
