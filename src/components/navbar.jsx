@@ -8,7 +8,7 @@ const Navbar = () => {
   const [isSignInOpen, setIsSignInOpen] = useState(false)
   const [isGetStartedOpen, setIsGetStartedOpen] = useState(false)
   const [accentColor, setAccentColor] = useState('#97e7aa')
-  const [backgroundGif, setBackgroundGif] = useState('Green2.gif')
+  const [backgroundGif, setBackgroundGif] = useState('Green.gif')
   const [language, setLanguage] = useState('English')
   const [notifications, setNotifications] = useState({
     examReminders: true,
