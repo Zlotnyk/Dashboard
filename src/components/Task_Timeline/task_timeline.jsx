@@ -12,6 +12,7 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false)
   const [drawerTask, setDrawerTask] = useState(null)
   const [isDragging, setIsDragging] = useState(false)
+  const [hoveredDay, setHoveredDay] = useState(null)
   const timelineRef = useRef(null)
   const scrollRef = useRef(null)
 
@@ -52,8 +53,8 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
   const daysToShow = getDaysToShow()
   const today = new Date()
   
-  // Fixed day width for consistent alignment
-  const dayWidth = viewMode === 'Week' ? 120 : 50
+  // Adjusted day width for better fit
+  const dayWidth = viewMode === 'Week' ? 140 : 40
   const totalWidth = daysToShow.length * dayWidth
 
   const navigateTime = (direction) => {
@@ -204,6 +205,14 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
         setIsDrawerOpen(true)
       }
     }
+  }
+
+  const handleDayHover = (dayIndex) => {
+    setHoveredDay(dayIndex)
+  }
+
+  const handleDayLeave = () => {
+    setHoveredDay(null)
   }
 
   useEffect(() => {
@@ -396,14 +405,22 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
                   return (
                     <div
                       key={i}
-                      className={`flex items-center justify-center text-sm border-r border-gray-800 ${
+                      className={`flex items-center justify-center text-sm border-r border-gray-800 relative ${
                         isToday
                           ? 'bg-[#97e7aa] text-white font-semibold' 
                           : 'text-gray-300'
                       }`}
                       style={{ width: `${dayWidth}px` }}
+                      onMouseEnter={() => handleDayHover(i)}
+                      onMouseLeave={handleDayLeave}
                     >
                       {dayText}
+                      {/* Plus button on hover */}
+                      {hoveredDay === i && !isToday && (
+                        <div className="absolute inset-0 bg-gray-800/50 flex items-center justify-center">
+                          <Plus size={12} className="text-[#97e7aa]" />
+                        </div>
+                      )}
                     </div>
                   )
                 })}
@@ -411,6 +428,15 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
 
               {/* Horizontal line under dates */}
               <div className="absolute top-8 left-0 right-0 h-px bg-gray-700 z-10" />
+
+              {/* Vertical lines for each day */}
+              {daysToShow.map((_, i) => (
+                <div
+                  key={`vertical-line-${i}`}
+                  className="absolute top-8 bottom-0 w-px bg-gray-800 z-5"
+                  style={{ left: `${(i + 1) * dayWidth}px` }}
+                />
+              ))}
 
               {/* Today Marker Line */}
               {(() => {

@@ -40,14 +40,18 @@ function App() {
 			<div>
 				<header className="relative">
 					<GifContainer />
-					<div className="absolute inset-0 flex flex-col justify-center items-center text-center z-10">
+				</header>
+
+				{/* Header content between photo and wavy lines */}
+				<div className="bg-[#1a1a1a] py-8">
+					<div className="text-center">
 						<h1 className="text-4xl font-bold text-white mb-2 font-[Libre_Baskerville]">
 							Student Planner <span className="text-[#d4af37]">(Sunrise)</span>
 						</h1>
-						<blockquote className="text-lg italic text-white/90 max-w-2xl font-[Libre_Baskerville]">
+						<blockquote className="text-lg italic text-white/90 max-w-2xl mx-auto font-[Libre_Baskerville]">
 							"Miracles happen everyday, change your perception of what a miracle is and you'll see them all around you."
 						</blockquote>
-						<div className="flex items-center gap-8 mt-4 text-sm text-white/80">
+						<div className="flex items-center justify-center gap-8 mt-4 text-sm text-white/80">
 							<span className="flex items-center gap-2">
 								<span className="w-2 h-2 bg-[#97e7aa] rounded-full"></span>
 								Lifestyle
@@ -70,7 +74,7 @@ function App() {
 							</span>
 						</div>
 					</div>
-				</header>
+				</div>
 
 				<WavyLines />
 

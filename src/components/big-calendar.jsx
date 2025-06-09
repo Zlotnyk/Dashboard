@@ -48,7 +48,8 @@ const BigCalendar = () => {
     setCurrentDate(newDate)
   }
   
-  const isToday = (day) => {
+  const isToday = (day, isCurrentMonth = true) => {
+    if (!isCurrentMonth) return false
     return today.getDate() === day && 
            today.getMonth() === currentMonth && 
            today.getFullYear() === currentYear
@@ -63,7 +64,7 @@ const BigCalendar = () => {
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
-          <span className="text-xl font-[Libre_Baskerville] italic text-[#e0e0e0]">
+          <span className="text-xl font-[Libre_Baskerville] italic text-[#d4af37]">
             Upcoming Meetings
           </span>
         </div>
@@ -96,18 +97,21 @@ const BigCalendar = () => {
         </div>
       </div>
 
+      {/* Horizontal line under header */}
+      <div className="w-full h-px bg-gray-700 mb-4"></div>
+
       {/* Calendar Grid */}
-      <div className="grid grid-cols-7 gap-1">
+      <div className="grid grid-cols-7 gap-0">
         {/* Day Headers */}
         {dayNames.map(day => (
-          <div key={day} className="h-10 flex items-center justify-center">
+          <div key={day} className="h-10 flex items-center justify-center border-b border-gray-700">
             <span className="text-sm font-medium text-gray-400">{day}</span>
           </div>
         ))}
         
         {/* Previous Month Days */}
         {prevMonthDays.map(day => (
-          <div key={`prev-${day}`} className="h-20 border border-gray-800 bg-gray-900/50 p-2">
+          <div key={`prev-${day}`} className="h-20 border-r border-b border-gray-800 bg-gray-900/30 p-2">
             <span className="text-sm text-gray-600">{day}</span>
           </div>
         ))}
@@ -116,13 +120,11 @@ const BigCalendar = () => {
         {currentMonthDays.map(day => (
           <div 
             key={day} 
-            className={`h-20 border border-gray-800 p-2 hover:bg-gray-800/50 cursor-pointer relative group ${
-              isToday(day) ? 'bg-[#97e7aa]/20 border-[#97e7aa]' : 'bg-gray-900/30'
-            }`}
+            className="h-20 border-r border-b border-gray-800 p-2 hover:bg-gray-800/30 cursor-pointer relative group bg-gray-900/10"
           >
             <div className="flex items-center justify-between">
               <span className={`text-sm font-medium ${
-                isToday(day) ? 'text-[#97e7aa] font-bold' : 'text-gray-300'
+                isToday(day) ? 'bg-[#97e7aa] text-white px-2 py-1 rounded-full' : 'text-gray-300'
               }`}>
                 {day}
               </span>
@@ -143,7 +145,7 @@ const BigCalendar = () => {
         
         {/* Next Month Days */}
         {nextMonthDays.map(day => (
-          <div key={`next-${day}`} className="h-20 border border-gray-800 bg-gray-900/50 p-2">
+          <div key={`next-${day}`} className="h-20 border-r border-b border-gray-800 bg-gray-900/30 p-2">
             <span className="text-sm text-gray-600">{day}</span>
           </div>
         ))}

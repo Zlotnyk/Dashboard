@@ -46,7 +46,7 @@ const QuickLinks = () => {
       <div className="space-y-6">
         {links.map((section, sectionIndex) => (
           <div key={sectionIndex}>
-            <h3 className="text-[#d4af37] text-sm font-medium mb-3 font-[Libre_Baskerville] italic">
+            <h3 className="text-white text-base font-medium mb-3 font-[Libre_Baskerville]">
               {section.title}
             </h3>
             <div className="space-y-2">
