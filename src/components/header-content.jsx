@@ -18,7 +18,7 @@ const HeaderContent = ({ title = "Student Planner" }) => {
         {/* Title and Quote Block - positioned parallel to wavy line */}
         <div className="flex flex-col items-start mb-6 pl-16">
           {/* Title - positioned slightly to the right */}
-          <8 className="text-4xl font-bold text-white mb-4 font-[Libre_Baskerville]">
+          <h1 className="text-4xl font-bold text-white mb-4 font-[Libre_Baskerville]">
             {title}
           </h1>
           
