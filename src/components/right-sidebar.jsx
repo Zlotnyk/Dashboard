@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Plus, X, Calendar, Clock, FileText, Flag } from 'lucide-react'
+import { Plus, X, Calendar, Clock, FileText, Flag, MapPin } from 'lucide-react'
 import { Dialog, DialogBackdrop, DialogPanel, DialogTitle } from '@headlessui/react'
 
 const RightSidebar = () => {
@@ -12,6 +12,7 @@ const RightSidebar = () => {
       location: '',
       targetGrade: '',
       notes: '',
+      attended: false,
       isUrgent: true
     }
   ])
@@ -19,13 +20,15 @@ const RightSidebar = () => {
   const [assignmentReminders, setAssignmentReminders] = useState([])
   const [isExamModalOpen, setIsExamModalOpen] = useState(false)
   const [isAssignmentModalOpen, setIsAssignmentModalOpen] = useState(false)
+  const [selectedExam, setSelectedExam] = useState(null)
   const [examForm, setExamForm] = useState({
     title: '',
     date: '',
     time: '',
     location: '',
     targetGrade: '',
-    notes: ''
+    notes: '',
+    attended: false
   })
   const [assignmentForm, setAssignmentForm] = useState({
     title: '',
@@ -49,13 +52,29 @@ const RightSidebar = () => {
   }
 
   const addExamReminder = () => {
+    setSelectedExam(null)
     setExamForm({
-      title: '',
+      title: 'New page',
       date: '',
       time: '',
       location: '',
       targetGrade: '',
-      notes: ''
+      notes: '',
+      attended: false
+    })
+    setIsExamModalOpen(true)
+  }
+
+  const handleExamClick = (exam) => {
+    setSelectedExam(exam)
+    setExamForm({
+      title: exam.title,
+      date: exam.date.toISOString().split('T')[0],
+      time: exam.time,
+      location: exam.location,
+      targetGrade: exam.targetGrade,
+      notes: exam.notes,
+      attended: exam.attended
     })
     setIsExamModalOpen(true)
   }
@@ -75,18 +94,46 @@ const RightSidebar = () => {
   const handleSaveExam = () => {
     if (!examForm.title.trim() || !examForm.date) return
 
-    const newReminder = {
-      id: Date.now(),
-      title: examForm.title,
-      date: new Date(examForm.date),
-      time: examForm.time,
-      location: examForm.location,
-      targetGrade: examForm.targetGrade,
-      notes: examForm.notes,
-      isUrgent: calculateDaysUntil(examForm.date) === 'Tomorrow'
+    if (selectedExam) {
+      // Update existing exam
+      const updatedExam = {
+        ...selectedExam,
+        title: examForm.title,
+        date: new Date(examForm.date),
+        time: examForm.time,
+        location: examForm.location,
+        targetGrade: examForm.targetGrade,
+        notes: examForm.notes,
+        attended: examForm.attended,
+        isUrgent: calculateDaysUntil(examForm.date) === 'Tomorrow'
+      }
+      setExamReminders(prev => prev.map(exam => 
+        exam.id === selectedExam.id ? updatedExam : exam
+      ))
+    } else {
+      // Create new exam
+      const newReminder = {
+        id: Date.now(),
+        title: examForm.title,
+        date: new Date(examForm.date),
+        time: examForm.time,
+        location: examForm.location,
+        targetGrade: examForm.targetGrade,
+        notes: examForm.notes,
+        attended: examForm.attended,
+        isUrgent: calculateDaysUntil(examForm.date) === 'Tomorrow'
+      }
+      setExamReminders(prev => [...prev, newReminder])
     }
-    setExamReminders(prev => [...prev, newReminder])
     setIsExamModalOpen(false)
+  }
+
+  const handleDeleteExam = () => {
+    if (selectedExam) {
+      setExamReminders(prev => prev.filter(exam => exam.id !== selectedExam.id))
+      setIsExamModalOpen(false)
+      setSelectedExam(null)
+    }
   }
 
   const handleSaveAssignment = () => {
@@ -119,7 +166,11 @@ const RightSidebar = () => {
 
           <div className="space-y-3">
             {examReminders.map(reminder => (
-              <div key={reminder.id} className="bg-gray-800/50 rounded-lg p-4">
+              <div 
+                key={reminder.id} 
+                className="bg-gray-800/50 rounded-lg p-4 cursor-pointer hover:bg-gray-700/50 transition-colors"
+                onClick={() => handleExamClick(reminder)}
+              >
                 <div className="flex items-center gap-2 mb-2">
                   {reminder.isUrgent && (
                     <span className="text-orange-500 text-sm">⚠️</span>
@@ -209,114 +260,167 @@ const RightSidebar = () => {
 
       {/* Exam Reminder Modal */}
       <Dialog open={isExamModalOpen} onClose={setIsExamModalOpen} className="relative z-50">
-        <DialogBackdrop className="fixed inset-0 bg-gray-500/75 transition-opacity" />
+        <DialogBackdrop 
+          transition
+          className="fixed inset-0 bg-gray-500/75 transition-opacity data-closed:opacity-0 data-enter:duration-300 data-enter:ease-out data-leave:duration-200 data-leave:ease-in"
+        />
         
         <div className="fixed inset-0 z-10 w-screen overflow-y-auto">
           <div className="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
-            <DialogPanel className="relative transform overflow-hidden rounded-lg bg-[#1a1a1a] text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg">
+            <DialogPanel 
+              transition
+              className="relative transform overflow-hidden rounded-lg bg-[#1a1a1a] text-left shadow-xl transition-all data-closed:translate-y-4 data-closed:opacity-0 data-enter:duration-300 data-enter:ease-out data-leave:duration-200 data-leave:ease-in sm:my-8 sm:w-full sm:max-w-lg data-closed:sm:translate-y-0 data-closed:sm:scale-95"
+            >
               <div className="bg-[#1a1a1a] px-6 pt-6 pb-4">
-                <div className="flex items-center justify-between mb-6">
-                  <DialogTitle className="text-lg font-semibold text-white flex items-center gap-2">
-                    <Calendar size={20} className="text-[#97e7aa]" />
-                    Exam Reminder
-                  </DialogTitle>
+                <div className="flex items-center justify-between mb-8">
+                  <input
+                    type="text"
+                    value={examForm.title}
+                    onChange={(e) => setExamForm(prev => ({ ...prev, title: e.target.value }))}
+                    className="text-2xl font-medium text-white bg-transparent border-none outline-none flex-1"
+                    placeholder="New page"
+                  />
                   <button
                     onClick={() => setIsExamModalOpen(false)}
-                    className="text-gray-400 hover:text-white"
+                    className="text-gray-400 hover:text-white ml-4"
                   >
-                    <X size={20} />
+                    <X size={24} />
                   </button>
                 </div>
 
-                <div className="space-y-4">
-                  <div>
-                    <label className="flex items-center gap-2 text-sm text-gray-300 mb-2">
-                      <Calendar size={16} />
-                      Date
-                    </label>
-                    <input
-                      type="date"
-                      value={examForm.date}
-                      onChange={(e) => setExamForm(prev => ({ ...prev, date: e.target.value }))}
-                      className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded text-white focus:outline-none focus:ring-2 focus:ring-[#97e7aa]"
-                    />
-                    {examForm.date && (
-                      <div className="mt-1 text-xs text-orange-500 flex items-center gap-1">
-                        ⚠️ {calculateDaysUntil(examForm.date)}.
+                <div className="space-y-6">
+                  {/* Date Field */}
+                  <div className="flex items-center gap-4">
+                    <Calendar size={20} className="text-gray-400 flex-shrink-0 cursor-pointer" />
+                    <div className="flex-1">
+                      <div className="text-sm text-gray-400 mb-1">Date</div>
+                      <input
+                        type="date"
+                        value={examForm.date}
+                        onChange={(e) => setExamForm(prev => ({ ...prev, date: e.target.value }))}
+                        className="w-full bg-transparent text-white text-base border-none outline-none cursor-pointer"
+                      />
+                      {examForm.date && (
+                        <div className="mt-1 text-xs text-orange-500 flex items-center gap-1">
+                          ⚠️ {calculateDaysUntil(examForm.date)}.
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Time Field */}
+                  <div className="flex items-center gap-4">
+                    <Clock size={20} className="text-gray-400 flex-shrink-0 cursor-pointer" />
+                    <div className="flex-1">
+                      <div className="text-sm text-gray-400 mb-1">Time</div>
+                      <input
+                        type="time"
+                        value={examForm.time}
+                        onChange={(e) => setExamForm(prev => ({ ...prev, time: e.target.value }))}
+                        placeholder="Empty"
+                        className="w-full bg-transparent text-white text-base border-none outline-none placeholder-gray-500 cursor-pointer"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Location Field */}
+                  <div className="flex items-center gap-4">
+                    <MapPin size={20} className="text-gray-400 flex-shrink-0" />
+                    <div className="flex-1">
+                      <div className="text-sm text-gray-400 mb-1">Location</div>
+                      <input
+                        type="text"
+                        value={examForm.location}
+                        onChange={(e) => setExamForm(prev => ({ ...prev, location: e.target.value }))}
+                        placeholder="Empty"
+                        className="w-full bg-transparent text-white text-base border-none outline-none placeholder-gray-500"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Target Grade Field */}
+                  <div className="flex items-center gap-4">
+                    <Flag size={20} className="text-gray-400 flex-shrink-0" />
+                    <div className="flex-1">
+                      <div className="text-sm text-gray-400 mb-1">Target Grade</div>
+                      <input
+                        type="text"
+                        value={examForm.targetGrade}
+                        onChange={(e) => setExamForm(prev => ({ ...prev, targetGrade: e.target.value }))}
+                        placeholder="Empty"
+                        className="w-full bg-transparent text-white text-base border-none outline-none placeholder-gray-500"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Notes Field */}
+                  <div className="flex items-center gap-4">
+                    <FileText size={20} className="text-gray-400 flex-shrink-0" />
+                    <div className="flex-1">
+                      <div className="text-sm text-gray-400 mb-1">Notes</div>
+                      <textarea
+                        value={examForm.notes}
+                        onChange={(e) => setExamForm(prev => ({ ...prev, notes: e.target.value }))}
+                        placeholder="Empty"
+                        className="w-full bg-transparent text-white text-base border-none outline-none placeholder-gray-500 resize-none"
+                        rows={3}
+                      />
+                    </div>
+                  </div>
+
+                  {/* When Exam Field */}
+                  <div className="flex items-center gap-4">
+                    <span className="text-gray-400 text-base">⚠️</span>
+                    <div className="flex-1">
+                      <div className="text-sm text-gray-400 mb-1">When Exam</div>
+                      <div className="text-orange-500 text-base">
+                        {examForm.date ? calculateDaysUntil(examForm.date) : 'Tomorrow.'}
                       </div>
-                    )}
+                    </div>
                   </div>
 
-                  <div>
-                    <label className="flex items-center gap-2 text-sm text-gray-300 mb-2">
-                      <Clock size={16} />
-                      Time
-                    </label>
-                    <input
-                      type="time"
-                      value={examForm.time}
-                      onChange={(e) => setExamForm(prev => ({ ...prev, time: e.target.value }))}
-                      className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded text-white focus:outline-none focus:ring-2 focus:ring-[#97e7aa]"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="flex items-center gap-2 text-sm text-gray-300 mb-2">
-                      <FileText size={16} />
-                      Location
-                    </label>
-                    <input
-                      type="text"
-                      value={examForm.location}
-                      onChange={(e) => setExamForm(prev => ({ ...prev, location: e.target.value }))}
-                      className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded text-white focus:outline-none focus:ring-2 focus:ring-[#97e7aa]"
-                      placeholder="Empty"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="flex items-center gap-2 text-sm text-gray-300 mb-2">
-                      <Flag size={16} />
-                      Target Grade
-                    </label>
-                    <input
-                      type="text"
-                      value={examForm.targetGrade}
-                      onChange={(e) => setExamForm(prev => ({ ...prev, targetGrade: e.target.value }))}
-                      className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded text-white focus:outline-none focus:ring-2 focus:ring-[#97e7aa]"
-                      placeholder="Empty"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="flex items-center gap-2 text-sm text-gray-300 mb-2">
-                      <FileText size={16} />
-                      Notes
-                    </label>
-                    <textarea
-                      value={examForm.notes}
-                      onChange={(e) => setExamForm(prev => ({ ...prev, notes: e.target.value }))}
-                      className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded text-white focus:outline-none focus:ring-2 focus:ring-[#97e7aa] resize-none"
-                      rows={3}
-                      placeholder="Empty"
-                    />
+                  {/* Attended Checkbox */}
+                  <div className="flex items-center gap-4">
+                    <div className="w-5 h-5 flex items-center justify-center">
+                      <input
+                        type="checkbox"
+                        checked={examForm.attended}
+                        onChange={(e) => setExamForm(prev => ({ ...prev, attended: e.target.checked }))}
+                        className="w-4 h-4 text-[#97e7aa] bg-gray-800 border-gray-600 rounded focus:ring-[#97e7aa]"
+                      />
+                    </div>
+                    <div className="flex-1">
+                      <div className="text-sm text-gray-400">Attended</div>
+                    </div>
                   </div>
                 </div>
               </div>
 
-              <div className="px-6 py-3 flex flex-row-reverse gap-3">
-                <button
-                  onClick={handleSaveExam}
-                  className="px-4 py-2 bg-[#97e7aa] text-white rounded hover:bg-[#75b384] transition-colors"
-                >
-                  Save
-                </button>
-                <button
-                  onClick={() => setIsExamModalOpen(false)}
-                  className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700 transition-colors"
-                >
-                  Cancel
-                </button>
+              {/* Footer with action buttons */}
+              <div className="bg-[#1a1a1a] px-6 py-4 border-t border-gray-700">
+                <div className="flex gap-3">
+                  {selectedExam && (
+                    <button
+                      onClick={handleDeleteExam}
+                      className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm"
+                    >
+                      Delete
+                    </button>
+                  )}
+                  <div className="flex-1"></div>
+                  <button
+                    onClick={() => setIsExamModalOpen(false)}
+                    className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors text-sm"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleSaveExam}
+                    className="px-4 py-2 bg-[#97e7aa] text-white rounded-lg hover:bg-[#75b384] transition-colors text-sm"
+                  >
+                    Save
+                  </button>
+                </div>
               </div>
             </DialogPanel>
           </div>

@@ -152,7 +152,7 @@ const BigCalendar = ({ events = [], onAddEvent, onDeleteEvent }) => {
 
   return (
     <>
-      <div className="w-full bg-[#1a1a1a] rounded-lg p-6">
+      <div className="w-full bg-transparent rounded-lg p-6">
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
@@ -203,7 +203,7 @@ const BigCalendar = ({ events = [], onAddEvent, onDeleteEvent }) => {
           
           {/* Previous Month Days */}
           {prevMonthDays.map(day => (
-            <div key={`prev-${day}`} className="h-32 border-r border-b border-gray-800 bg-gray-900/30 p-2">
+            <div key={`prev-${day}`} className="h-32 border-b border-gray-800 bg-gray-900/30 p-2">
               <span className="text-sm text-gray-600">{day}</span>
             </div>
           ))}
@@ -215,7 +215,7 @@ const BigCalendar = ({ events = [], onAddEvent, onDeleteEvent }) => {
             return (
               <div 
                 key={day} 
-                className="h-32 border-r border-b border-gray-800 p-2 hover:bg-gray-800/30 cursor-pointer relative group bg-gray-900/10"
+                className="h-32 border-b border-gray-800 p-2 hover:bg-gray-800/30 cursor-pointer relative group bg-gray-900/10"
               >
                 <div className="flex items-center justify-between">
                   <span className={`text-sm font-medium ${
@@ -235,7 +235,7 @@ const BigCalendar = ({ events = [], onAddEvent, onDeleteEvent }) => {
                   {dayEvents.map(event => (
                     <div 
                       key={event.id}
-                      className="w-full h-8 bg-gray-600 rounded text-xs text-white px-2 flex items-center truncate cursor-pointer hover:bg-gray-500"
+                      className="w-full h-10 bg-gray-600 rounded text-xs text-white px-2 flex items-center truncate cursor-pointer hover:bg-gray-500"
                       title={`${event.title} ${event.time ? `at ${event.time}` : ''}`}
                       onClick={(e) => handleEventClick(event, e)}
                     >
@@ -249,7 +249,7 @@ const BigCalendar = ({ events = [], onAddEvent, onDeleteEvent }) => {
           
           {/* Next Month Days */}
           {nextMonthDays.map(day => (
-            <div key={`next-${day}`} className="h-32 border-r border-b border-gray-800 bg-gray-900/30 p-2">
+            <div key={`next-${day}`} className="h-32 border-b border-gray-800 bg-gray-900/30 p-2">
               <span className="text-sm text-gray-600">{day}</span>
             </div>
           ))}
@@ -260,7 +260,7 @@ const BigCalendar = ({ events = [], onAddEvent, onDeleteEvent }) => {
       <Dialog open={isModalOpen} onClose={setIsModalOpen} className="relative z-50">
         <DialogBackdrop 
           transition
-          className="fixed inset-0 bg-transparent transition-opacity data-closed:opacity-0 data-enter:duration-300 data-enter:ease-out data-leave:duration-200 data-leave:ease-in"
+          className="fixed inset-0 bg-gray-500/75 transition-opacity data-closed:opacity-0 data-enter:duration-300 data-enter:ease-out data-leave:duration-200 data-leave:ease-in"
         />
         
         <div className="fixed inset-0 z-10 w-screen overflow-y-auto">
