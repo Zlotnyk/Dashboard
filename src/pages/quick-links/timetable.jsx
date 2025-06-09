@@ -176,7 +176,7 @@ function TimetablePage() {
             style={{ width: '80%' }}
           >
             {/* Timetable Content */}
-            <div className='bg-[#1a1a1a] rounded-lg p-6 min-h-[600px]'>
+            <div className='rounded-lg p-6 min-h-[600px]'>
               <div className='flex items-center justify-between mb-6'>
                 <h2 className='text-2xl font-[Libre_Baskerville] italic text-white'>
                   Timetable
@@ -209,7 +209,7 @@ function TimetablePage() {
               {/* Timetable Grid */}
               <div className='grid grid-cols-7 gap-4'>
                 {weekDays.map(day => (
-                  <div key={day} className='bg-[#2a2a2a] rounded-lg p-4 min-h-[400px]'>
+                  <div key={day} className='rounded-lg p-4 min-h-[400px]'>
                     {/* Day Header */}
                     <div className='mb-4'>
                       <h3 className='text-white font-medium text-lg mb-2'>{day}</h3>
