@@ -199,6 +199,9 @@ const RightSidebar = () => {
             </h3>
           </div>
 
+          {/* Horizontal line under header */}
+          <div className="w-full h-px bg-gray-700 mb-4"></div>
+
           <div className="space-y-3">
             {examReminders.map(reminder => (
               <div 
@@ -246,6 +249,9 @@ const RightSidebar = () => {
               Assignment Reminder
             </h3>
           </div>
+
+          {/* Horizontal line under header */}
+          <div className="w-full h-px bg-gray-700 mb-4"></div>
 
           <div className="space-y-3">
             {assignmentReminders.length === 0 ? (
@@ -382,7 +388,7 @@ const RightSidebar = () => {
                         onChange={(e) => setExamForm(prev => ({ ...prev, notes: e.target.value }))}
                         placeholder="Empty"
                         className="w-full bg-transparent text-white text-base border-none outline-none placeholder-gray-500 resize-none"
-                        rows={3}
+                        rows={2}
                       />
                     </div>
                   </div>
@@ -405,7 +411,7 @@ const RightSidebar = () => {
                         type="checkbox"
                         checked={examForm.attended}
                         onChange={(e) => setExamForm(prev => ({ ...prev, attended: e.target.checked }))}
-                        className="w-4 h-4 text-gray-500 bg-gray-800 border-gray-600 rounded focus:ring-gray-500"
+                        className="w-4 h-4 text-gray-500 bg-gray-800 border-gray-600 rounded focus:ring-gray-500 accent-gray-500"
                       />
                     </div>
                     <div className="flex-1">
@@ -534,7 +540,7 @@ const RightSidebar = () => {
                         onChange={(e) => setAssignmentForm(prev => ({ ...prev, notes: e.target.value }))}
                         placeholder="Empty"
                         className="w-full bg-transparent text-white text-base border-none outline-none placeholder-gray-500 resize-none"
-                        rows={3}
+                        rows={2}
                       />
                     </div>
                   </div>
@@ -557,7 +563,7 @@ const RightSidebar = () => {
                         type="checkbox"
                         checked={assignmentForm.submitted}
                         onChange={(e) => setAssignmentForm(prev => ({ ...prev, submitted: e.target.checked }))}
-                        className="w-4 h-4 text-gray-500 bg-gray-800 border-gray-600 rounded focus:ring-gray-500"
+                        className="w-4 h-4 text-gray-500 bg-gray-800 border-gray-600 rounded focus:ring-gray-500 accent-gray-500"
                       />
                     </div>
                     <div className="flex-1">

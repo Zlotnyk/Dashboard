@@ -20,7 +20,8 @@ const BigCalendar = ({ events = [], onAddEvent, onDeleteEvent }) => {
     'July', 'August', 'September', 'October', 'November', 'December'
   ]
   
-  const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+  // Changed to start with Monday
+  const dayNames = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
   
   const currentMonth = currentDate.getMonth()
   const currentYear = currentDate.getFullYear()
@@ -30,7 +31,10 @@ const BigCalendar = ({ events = [], onAddEvent, onDeleteEvent }) => {
   const firstDayOfMonth = new Date(currentYear, currentMonth, 1)
   const lastDayOfMonth = new Date(currentYear, currentMonth + 1, 0)
   const daysInMonth = lastDayOfMonth.getDate()
-  const startingDayOfWeek = firstDayOfMonth.getDay()
+  
+  // Adjust starting day to make Monday = 0
+  let startingDayOfWeek = firstDayOfMonth.getDay()
+  startingDayOfWeek = startingDayOfWeek === 0 ? 6 : startingDayOfWeek - 1
   
   // Get days from previous month to fill the grid
   const daysInPrevMonth = new Date(currentYear, currentMonth, 0).getDate()

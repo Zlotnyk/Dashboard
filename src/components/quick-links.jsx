@@ -6,37 +6,37 @@ const QuickLinks = () => {
     {
       title: 'Course',
       items: [
-        { name: 'Timetable', icon: Clock },
-        { name: 'Course Materials', icon: BookOpen },
-        { name: 'Study Checklist', icon: Target }
+        { name: 'Timetable', icon: Clock, href: '#timetable' },
+        { name: 'Course Materials', icon: BookOpen, href: '#materials' },
+        { name: 'Study Checklist', icon: Target, href: '#checklist' }
       ]
     },
     {
       title: 'Assignments',
       items: [
-        { name: 'Assignment Planner', icon: FileText },
-        { name: 'Study Notebook', icon: BookOpen },
-        { name: 'Important Concepts', icon: Target }
+        { name: 'Assignment Planner', icon: FileText, href: '#assignment-planner' },
+        { name: 'Study Notebook', icon: BookOpen, href: '#notebook' },
+        { name: 'Important Concepts', icon: Target, href: '#concepts' }
       ]
     },
     {
       title: 'Projects',
       items: [
-        { name: 'Project Planner', icon: Target },
-        { name: 'Group Projects', icon: Users }
+        { name: 'Project Planner', icon: Target, href: '#project-planner' },
+        { name: 'Group Projects', icon: Users, href: '#group-projects' }
       ]
     },
     {
       title: 'Writing',
       items: [
-        { name: 'Essay Planner', icon: PenTool }
+        { name: 'Essay Planner', icon: PenTool, href: '#essay-planner' }
       ]
     },
     {
       title: 'Exams',
       items: [
-        { name: 'Exam Preparation', icon: Target },
-        { name: 'Exam Reflection', icon: FileText }
+        { name: 'Exam Preparation', icon: Target, href: '#exam-prep' },
+        { name: 'Exam Reflection', icon: FileText, href: '#exam-reflection' }
       ]
     }
   ]
@@ -55,15 +55,16 @@ const QuickLinks = () => {
               {section.items.map((item, itemIndex) => {
                 const IconComponent = item.icon
                 return (
-                  <div 
+                  <a
                     key={itemIndex}
+                    href={item.href}
                     className="flex items-center gap-3 p-2 hover:bg-gray-800/50 rounded cursor-pointer transition-colors group"
                   >
                     <IconComponent size={16} className="text-gray-400 group-hover:text-[#97e7aa]" />
                     <span className="text-gray-300 text-sm group-hover:text-white">
                       {item.name}
                     </span>
-                  </div>
+                  </a>
                 )
               })}
             </div>
