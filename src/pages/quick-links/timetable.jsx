@@ -22,6 +22,7 @@ function TimetablePage() {
   })
   const [isDrawerOpen, setIsDrawerOpen] = useState(false)
   const [selectedDay, setSelectedDay] = useState('')
+  const [selectedClass, setSelectedClass] = useState(null)
   const [validationErrors, setValidationErrors] = useState({})
   const [classForm, setClassForm] = useState({
     title: '',
@@ -89,6 +90,7 @@ function TimetablePage() {
 
   const handleAddClass = (day) => {
     setSelectedDay(day)
+    setSelectedClass(null)
     setValidationErrors({})
     setClassForm({
       title: 'New page',
@@ -101,25 +103,60 @@ function TimetablePage() {
     setIsDrawerOpen(true)
   }
 
+  const handleEditClass = (cls) => {
+    setSelectedClass(cls)
+    setSelectedDay(cls.weekDay)
+    setValidationErrors({})
+    setClassForm({
+      title: cls.title,
+      weekDay: cls.weekDay,
+      classroom: cls.classroom || '',
+      professor: cls.professor || '',
+      startTime: cls.startTime || '',
+      endTime: cls.endTime || ''
+    })
+    setIsDrawerOpen(true)
+  }
+
   const handleSaveClass = () => {
     if (!validateForm()) {
       return
     }
 
-    const newClass = {
-      id: crypto.randomUUID(),
-      title: classForm.title,
-      weekDay: classForm.weekDay,
-      classroom: classForm.classroom,
-      professor: classForm.professor,
-      startTime: classForm.startTime,
-      endTime: classForm.endTime
-    }
+    if (selectedClass) {
+      // Update existing class
+      const updatedClass = {
+        ...selectedClass,
+        title: classForm.title,
+        weekDay: classForm.weekDay,
+        classroom: classForm.classroom,
+        professor: classForm.professor,
+        startTime: classForm.startTime,
+        endTime: classForm.endTime
+      }
 
-    setSchedule(prev => ({
-      ...prev,
-      [classForm.weekDay]: [...prev[classForm.weekDay], newClass].sort((a, b) => a.startTime.localeCompare(b.startTime))
-    }))
+      setSchedule(prev => ({
+        ...prev,
+        [selectedClass.weekDay]: prev[selectedClass.weekDay].filter(cls => cls.id !== selectedClass.id),
+        [classForm.weekDay]: [...prev[classForm.weekDay], updatedClass].sort((a, b) => a.startTime.localeCompare(b.startTime))
+      }))
+    } else {
+      // Create new class
+      const newClass = {
+        id: crypto.randomUUID(),
+        title: classForm.title,
+        weekDay: classForm.weekDay,
+        classroom: classForm.classroom,
+        professor: classForm.professor,
+        startTime: classForm.startTime,
+        endTime: classForm.endTime
+      }
+
+      setSchedule(prev => ({
+        ...prev,
+        [classForm.weekDay]: [...prev[classForm.weekDay], newClass].sort((a, b) => a.startTime.localeCompare(b.startTime))
+      }))
+    }
 
     setIsDrawerOpen(false)
     setValidationErrors({})
@@ -131,13 +168,26 @@ function TimetablePage() {
       startTime: '',
       endTime: ''
     })
+    setSelectedClass(null)
   }
 
-  const handleDeleteClass = (day, classId) => {
+  const handleDeleteClass = (day, classId, e) => {
+    e.stopPropagation() // Prevent triggering edit when clicking delete
     setSchedule(prev => ({
       ...prev,
       [day]: prev[day].filter(cls => cls.id !== classId)
     }))
+  }
+
+  const handleDeleteCurrentClass = () => {
+    if (selectedClass) {
+      setSchedule(prev => ({
+        ...prev,
+        [selectedClass.weekDay]: prev[selectedClass.weekDay].filter(cls => cls.id !== selectedClass.id)
+      }))
+      setIsDrawerOpen(false)
+      setSelectedClass(null)
+    }
   }
 
   const formatTime = (time) => {
@@ -197,14 +247,15 @@ function TimetablePage() {
                       {schedule[day].map(cls => (
                         <div 
                           key={cls.id}
-                          className='bg-[#3a3a3a] rounded-lg p-3 hover:bg-[#4a4a4a] transition-colors group'
+                          className='bg-[#3a3a3a] rounded-lg p-3 hover:bg-[#4a4a4a] transition-colors group cursor-pointer'
+                          onClick={() => handleEditClass(cls)}
                         >
                           <div className='flex items-center justify-between mb-2'>
                             <h4 className='text-white text-sm font-medium truncate flex-1'>
                               {cls.title}
                             </h4>
                             <button
-                              onClick={() => handleDeleteClass(day, cls.id)}
+                              onClick={(e) => handleDeleteClass(day, cls.id, e)}
                               className='opacity-0 group-hover:opacity-100 text-red-400 hover:text-red-300 transition-all'
                             >
                               <X size={14} />
@@ -283,10 +334,35 @@ function TimetablePage() {
 
                 <div className="flex h-full flex-col overflow-y-scroll bg-[#1a1a1a] border-l border-gray-700 shadow-2xl">
                   <div className="px-4 sm:px-6 py-6 border-b border-gray-700">
-                    <DialogTitle className="text-lg font-semibold text-white">New page</DialogTitle>
+                    <DialogTitle className="text-lg font-semibold text-white">
+                      {selectedClass ? 'Edit Class' : 'New page'}
+                    </DialogTitle>
                   </div>
 
                   <div className="flex-1 px-4 sm:px-6 space-y-6 overflow-y-auto py-6">
+                    {/* Title */}
+                    <div>
+                      <label className="flex items-center gap-2 text-sm font-medium text-gray-300 mb-2">
+                        <Calendar size={16} />
+                        Title
+                      </label>
+                      <input
+                        type="text"
+                        value={classForm.title}
+                        onChange={(e) => handleFormChange('title', e.target.value)}
+                        className={`w-full px-3 py-3 bg-transparent border-none outline-none text-white placeholder-gray-400 focus:outline-none transition-colors ${
+                          validationErrors.title ? 'text-red-400' : ''
+                        }`}
+                        placeholder="Enter class title"
+                      />
+                      {validationErrors.title && (
+                        <div className="flex items-center gap-2 mt-1">
+                          <AlertCircle size={14} className="text-red-400" />
+                          <span className="text-red-400 text-sm">{validationErrors.title}</span>
+                        </div>
+                      )}
+                    </div>
+
                     {/* Week Day */}
                     <div>
                       <label className="flex items-center gap-2 text-sm font-medium text-gray-300 mb-2">
@@ -394,6 +470,14 @@ function TimetablePage() {
 
                   {/* Footer */}
                   <div className="px-4 sm:px-6 py-4 border-t border-gray-700 flex gap-3">
+                    {selectedClass && (
+                      <button
+                        onClick={handleDeleteCurrentClass}
+                        className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                      >
+                        Delete
+                      </button>
+                    )}
                     <button
                       type="button"
                       onClick={() => setIsDrawerOpen(false)}
@@ -405,7 +489,7 @@ function TimetablePage() {
                       onClick={handleSaveClass}
                       className="flex-1 px-4 py-2 bg-accent text-white rounded-lg hover:bg-accent-80 transition-colors"
                     >
-                      Save
+                      {selectedClass ? 'Update' : 'Save'}
                     </button>
                   </div>
                 </div>
