@@ -391,246 +391,244 @@ const TripPlanner = () => {
           className="fixed inset-0 bg-black/50"
         />
         
-        <div className="fixed inset-0 z-10 w-screen overflow-y-auto">
-          <div className="flex min-h-full items-center justify-center p-4">
-            <DialogPanel 
-              className="relative transform overflow-hidden rounded-lg bg-[#1a1a1a] text-left shadow-xl w-full max-w-lg"
-            >
-              <div className="bg-[#1a1a1a] px-6 pt-6 pb-4">
-                <div className="flex items-center justify-between mb-8">
+        <div className="fixed inset-0 z-10 flex items-center justify-center p-4">
+          <DialogPanel 
+            className="relative transform overflow-hidden rounded-lg bg-[#1a1a1a] text-left shadow-xl w-full max-w-lg"
+          >
+            <div className="bg-[#1a1a1a] px-6 pt-6 pb-4">
+              <div className="flex items-center justify-between mb-8">
+                <div className="flex-1">
+                  <input
+                    type="text"
+                    value={tripForm.title}
+                    onChange={(e) => handleFormChange('title', e.target.value)}
+                    className={`text-2xl font-medium bg-transparent border-none outline-none flex-1 w-full ${
+                      validationErrors.title ? 'text-red-400' : 'text-white'
+                    }`}
+                    placeholder="New page"
+                  />
+                  {validationErrors.title && (
+                    <div className="flex items-center gap-2 mt-1">
+                      <AlertCircle size={14} className="text-red-400" />
+                      <span className="text-red-400 text-sm">{validationErrors.title}</span>
+                    </div>
+                  )}
+                </div>
+                <button
+                  onClick={() => setIsModalOpen(false)}
+                  className="text-gray-400 hover:text-white ml-4"
+                >
+                  <X size={24} />
+                </button>
+              </div>
+
+              <div className="space-y-6">
+                {/* Destination Field */}
+                <div className="flex items-start gap-4">
+                  <MapPin size={20} className="text-gray-400 flex-shrink-0 mt-1" />
                   <div className="flex-1">
+                    <div className="text-sm text-gray-400 mb-1">Destination</div>
                     <input
                       type="text"
-                      value={tripForm.title}
-                      onChange={(e) => handleFormChange('title', e.target.value)}
-                      className={`text-2xl font-medium bg-transparent border-none outline-none flex-1 w-full ${
-                        validationErrors.title ? 'text-red-400' : 'text-white'
+                      value={tripForm.destination}
+                      onChange={(e) => handleFormChange('destination', e.target.value)}
+                      placeholder="Empty"
+                      className={`w-full bg-transparent text-base border-none outline-none placeholder-gray-500 ${
+                        validationErrors.destination ? 'text-red-400' : 'text-white'
                       }`}
-                      placeholder="New page"
                     />
-                    {validationErrors.title && (
+                    {validationErrors.destination && (
                       <div className="flex items-center gap-2 mt-1">
                         <AlertCircle size={14} className="text-red-400" />
-                        <span className="text-red-400 text-sm">{validationErrors.title}</span>
+                        <span className="text-red-400 text-sm">{validationErrors.destination}</span>
                       </div>
                     )}
                   </div>
-                  <button
-                    onClick={() => setIsModalOpen(false)}
-                    className="text-gray-400 hover:text-white ml-4"
-                  >
-                    <X size={24} />
-                  </button>
                 </div>
 
-                <div className="space-y-6">
-                  {/* Destination Field */}
-                  <div className="flex items-start gap-4">
-                    <MapPin size={20} className="text-gray-400 flex-shrink-0 mt-1" />
-                    <div className="flex-1">
-                      <div className="text-sm text-gray-400 mb-1">Destination</div>
-                      <input
-                        type="text"
-                        value={tripForm.destination}
-                        onChange={(e) => handleFormChange('destination', e.target.value)}
-                        placeholder="Empty"
-                        className={`w-full bg-transparent text-base border-none outline-none placeholder-gray-500 ${
-                          validationErrors.destination ? 'text-red-400' : 'text-white'
-                        }`}
-                      />
-                      {validationErrors.destination && (
-                        <div className="flex items-center gap-2 mt-1">
-                          <AlertCircle size={14} className="text-red-400" />
-                          <span className="text-red-400 text-sm">{validationErrors.destination}</span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Start Date Field */}
-                  <div className="flex items-start gap-4">
-                    <Calendar size={20} className="text-gray-400 flex-shrink-0 mt-1" />
-                    <div className="flex-1">
-                      <div className="text-sm text-gray-400 mb-1">Start date</div>
-                      <input
-                        type="date"
-                        value={tripForm.startDate}
-                        onChange={(e) => handleFormChange('startDate', e.target.value)}
-                        className={`w-full bg-transparent text-base border-none outline-none ${
-                          validationErrors.startDate ? 'text-red-400' : 'text-white'
-                        }`}
-                      />
-                      {validationErrors.startDate && (
-                        <div className="flex items-center gap-2 mt-1">
-                          <AlertCircle size={14} className="text-red-400" />
-                          <span className="text-red-400 text-sm">{validationErrors.startDate}</span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* End Date Field */}
-                  <div className="flex items-start gap-4">
-                    <Calendar size={20} className="text-gray-400 flex-shrink-0 mt-1" />
-                    <div className="flex-1">
-                      <div className="text-sm text-gray-400 mb-1">End date</div>
-                      <input
-                        type="date"
-                        value={tripForm.endDate}
-                        onChange={(e) => handleFormChange('endDate', e.target.value)}
-                        min={tripForm.startDate}
-                        className={`w-full bg-transparent text-base border-none outline-none ${
-                          validationErrors.endDate ? 'text-red-400' : 'text-white'
-                        }`}
-                      />
-                      {validationErrors.endDate && (
-                        <div className="flex items-center gap-2 mt-1">
-                          <AlertCircle size={14} className="text-red-400" />
-                          <span className="text-red-400 text-sm">{validationErrors.endDate}</span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Duration Display */}
-                  {tripForm.startDate && tripForm.endDate && !validationErrors.startDate && !validationErrors.endDate && (
-                    <div className="flex items-center gap-4">
-                      <Clock size={20} className="text-gray-400 flex-shrink-0" />
-                      <div className="flex-1">
-                        <div className="text-sm text-gray-400 mb-1">Duration (Days)</div>
-                        <div className="text-white text-base">
-                          {calculateDuration(tripForm.startDate, tripForm.endDate)} days
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Status Field */}
-                  <div className="flex items-center gap-4">
-                    <div 
-                      className="w-5 h-5 rounded-full flex-shrink-0"
-                      style={{ backgroundColor: getStatusColor(tripForm.status) }}
+                {/* Start Date Field */}
+                <div className="flex items-start gap-4">
+                  <Calendar size={20} className="text-gray-400 flex-shrink-0 mt-1" />
+                  <div className="flex-1">
+                    <div className="text-sm text-gray-400 mb-1">Start date</div>
+                    <input
+                      type="date"
+                      value={tripForm.startDate}
+                      onChange={(e) => handleFormChange('startDate', e.target.value)}
+                      className={`w-full bg-transparent text-base border-none outline-none ${
+                        validationErrors.startDate ? 'text-red-400' : 'text-white'
+                      }`}
                     />
-                    <div className="flex-1">
-                      <div className="text-sm text-gray-400 mb-1">Status</div>
-                      <select
-                        value={tripForm.status}
-                        onChange={(e) => handleFormChange('status', e.target.value)}
-                        className="w-full bg-transparent text-white text-base border-none outline-none"
-                      >
-                        {statusOptions.map(option => (
-                          <option key={option.value} value={option.value} className="bg-[#1a1a1a]">
-                            {option.label}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                  </div>
-
-                  {/* Budget Field */}
-                  <div className="flex items-center gap-4">
-                    <span className="text-gray-400 text-xl flex-shrink-0">$</span>
-                    <div className="flex-1">
-                      <div className="text-sm text-gray-400 mb-1">Budget</div>
-                      <input
-                        type="number"
-                        value={tripForm.budget}
-                        onChange={(e) => handleFormChange('budget', e.target.value)}
-                        placeholder="Empty"
-                        className="w-full bg-transparent text-white text-base border-none outline-none placeholder-gray-500"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Photos Section */}
-                  <div className="flex items-start gap-4">
-                    <Camera size={20} className="text-gray-400 flex-shrink-0 mt-1" />
-                    <div className="flex-1">
-                      <div className="text-sm text-gray-400 mb-2">Photos</div>
-                      
-                      {/* Photo Upload */}
-                      <div className="mb-3">
-                        <label className="flex items-center gap-2 px-3 py-2 bg-gray-800 border border-gray-600 rounded-lg cursor-pointer hover:bg-gray-700 transition-colors">
-                          <Upload size={16} className="text-gray-400" />
-                          <span className="text-gray-300 text-sm">Upload Photos</span>
-                          <input
-                            type="file"
-                            multiple
-                            accept="image/*"
-                            onChange={handlePhotoUpload}
-                            className="hidden"
-                          />
-                        </label>
+                    {validationErrors.startDate && (
+                      <div className="flex items-center gap-2 mt-1">
+                        <AlertCircle size={14} className="text-red-400" />
+                        <span className="text-red-400 text-sm">{validationErrors.startDate}</span>
                       </div>
-
-                      {/* Photo Grid */}
-                      {tripForm.photos.length > 0 && (
-                        <div className="grid grid-cols-3 gap-2">
-                          {tripForm.photos.map(photo => (
-                            <div key={photo.id} className="relative group">
-                              <img 
-                                src={photo.url} 
-                                alt={photo.name}
-                                className="w-full h-16 object-cover rounded"
-                              />
-                              <button
-                                onClick={() => handleRemovePhoto(photo.id)}
-                                className="absolute -top-1 -right-1 w-5 h-5 bg-red-600 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                              >
-                                <X size={12} />
-                              </button>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
+                    )}
                   </div>
+                </div>
 
-                  {/* Notes Field */}
-                  <div className="flex items-start gap-4">
-                    <Edit size={20} className="text-gray-400 flex-shrink-0 mt-1" />
+                {/* End Date Field */}
+                <div className="flex items-start gap-4">
+                  <Calendar size={20} className="text-gray-400 flex-shrink-0 mt-1" />
+                  <div className="flex-1">
+                    <div className="text-sm text-gray-400 mb-1">End date</div>
+                    <input
+                      type="date"
+                      value={tripForm.endDate}
+                      onChange={(e) => handleFormChange('endDate', e.target.value)}
+                      min={tripForm.startDate}
+                      className={`w-full bg-transparent text-base border-none outline-none ${
+                        validationErrors.endDate ? 'text-red-400' : 'text-white'
+                      }`}
+                    />
+                    {validationErrors.endDate && (
+                      <div className="flex items-center gap-2 mt-1">
+                        <AlertCircle size={14} className="text-red-400" />
+                        <span className="text-red-400 text-sm">{validationErrors.endDate}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Duration Display */}
+                {tripForm.startDate && tripForm.endDate && !validationErrors.startDate && !validationErrors.endDate && (
+                  <div className="flex items-center gap-4">
+                    <Clock size={20} className="text-gray-400 flex-shrink-0" />
                     <div className="flex-1">
-                      <div className="text-sm text-gray-400 mb-1">Notes</div>
-                      <textarea
-                        value={tripForm.notes}
-                        onChange={(e) => handleFormChange('notes', e.target.value)}
-                        placeholder="Empty"
-                        rows={3}
-                        className="w-full bg-transparent text-white text-base border-none outline-none placeholder-gray-500 resize-none"
-                      />
+                      <div className="text-sm text-gray-400 mb-1">Duration (Days)</div>
+                      <div className="text-white text-base">
+                        {calculateDuration(tripForm.startDate, tripForm.endDate)} days
+                      </div>
                     </div>
+                  </div>
+                )}
+
+                {/* Status Field */}
+                <div className="flex items-center gap-4">
+                  <div 
+                    className="w-5 h-5 rounded-full flex-shrink-0"
+                    style={{ backgroundColor: getStatusColor(tripForm.status) }}
+                  />
+                  <div className="flex-1">
+                    <div className="text-sm text-gray-400 mb-1">Status</div>
+                    <select
+                      value={tripForm.status}
+                      onChange={(e) => handleFormChange('status', e.target.value)}
+                      className="w-full bg-transparent text-white text-base border-none outline-none"
+                    >
+                      {statusOptions.map(option => (
+                        <option key={option.value} value={option.value} className="bg-[#1a1a1a]">
+                          {option.label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                {/* Budget Field */}
+                <div className="flex items-center gap-4">
+                  <span className="text-gray-400 text-xl flex-shrink-0">$</span>
+                  <div className="flex-1">
+                    <div className="text-sm text-gray-400 mb-1">Budget</div>
+                    <input
+                      type="number"
+                      value={tripForm.budget}
+                      onChange={(e) => handleFormChange('budget', e.target.value)}
+                      placeholder="Empty"
+                      className="w-full bg-transparent text-white text-base border-none outline-none placeholder-gray-500"
+                    />
+                  </div>
+                </div>
+
+                {/* Photos Section */}
+                <div className="flex items-start gap-4">
+                  <Camera size={20} className="text-gray-400 flex-shrink-0 mt-1" />
+                  <div className="flex-1">
+                    <div className="text-sm text-gray-400 mb-2">Photos</div>
+                    
+                    {/* Photo Upload */}
+                    <div className="mb-3">
+                      <label className="flex items-center gap-2 px-3 py-2 bg-gray-800 border border-gray-600 rounded-lg cursor-pointer hover:bg-gray-700 transition-colors">
+                        <Upload size={16} className="text-gray-400" />
+                        <span className="text-gray-300 text-sm">Upload Photos</span>
+                        <input
+                          type="file"
+                          multiple
+                          accept="image/*"
+                          onChange={handlePhotoUpload}
+                          className="hidden"
+                        />
+                      </label>
+                    </div>
+
+                    {/* Photo Grid */}
+                    {tripForm.photos.length > 0 && (
+                      <div className="grid grid-cols-3 gap-2">
+                        {tripForm.photos.map(photo => (
+                          <div key={photo.id} className="relative group">
+                            <img 
+                              src={photo.url} 
+                              alt={photo.name}
+                              className="w-full h-16 object-cover rounded"
+                            />
+                            <button
+                              onClick={() => handleRemovePhoto(photo.id)}
+                              className="absolute -top-1 -right-1 w-5 h-5 bg-red-600 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                            >
+                              <X size={12} />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Notes Field */}
+                <div className="flex items-start gap-4">
+                  <Edit size={20} className="text-gray-400 flex-shrink-0 mt-1" />
+                  <div className="flex-1">
+                    <div className="text-sm text-gray-400 mb-1">Notes</div>
+                    <textarea
+                      value={tripForm.notes}
+                      onChange={(e) => handleFormChange('notes', e.target.value)}
+                      placeholder="Empty"
+                      rows={3}
+                      className="w-full bg-transparent text-white text-base border-none outline-none placeholder-gray-500 resize-none"
+                    />
                   </div>
                 </div>
               </div>
+            </div>
 
-              {/* Footer with action buttons */}
-              <div className="bg-[#1a1a1a] px-6 py-4 border-t border-gray-700">
-                <div className="flex gap-3">
-                  {selectedTrip && (
-                    <button
-                      onClick={handleDeleteTrip}
-                      className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm"
-                    >
-                      Delete
-                    </button>
-                  )}
-                  <div className="flex-1"></div>
+            {/* Footer with action buttons */}
+            <div className="bg-[#1a1a1a] px-6 py-4 border-t border-gray-700">
+              <div className="flex gap-3">
+                {selectedTrip && (
                   <button
-                    onClick={() => setIsModalOpen(false)}
-                    className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors text-sm"
+                    onClick={handleDeleteTrip}
+                    className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm"
                   >
-                    Cancel
+                    Delete
                   </button>
-                  <button
-                    onClick={handleSaveTrip}
-                    className="px-4 py-2 bg-accent text-white rounded-lg hover:bg-accent-80 transition-colors text-sm"
-                  >
-                    Save
-                  </button>
-                </div>
+                )}
+                <div className="flex-1"></div>
+                <button
+                  onClick={() => setIsModalOpen(false)}
+                  className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors text-sm"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleSaveTrip}
+                  className="px-4 py-2 bg-accent text-white rounded-lg hover:bg-accent-80 transition-colors text-sm"
+                >
+                  Save
+                </button>
               </div>
-            </DialogPanel>
-          </div>
+            </div>
+          </DialogPanel>
         </div>
       </Dialog>
     </>

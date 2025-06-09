@@ -378,162 +378,160 @@ const RightSidebar = () => {
           className="fixed inset-0 bg-black/50"
         />
         
-        <div className="fixed inset-0 z-10 w-screen overflow-y-auto">
-          <div className="flex min-h-full items-center justify-center p-4">
-            <DialogPanel 
-              className="relative transform overflow-hidden rounded-lg bg-[#1a1a1a] text-left shadow-xl w-full max-w-lg"
-            >
-              <div className="bg-[#1a1a1a] px-6 pt-6 pb-4">
-                <div className="flex items-center justify-between mb-8">
+        <div className="fixed inset-0 z-10 flex items-center justify-center p-4">
+          <DialogPanel 
+            className="relative transform overflow-hidden rounded-lg bg-[#1a1a1a] text-left shadow-xl w-full max-w-lg"
+          >
+            <div className="bg-[#1a1a1a] px-6 pt-6 pb-4">
+              <div className="flex items-center justify-between mb-8">
+                <div className="flex-1">
+                  <input
+                    type="text"
+                    value={examForm.title}
+                    onChange={(e) => handleExamFormChange('title', e.target.value)}
+                    className={`text-2xl font-medium bg-transparent border-none outline-none flex-1 w-full ${
+                      examValidationErrors.title ? 'text-red-400' : 'text-white'
+                    }`}
+                    placeholder="New page"
+                  />
+                  {examValidationErrors.title && (
+                    <div className="flex items-center gap-2 mt-1">
+                      <AlertCircle size={14} className="text-red-400" />
+                      <span className="text-red-400 text-sm">{examValidationErrors.title}</span>
+                    </div>
+                  )}
+                </div>
+                <button
+                  onClick={() => setIsExamModalOpen(false)}
+                  className="text-gray-400 hover:text-white ml-4"
+                >
+                  <X size={24} />
+                </button>
+              </div>
+
+              <div className="space-y-4">
+                {/* Date Field */}
+                <div className="flex items-start gap-4">
+                  <Calendar size={20} className="text-gray-400 flex-shrink-0 mt-1" />
                   <div className="flex-1">
+                    <div className="text-sm text-gray-400 mb-1">Date</div>
                     <input
-                      type="text"
-                      value={examForm.title}
-                      onChange={(e) => handleExamFormChange('title', e.target.value)}
-                      className={`text-2xl font-medium bg-transparent border-none outline-none flex-1 w-full ${
-                        examValidationErrors.title ? 'text-red-400' : 'text-white'
+                      type="date"
+                      value={examForm.date}
+                      onChange={(e) => handleExamFormChange('date', e.target.value)}
+                      className={`w-full bg-transparent text-base border-none outline-none cursor-pointer ${
+                        examValidationErrors.date ? 'text-red-400' : 'text-white'
                       }`}
-                      placeholder="New page"
                     />
-                    {examValidationErrors.title && (
+                    {examValidationErrors.date && (
                       <div className="flex items-center gap-2 mt-1">
                         <AlertCircle size={14} className="text-red-400" />
-                        <span className="text-red-400 text-sm">{examValidationErrors.title}</span>
+                        <span className="text-red-400 text-sm">{examValidationErrors.date}</span>
                       </div>
                     )}
                   </div>
-                  <button
-                    onClick={() => setIsExamModalOpen(false)}
-                    className="text-gray-400 hover:text-white ml-4"
-                  >
-                    <X size={24} />
-                  </button>
                 </div>
 
-                <div className="space-y-4">
-                  {/* Date Field */}
-                  <div className="flex items-start gap-4">
-                    <Calendar size={20} className="text-gray-400 flex-shrink-0 mt-1" />
-                    <div className="flex-1">
-                      <div className="text-sm text-gray-400 mb-1">Date</div>
-                      <input
-                        type="date"
-                        value={examForm.date}
-                        onChange={(e) => handleExamFormChange('date', e.target.value)}
-                        className={`w-full bg-transparent text-base border-none outline-none cursor-pointer ${
-                          examValidationErrors.date ? 'text-red-400' : 'text-white'
-                        }`}
-                      />
-                      {examValidationErrors.date && (
-                        <div className="flex items-center gap-2 mt-1">
-                          <AlertCircle size={14} className="text-red-400" />
-                          <span className="text-red-400 text-sm">{examValidationErrors.date}</span>
-                        </div>
-                      )}
+                {/* Time Field */}
+                <div className="flex items-center gap-4">
+                  <Clock size={20} className="text-gray-400 flex-shrink-0 cursor-pointer" />
+                  <div className="flex-1">
+                    <div className="text-sm text-gray-400 mb-1">Time</div>
+                    <input
+                      type="time"
+                      value={examForm.time}
+                      onChange={(e) => handleExamFormChange('time', e.target.value)}
+                      placeholder="Empty"
+                      className="w-full bg-transparent text-white text-base border-none outline-none placeholder-gray-500 cursor-pointer"
+                    />
+                  </div>
+                </div>
+
+                {/* Location Field */}
+                <div className="flex items-center gap-4">
+                  <MapPin size={20} className="text-gray-400 flex-shrink-0" />
+                  <div className="flex-1">
+                    <div className="text-sm text-gray-400 mb-1">Location</div>
+                    <input
+                      type="text"
+                      value={examForm.location}
+                      onChange={(e) => handleExamFormChange('location', e.target.value)}
+                      placeholder="Empty"
+                      className="w-full bg-transparent text-white text-base border-none outline-none placeholder-gray-500"
+                    />
+                  </div>
+                </div>
+
+                {/* Notes Field */}
+                <div className="flex items-start gap-4">
+                  <FileText size={20} className="text-gray-400 flex-shrink-0 mt-1" />
+                  <div className="flex-1">
+                    <div className="text-sm text-gray-400 mb-1">Notes</div>
+                    <input
+                      type="text"
+                      value={examForm.notes}
+                      onChange={(e) => handleExamFormChange('notes', e.target.value)}
+                      placeholder="Empty"
+                      className="w-full bg-transparent text-white text-base border-none outline-none placeholder-gray-500"
+                    />
+                  </div>
+                </div>
+
+                {/* When Exam Field */}
+                <div className="flex items-center gap-4">
+                  <span className="text-gray-500 text-base">⚠️</span>
+                  <div className="flex-1">
+                    <div className="text-sm text-gray-400 mb-1">When Exam</div>
+                    <div className="text-gray-500 text-base">
+                      {examForm.date ? calculateDaysUntil(examForm.date) : 'Невизначено'}
                     </div>
                   </div>
+                </div>
 
-                  {/* Time Field */}
-                  <div className="flex items-center gap-4">
-                    <Clock size={20} className="text-gray-400 flex-shrink-0 cursor-pointer" />
-                    <div className="flex-1">
-                      <div className="text-sm text-gray-400 mb-1">Time</div>
-                      <input
-                        type="time"
-                        value={examForm.time}
-                        onChange={(e) => handleExamFormChange('time', e.target.value)}
-                        placeholder="Empty"
-                        className="w-full bg-transparent text-white text-base border-none outline-none placeholder-gray-500 cursor-pointer"
-                      />
-                    </div>
+                {/* Attended Checkbox */}
+                <div className="flex items-center gap-4">
+                  <div className="w-5 h-5 flex items-center justify-center">
+                    <input
+                      type="checkbox"
+                      checked={examForm.attended}
+                      onChange={(e) => handleExamFormChange('attended', e.target.checked)}
+                      className="w-4 h-4 text-gray-500 bg-gray-800 border-gray-600 rounded focus:ring-gray-500 accent-gray-500"
+                    />
                   </div>
-
-                  {/* Location Field */}
-                  <div className="flex items-center gap-4">
-                    <MapPin size={20} className="text-gray-400 flex-shrink-0" />
-                    <div className="flex-1">
-                      <div className="text-sm text-gray-400 mb-1">Location</div>
-                      <input
-                        type="text"
-                        value={examForm.location}
-                        onChange={(e) => handleExamFormChange('location', e.target.value)}
-                        placeholder="Empty"
-                        className="w-full bg-transparent text-white text-base border-none outline-none placeholder-gray-500"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Notes Field */}
-                  <div className="flex items-start gap-4">
-                    <FileText size={20} className="text-gray-400 flex-shrink-0 mt-1" />
-                    <div className="flex-1">
-                      <div className="text-sm text-gray-400 mb-1">Notes</div>
-                      <input
-                        type="text"
-                        value={examForm.notes}
-                        onChange={(e) => handleExamFormChange('notes', e.target.value)}
-                        placeholder="Empty"
-                        className="w-full bg-transparent text-white text-base border-none outline-none placeholder-gray-500"
-                      />
-                    </div>
-                  </div>
-
-                  {/* When Exam Field */}
-                  <div className="flex items-center gap-4">
-                    <span className="text-gray-500 text-base">⚠️</span>
-                    <div className="flex-1">
-                      <div className="text-sm text-gray-400 mb-1">When Exam</div>
-                      <div className="text-gray-500 text-base">
-                        {examForm.date ? calculateDaysUntil(examForm.date) : 'Невизначено'}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Attended Checkbox */}
-                  <div className="flex items-center gap-4">
-                    <div className="w-5 h-5 flex items-center justify-center">
-                      <input
-                        type="checkbox"
-                        checked={examForm.attended}
-                        onChange={(e) => handleExamFormChange('attended', e.target.checked)}
-                        className="w-4 h-4 text-gray-500 bg-gray-800 border-gray-600 rounded focus:ring-gray-500 accent-gray-500"
-                      />
-                    </div>
-                    <div className="flex-1">
-                      <div className="text-sm text-gray-400">Attended</div>
-                    </div>
+                  <div className="flex-1">
+                    <div className="text-sm text-gray-400">Attended</div>
                   </div>
                 </div>
               </div>
+            </div>
 
-              {/* Footer with action buttons */}
-              <div className="bg-[#1a1a1a] px-6 py-4 border-t border-gray-700">
-                <div className="flex gap-3">
-                  {selectedExam && (
-                    <button
-                      onClick={handleDeleteExam}
-                      className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm"
-                    >
-                      Delete
-                    </button>
-                  )}
-                  <div className="flex-1"></div>
+            {/* Footer with action buttons */}
+            <div className="bg-[#1a1a1a] px-6 py-4 border-t border-gray-700">
+              <div className="flex gap-3">
+                {selectedExam && (
                   <button
-                    onClick={() => setIsExamModalOpen(false)}
-                    className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors text-sm"
+                    onClick={handleDeleteExam}
+                    className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm"
                   >
-                    Cancel
+                    Delete
                   </button>
-                  <button
-                    onClick={handleSaveExam}
-                    className="px-4 py-2 bg-accent text-white rounded-lg hover:bg-accent-80 transition-colors text-sm"
-                  >
-                    Save
-                  </button>
-                </div>
+                )}
+                <div className="flex-1"></div>
+                <button
+                  onClick={() => setIsExamModalOpen(false)}
+                  className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors text-sm"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleSaveExam}
+                  className="px-4 py-2 bg-accent text-white rounded-lg hover:bg-accent-80 transition-colors text-sm"
+                >
+                  Save
+                </button>
               </div>
-            </DialogPanel>
-          </div>
+            </div>
+          </DialogPanel>
         </div>
       </Dialog>
 
@@ -547,151 +545,149 @@ const RightSidebar = () => {
           className="fixed inset-0 bg-black/50"
         />
         
-        <div className="fixed inset-0 z-10 w-screen overflow-y-auto">
-          <div className="flex min-h-full items-center justify-center p-4">
-            <DialogPanel 
-              className="relative transform overflow-hidden rounded-lg bg-[#1a1a1a] text-left shadow-xl w-full max-w-lg"
-            >
-              <div className="bg-[#1a1a1a] px-6 pt-6 pb-4">
-                <div className="flex items-center justify-between mb-8">
+        <div className="fixed inset-0 z-10 flex items-center justify-center p-4">
+          <DialogPanel 
+            className="relative transform overflow-hidden rounded-lg bg-[#1a1a1a] text-left shadow-xl w-full max-w-lg"
+          >
+            <div className="bg-[#1a1a1a] px-6 pt-6 pb-4">
+              <div className="flex items-center justify-between mb-8">
+                <div className="flex-1">
+                  <input
+                    type="text"
+                    value={assignmentForm.title}
+                    onChange={(e) => handleAssignmentFormChange('title', e.target.value)}
+                    className={`text-2xl font-medium bg-transparent border-none outline-none flex-1 w-full ${
+                      assignmentValidationErrors.title ? 'text-red-400' : 'text-white'
+                    }`}
+                    placeholder="New page"
+                  />
+                  {assignmentValidationErrors.title && (
+                    <div className="flex items-center gap-2 mt-1">
+                      <AlertCircle size={14} className="text-red-400" />
+                      <span className="text-red-400 text-sm">{assignmentValidationErrors.title}</span>
+                    </div>
+                  )}
+                </div>
+                <button
+                  onClick={() => setIsAssignmentModalOpen(false)}
+                  className="text-gray-400 hover:text-white ml-4"
+                >
+                  <X size={24} />
+                </button>
+              </div>
+
+              <div className="space-y-4">
+                {/* Due Date Field */}
+                <div className="flex items-start gap-4">
+                  <Calendar size={20} className="text-gray-400 flex-shrink-0 mt-1" />
                   <div className="flex-1">
+                    <div className="text-sm text-gray-400 mb-1">Due Date</div>
                     <input
-                      type="text"
-                      value={assignmentForm.title}
-                      onChange={(e) => handleAssignmentFormChange('title', e.target.value)}
-                      className={`text-2xl font-medium bg-transparent border-none outline-none flex-1 w-full ${
-                        assignmentValidationErrors.title ? 'text-red-400' : 'text-white'
+                      type="date"
+                      value={assignmentForm.dueDate}
+                      onChange={(e) => handleAssignmentFormChange('dueDate', e.target.value)}
+                      className={`w-full bg-transparent text-base border-none outline-none cursor-pointer ${
+                        assignmentValidationErrors.dueDate ? 'text-red-400' : 'text-white'
                       }`}
-                      placeholder="New page"
                     />
-                    {assignmentValidationErrors.title && (
+                    {assignmentValidationErrors.dueDate && (
                       <div className="flex items-center gap-2 mt-1">
                         <AlertCircle size={14} className="text-red-400" />
-                        <span className="text-red-400 text-sm">{assignmentValidationErrors.title}</span>
+                        <span className="text-red-400 text-sm">{assignmentValidationErrors.dueDate}</span>
                       </div>
                     )}
                   </div>
-                  <button
-                    onClick={() => setIsAssignmentModalOpen(false)}
-                    className="text-gray-400 hover:text-white ml-4"
-                  >
-                    <X size={24} />
-                  </button>
                 </div>
 
-                <div className="space-y-4">
-                  {/* Due Date Field */}
-                  <div className="flex items-start gap-4">
-                    <Calendar size={20} className="text-gray-400 flex-shrink-0 mt-1" />
-                    <div className="flex-1">
-                      <div className="text-sm text-gray-400 mb-1">Due Date</div>
-                      <input
-                        type="date"
-                        value={assignmentForm.dueDate}
-                        onChange={(e) => handleAssignmentFormChange('dueDate', e.target.value)}
-                        className={`w-full bg-transparent text-base border-none outline-none cursor-pointer ${
-                          assignmentValidationErrors.dueDate ? 'text-red-400' : 'text-white'
-                        }`}
-                      />
-                      {assignmentValidationErrors.dueDate && (
-                        <div className="flex items-center gap-2 mt-1">
-                          <AlertCircle size={14} className="text-red-400" />
-                          <span className="text-red-400 text-sm">{assignmentValidationErrors.dueDate}</span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Status Field */}
-                  <div className="flex items-center gap-4">
-                    <Flag size={20} className="text-gray-400 flex-shrink-0" />
-                    <div className="flex-1">
-                      <div className="text-sm text-gray-400 mb-1">Status</div>
-                      <select
-                        value={assignmentForm.status}
-                        onChange={(e) => handleAssignmentFormChange('status', e.target.value)}
-                        className="w-full bg-transparent text-white text-base border-none outline-none"
-                      >
-                        <option value="Not started" className="bg-[#1a1a1a]">Not started</option>
-                        <option value="In progress" className="bg-[#1a1a1a]">In progress</option>
-                        <option value="Completed" className="bg-[#1a1a1a]">Completed</option>
-                        <option value="Submitted" className="bg-[#1a1a1a]">Submitted</option>
-                      </select>
-                    </div>
-                  </div>
-
-                  {/* Notes Field */}
-                  <div className="flex items-start gap-4">
-                    <FileText size={20} className="text-gray-400 flex-shrink-0 mt-1" />
-                    <div className="flex-1">
-                      <div className="text-sm text-gray-400 mb-1">Notes</div>
-                      <input
-                        type="text"
-                        value={assignmentForm.notes}
-                        onChange={(e) => handleAssignmentFormChange('notes', e.target.value)}
-                        placeholder="Empty"
-                        className="w-full bg-transparent text-white text-base border-none outline-none placeholder-gray-500"
-                      />
-                    </div>
-                  </div>
-
-                  {/* When Assignment Field */}
-                  <div className="flex items-center gap-4">
-                
-                    <span className="text-gray-500 text-base">⚠️</span>
-                    <div className="flex-1">
-                      <div className="text-sm text-gray-400 mb-1">When Assignment</div>
-                      <div className="text-gray-500 text-base">
-                        {assignmentForm.dueDate ? calculateDaysUntil(assignmentForm.dueDate) : 'Невизначено'}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Submitted Checkbox */}
-                  <div className="flex items-center gap-4">
-                    <div className="w-5 h-5 flex items-center justify-center">
-                      <input
-                        type="checkbox"
-                        checked={assignmentForm.submitted}
-                        onChange={(e) => handleAssignmentFormChange('submitted', e.target.checked)}
-                        className="w-4 h-4 text-gray-500 bg-gray-800 border-gray-600 rounded focus:ring-gray-500 accent-gray-500"
-                      />
-                    </div>
-                    <div className="flex-1">
-                      <div className="text-sm text-gray-400">Submitted</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Footer with action buttons */}
-              <div className="bg-[#1a1a1a] px-6 py-4 border-t border-gray-700">
-                <div className="flex gap-3">
-                  {selectedAssignment && (
-                    <button
-                      onClick={handleDeleteAssignment}
-                      className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm"
+                {/* Status Field */}
+                <div className="flex items-center gap-4">
+                  <Flag size={20} className="text-gray-400 flex-shrink-0" />
+                  <div className="flex-1">
+                    <div className="text-sm text-gray-400 mb-1">Status</div>
+                    <select
+                      value={assignmentForm.status}
+                      onChange={(e) => handleAssignmentFormChange('status', e.target.value)}
+                      className="w-full bg-transparent text-white text-base border-none outline-none"
                     >
-                      Delete
-                    </button>
-                  )}
-                  <div className="flex-1"></div>
-                  <button
-                    onClick={() => setIsAssignmentModalOpen(false)}
-                    className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors text-sm"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    onClick={handleSaveAssignment}
-                    className="px-4 py-2 bg-accent text-white rounded-lg hover:bg-accent-80 transition-colors text-sm"
-                  >
-                    Save
-                  </button>
+                      <option value="Not started" className="bg-[#1a1a1a]">Not started</option>
+                      <option value="In progress" className="bg-[#1a1a1a]">In progress</option>
+                      <option value="Completed" className="bg-[#1a1a1a]">Completed</option>
+                      <option value="Submitted" className="bg-[#1a1a1a]">Submitted</option>
+                    </select>
+                  </div>
+                </div>
+
+                {/* Notes Field */}
+                <div className="flex items-start gap-4">
+                  <FileText size={20} className="text-gray-400 flex-shrink-0 mt-1" />
+                  <div className="flex-1">
+                    <div className="text-sm text-gray-400 mb-1">Notes</div>
+                    <input
+                      type="text"
+                      value={assignmentForm.notes}
+                      onChange={(e) => handleAssignmentFormChange('notes', e.target.value)}
+                      placeholder="Empty"
+                      className="w-full bg-transparent text-white text-base border-none outline-none placeholder-gray-500"
+                    />
+                  </div>
+                </div>
+
+                {/* When Assignment Field */}
+                <div className="flex items-center gap-4">
+              
+                  <span className="text-gray-500 text-base">⚠️</span>
+                  <div className="flex-1">
+                    <div className="text-sm text-gray-400 mb-1">When Assignment</div>
+                    <div className="text-gray-500 text-base">
+                      {assignmentForm.dueDate ? calculateDaysUntil(assignmentForm.dueDate) : 'Невизначено'}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Submitted Checkbox */}
+                <div className="flex items-center gap-4">
+                  <div className="w-5 h-5 flex items-center justify-center">
+                    <input
+                      type="checkbox"
+                      checked={assignmentForm.submitted}
+                      onChange={(e) => handleAssignmentFormChange('submitted', e.target.checked)}
+                      className="w-4 h-4 text-gray-500 bg-gray-800 border-gray-600 rounded focus:ring-gray-500 accent-gray-500"
+                    />
+                  </div>
+                  <div className="flex-1">
+                    <div className="text-sm text-gray-400">Submitted</div>
+                  </div>
                 </div>
               </div>
-            </DialogPanel>
-          </div>
+            </div>
+
+            {/* Footer with action buttons */}
+            <div className="bg-[#1a1a1a] px-6 py-4 border-t border-gray-700">
+              <div className="flex gap-3">
+                {selectedAssignment && (
+                  <button
+                    onClick={handleDeleteAssignment}
+                    className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm"
+                  >
+                    Delete
+                  </button>
+                )}
+                <div className="flex-1"></div>
+                <button
+                  onClick={() => setIsAssignmentModalOpen(false)}
+                  className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors text-sm"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleSaveAssignment}
+                  className="px-4 py-2 bg-accent text-white rounded-lg hover:bg-accent-80 transition-colors text-sm"
+                >
+                  Save
+                </button>
+              </div>
+            </div>
+          </DialogPanel>
         </div>
       </Dialog>
     </>

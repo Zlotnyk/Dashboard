@@ -459,157 +459,155 @@ const BigCalendar = ({ events = [], onAddEvent, onDeleteEvent }) => {
           className="fixed inset-0 bg-black/50"
         />
         
-        <div className="fixed inset-0 z-10 w-screen overflow-y-auto">
-          <div className="flex min-h-full items-center justify-center p-4">
-            <DialogPanel 
-              className="relative transform overflow-hidden rounded-lg bg-[#1a1a1a] text-left shadow-xl w-full max-w-lg"
-            >
-              <div className="bg-[#1a1a1a] px-6 pt-6 pb-4">
-                <div className="flex items-center justify-between mb-8">
+        <div className="fixed inset-0 z-10 flex items-center justify-center p-4">
+          <DialogPanel 
+            className="relative transform overflow-hidden rounded-lg bg-[#1a1a1a] text-left shadow-xl w-full max-w-lg"
+          >
+            <div className="bg-[#1a1a1a] px-6 pt-6 pb-4">
+              <div className="flex items-center justify-between mb-8">
+                <div className="flex-1">
+                  <input
+                    type="text"
+                    value={eventForm.title}
+                    onChange={(e) => handleFormChange('title', e.target.value)}
+                    className={`text-2xl font-medium bg-transparent border-none outline-none flex-1 w-full ${
+                      validationErrors.title ? 'text-red-400' : 'text-white'
+                    }`}
+                    placeholder="New page"
+                  />
+                  {validationErrors.title && (
+                    <div className="flex items-center gap-2 mt-1">
+                      <AlertCircle size={14} className="text-red-400" />
+                      <span className="text-red-400 text-sm">{validationErrors.title}</span>
+                    </div>
+                  )}
+                </div>
+                <button
+                  onClick={() => setIsModalOpen(false)}
+                  className="text-gray-400 hover:text-white ml-4"
+                >
+                  <X size={24} />
+                </button>
+              </div>
+
+              <div className="space-y-6">
+                {/* Date Field */}
+                <div className="flex items-start gap-4">
+                  <Calendar size={20} className="text-gray-400 flex-shrink-0 mt-1" />
                   <div className="flex-1">
+                    <div className="text-sm text-gray-400 mb-1">Date</div>
                     <input
-                      type="text"
-                      value={eventForm.title}
-                      onChange={(e) => handleFormChange('title', e.target.value)}
-                      className={`text-2xl font-medium bg-transparent border-none outline-none flex-1 w-full ${
-                        validationErrors.title ? 'text-red-400' : 'text-white'
+                      type="date"
+                      value={eventForm.date}
+                      onChange={(e) => handleFormChange('date', e.target.value)}
+                      className={`w-full bg-transparent text-base border-none outline-none ${
+                        validationErrors.date ? 'text-red-400' : 'text-white'
                       }`}
-                      placeholder="New page"
                     />
-                    {validationErrors.title && (
+                    {validationErrors.date && (
                       <div className="flex items-center gap-2 mt-1">
                         <AlertCircle size={14} className="text-red-400" />
-                        <span className="text-red-400 text-sm">{validationErrors.title}</span>
+                        <span className="text-red-400 text-sm">{validationErrors.date}</span>
                       </div>
                     )}
                   </div>
-                  <button
-                    onClick={() => setIsModalOpen(false)}
-                    className="text-gray-400 hover:text-white ml-4"
-                  >
-                    <X size={24} />
-                  </button>
                 </div>
 
-                <div className="space-y-6">
-                  {/* Date Field */}
-                  <div className="flex items-start gap-4">
-                    <Calendar size={20} className="text-gray-400 flex-shrink-0 mt-1" />
-                    <div className="flex-1">
-                      <div className="text-sm text-gray-400 mb-1">Date</div>
-                      <input
-                        type="date"
-                        value={eventForm.date}
-                        onChange={(e) => handleFormChange('date', e.target.value)}
-                        className={`w-full bg-transparent text-base border-none outline-none ${
-                          validationErrors.date ? 'text-red-400' : 'text-white'
-                        }`}
-                      />
-                      {validationErrors.date && (
-                        <div className="flex items-center gap-2 mt-1">
-                          <AlertCircle size={14} className="text-red-400" />
-                          <span className="text-red-400 text-sm">{validationErrors.date}</span>
+                {/* Location Field */}
+                <div className="flex items-center gap-4">
+                  <MapPin size={20} className="text-gray-400 flex-shrink-0" />
+                  <div className="flex-1">
+                    <div className="text-sm text-gray-400 mb-1">Location</div>
+                    <input
+                      type="text"
+                      value={eventForm.location}
+                      onChange={(e) => handleFormChange('location', e.target.value)}
+                      placeholder="Empty"
+                      className="w-full bg-transparent text-white text-base border-none outline-none placeholder-gray-500"
+                    />
+                  </div>
+                </div>
+
+                {/* Time Field */}
+                <div className="flex items-center gap-4">
+                  <Clock size={20} className="text-gray-400 flex-shrink-0" />
+                  <div className="flex-1">
+                    <div className="text-sm text-gray-400 mb-1">Time</div>
+                    <input
+                      type="time"
+                      value={eventForm.time}
+                      onChange={(e) => handleFormChange('time', e.target.value)}
+                      placeholder="Empty"
+                      className="w-full bg-transparent text-white text-base border-none outline-none placeholder-gray-500"
+                    />
+                  </div>
+                </div>
+
+                {/* Category Field */}
+                <div className="flex items-center gap-4">
+                  <Calendar size={20} className="text-gray-400 flex-shrink-0" />
+                  <div className="flex-1">
+                    <div className="text-sm text-gray-400 mb-1">Category</div>
+                    <select
+                      value={eventForm.category}
+                      onChange={(e) => handleFormChange('category', e.target.value)}
+                      className="w-full bg-transparent text-white text-base border-none outline-none"
+                    >
+                      <option value="meeting" className="bg-[#1a1a1a]">Meeting</option>
+                      <option value="birthday" className="bg-[#1a1a1a]">Birthday</option>
+                      <option value="event" className="bg-[#1a1a1a]">Event</option>
+                      <option value="other" className="bg-[#1a1a1a]">Other</option>
+                    </select>
+                  </div>
+                </div>
+
+                {/* Birthday Info */}
+                {eventForm.category === 'birthday' && (
+                  <div className="bg-pink-900/20 border border-pink-700/30 rounded-lg p-4">
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="text-pink-400">🎂</span>
+                      <span className="text-pink-400 font-medium">Birthday Event</span>
+                    </div>
+                    <div className="text-sm text-gray-300">
+                      This event will repeat every year on the same date.
+                      {eventForm.date && (
+                        <div className="mt-1">
+                          Age in {currentYear}: {currentYear - new Date(eventForm.date).getFullYear()} years
                         </div>
                       )}
                     </div>
                   </div>
-
-                  {/* Location Field */}
-                  <div className="flex items-center gap-4">
-                    <MapPin size={20} className="text-gray-400 flex-shrink-0" />
-                    <div className="flex-1">
-                      <div className="text-sm text-gray-400 mb-1">Location</div>
-                      <input
-                        type="text"
-                        value={eventForm.location}
-                        onChange={(e) => handleFormChange('location', e.target.value)}
-                        placeholder="Empty"
-                        className="w-full bg-transparent text-white text-base border-none outline-none placeholder-gray-500"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Time Field */}
-                  <div className="flex items-center gap-4">
-                    <Clock size={20} className="text-gray-400 flex-shrink-0" />
-                    <div className="flex-1">
-                      <div className="text-sm text-gray-400 mb-1">Time</div>
-                      <input
-                        type="time"
-                        value={eventForm.time}
-                        onChange={(e) => handleFormChange('time', e.target.value)}
-                        placeholder="Empty"
-                        className="w-full bg-transparent text-white text-base border-none outline-none placeholder-gray-500"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Category Field */}
-                  <div className="flex items-center gap-4">
-                    <Calendar size={20} className="text-gray-400 flex-shrink-0" />
-                    <div className="flex-1">
-                      <div className="text-sm text-gray-400 mb-1">Category</div>
-                      <select
-                        value={eventForm.category}
-                        onChange={(e) => handleFormChange('category', e.target.value)}
-                        className="w-full bg-transparent text-white text-base border-none outline-none"
-                      >
-                        <option value="meeting" className="bg-[#1a1a1a]">Meeting</option>
-                        <option value="birthday" className="bg-[#1a1a1a]">Birthday</option>
-                        <option value="event" className="bg-[#1a1a1a]">Event</option>
-                        <option value="other" className="bg-[#1a1a1a]">Other</option>
-                      </select>
-                    </div>
-                  </div>
-
-                  {/* Birthday Info */}
-                  {eventForm.category === 'birthday' && (
-                    <div className="bg-pink-900/20 border border-pink-700/30 rounded-lg p-4">
-                      <div className="flex items-center gap-2 mb-2">
-                        <span className="text-pink-400">🎂</span>
-                        <span className="text-pink-400 font-medium">Birthday Event</span>
-                      </div>
-                      <div className="text-sm text-gray-300">
-                        This event will repeat every year on the same date.
-                        {eventForm.date && (
-                          <div className="mt-1">
-                            Age in {currentYear}: {currentYear - new Date(eventForm.date).getFullYear()} years
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  )}
-                </div>
+                )}
               </div>
+            </div>
 
-              {/* Footer with action buttons */}
-              <div className="bg-[#1a1a1a] px-6 py-4 border-t border-gray-700">
-                <div className="flex gap-3">
-                  {selectedEvent && (
-                    <button
-                      onClick={handleDeleteEvent}
-                      className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm"
-                    >
-                      Delete
-                    </button>
-                  )}
-                  <div className="flex-1"></div>
+            {/* Footer with action buttons */}
+            <div className="bg-[#1a1a1a] px-6 py-4 border-t border-gray-700">
+              <div className="flex gap-3">
+                {selectedEvent && (
                   <button
-                    onClick={() => setIsModalOpen(false)}
-                    className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors text-sm"
+                    onClick={handleDeleteEvent}
+                    className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm"
                   >
-                    Cancel
+                    Delete
                   </button>
-                  <button
-                    onClick={handleSaveEvent}
-                    className="px-4 py-2 bg-accent text-white rounded-lg hover:bg-accent-80 transition-colors text-sm"
-                  >
-                    Save
-                  </button>
-                </div>
+                )}
+                <div className="flex-1"></div>
+                <button
+                  onClick={() => setIsModalOpen(false)}
+                  className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors text-sm"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleSaveEvent}
+                  className="px-4 py-2 bg-accent text-white rounded-lg hover:bg-accent-80 transition-colors text-sm"
+                >
+                  Save
+                </button>
               </div>
-            </DialogPanel>
-          </div>
+            </div>
+          </DialogPanel>
         </div>
       </Dialog>
 
