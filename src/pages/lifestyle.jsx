@@ -84,7 +84,7 @@ function LifestylePage() {
 						{/* Trade Planner Block */}
 						<div className='min-h-[200px] border-2 border-dashed border-gray-500 rounded-lg p-4 flex items-center justify-center'>
 							<h3 className='text-xl font-[Libre_Baskerville] italic text-white'>
-								Trade Planner
+								Trip Planner
 							</h3>
 						</div>
 
