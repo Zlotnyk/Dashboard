@@ -3,19 +3,7 @@ import { Plus, X, Calendar, Clock, FileText, Flag, MapPin } from 'lucide-react'
 import { Dialog, DialogBackdrop, DialogPanel, DialogTitle } from '@headlessui/react'
 
 const RightSidebar = () => {
-  const [examReminders, setExamReminders] = useState([
-    {
-      id: 1,
-      title: 'New page',
-      date: new Date('2025-06-10'),
-      time: '',
-      location: '',
-      notes: '',
-      attended: false,
-      isUrgent: true
-    }
-  ])
-
+  const [examReminders, setExamReminders] = useState([])
   const [assignmentReminders, setAssignmentReminders] = useState([])
   const [isExamModalOpen, setIsExamModalOpen] = useState(false)
   const [isAssignmentModalOpen, setIsAssignmentModalOpen] = useState(false)
@@ -198,34 +186,40 @@ const RightSidebar = () => {
           <div className="w-full h-px bg-gray-700 mb-4"></div>
 
           <div className="space-y-3">
-            {examReminders.map(reminder => (
-              <div 
-                key={reminder.id} 
-                className="bg-gray-800/50 rounded-lg p-4 cursor-pointer hover:bg-gray-700/50 transition-colors"
-                onClick={() => handleExamClick(reminder)}
-              >
-                <div className="flex items-center gap-2 mb-2">
-                  {reminder.isUrgent && (
-                    <span className="text-orange-500 text-sm">⚠️</span>
-                  )}
-                  <span className="text-white text-sm font-medium">
-                    {reminder.title}
-                  </span>
-                </div>
-                <div className="text-gray-400 text-xs mb-1">
-                  {reminder.date.toLocaleDateString('en-US', { 
-                    year: 'numeric', 
-                    month: 'long', 
-                    day: 'numeric' 
-                  })}
-                </div>
-                {reminder.isUrgent && (
-                  <div className="text-orange-500 text-xs font-medium">
-                    {calculateDaysUntil(reminder.date)}
-                  </div>
-                )}
+            {examReminders.length === 0 ? (
+              <div className="text-gray-500 text-sm text-center py-4">
+                No exam reminders
               </div>
-            ))}
+            ) : (
+              examReminders.map(reminder => (
+                <div 
+                  key={reminder.id} 
+                  className="bg-gray-800/50 rounded-lg p-4 cursor-pointer hover:bg-gray-700/50 transition-colors"
+                  onClick={() => handleExamClick(reminder)}
+                >
+                  <div className="flex items-center gap-2 mb-2">
+                    {reminder.isUrgent && (
+                      <span className="text-orange-500 text-sm">⚠️</span>
+                    )}
+                    <span className="text-white text-sm font-medium">
+                      {reminder.title}
+                    </span>
+                  </div>
+                  <div className="text-gray-400 text-xs mb-1">
+                    {reminder.date.toLocaleDateString('en-US', { 
+                      year: 'numeric', 
+                      month: 'long', 
+                      day: 'numeric' 
+                    })}
+                  </div>
+                  {reminder.isUrgent && (
+                    <div className="text-orange-500 text-xs font-medium">
+                      {calculateDaysUntil(reminder.date)}
+                    </div>
+                  )}
+                </div>
+              ))
+            )}
 
             <button
               onClick={addExamReminder}
@@ -328,7 +322,7 @@ const RightSidebar = () => {
                   </button>
                 </div>
 
-                <div className="space-y-6">
+                <div className="space-y-4">
                   {/* Date Field */}
                   <div className="flex items-center gap-4">
                     <Calendar size={20} className="text-gray-400 flex-shrink-0 cursor-pointer" />
@@ -374,16 +368,16 @@ const RightSidebar = () => {
                   </div>
 
                   {/* Notes Field */}
-                  <div className="flex items-center gap-4">
-                    <FileText size={20} className="text-gray-400 flex-shrink-0" />
+                  <div className="flex items-start gap-4">
+                    <FileText size={20} className="text-gray-400 flex-shrink-0 mt-1" />
                     <div className="flex-1">
                       <div className="text-sm text-gray-400 mb-1">Notes</div>
-                      <textarea
+                      <input
+                        type="text"
                         value={examForm.notes}
                         onChange={(e) => setExamForm(prev => ({ ...prev, notes: e.target.value }))}
                         placeholder="Empty"
-                        className="w-full bg-transparent text-white text-base border-none outline-none placeholder-gray-500 resize-none"
-                        rows={2}
+                        className="w-full bg-transparent text-white text-base border-none outline-none placeholder-gray-500"
                       />
                     </div>
                   </div>
@@ -477,7 +471,7 @@ const RightSidebar = () => {
                   </button>
                 </div>
 
-                <div className="space-y-6">
+                <div className="space-y-4">
                   {/* Due Date Field */}
                   <div className="flex items-center gap-4">
                     <Calendar size={20} className="text-gray-400 flex-shrink-0 cursor-pointer" />
@@ -511,16 +505,16 @@ const RightSidebar = () => {
                   </div>
 
                   {/* Notes Field */}
-                  <div className="flex items-center gap-4">
-                    <FileText size={20} className="text-gray-400 flex-shrink-0" />
+                  <div className="flex items-start gap-4">
+                    <FileText size={20} className="text-gray-400 flex-shrink-0 mt-1" />
                     <div className="flex-1">
                       <div className="text-sm text-gray-400 mb-1">Notes</div>
-                      <textarea
+                      <input
+                        type="text"
                         value={assignmentForm.notes}
                         onChange={(e) => setAssignmentForm(prev => ({ ...prev, notes: e.target.value }))}
                         placeholder="Empty"
-                        className="w-full bg-transparent text-white text-base border-none outline-none placeholder-gray-500 resize-none"
-                        rows={2}
+                        className="w-full bg-transparent text-white text-base border-none outline-none placeholder-gray-500"
                       />
                     </div>
                   </div>
