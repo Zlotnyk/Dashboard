@@ -10,6 +10,7 @@ import BigCalendar from '../components/big-calendar'
 import TodayTasks from '../components/today-tasks'
 import UpcomingBirthdays from '../components/upcoming-birthdays'
 import TripPlanner from '../components/trip-planner'
+import UpcomingEvents from '../components/upcoming-events'
 import { generateMockTasks } from '../components/Task_Timeline/timeline_utils'
 import '../App.css'
 
@@ -88,10 +89,8 @@ function LifestylePage() {
 						</div>
 
 						{/* Upcoming Events Block */}
-						<div className='min-h-[200px] border-2 border-dashed border-gray-500 rounded-lg p-4 flex items-center justify-center'>
-							<h3 className='text-xl font-[Libre_Baskerville] italic text-white'>
-								Upcoming Events in 30 Days
-							</h3>
+						<div className='min-h-[300px]'>
+							<UpcomingEvents events={events} />
 						</div>
 
 						{/* Calendar Block */}
