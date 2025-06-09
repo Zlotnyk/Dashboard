@@ -60,7 +60,7 @@ const QuickLinks = () => {
                     href={item.href}
                     className="flex items-center gap-3 p-2 hover:bg-gray-800/50 rounded cursor-pointer transition-colors group"
                   >
-                    <IconComponent size={16} className="text-gray-400 group-hover:text-[#97e7aa]" />
+                    <IconComponent size={16} className="text-gray-400 group-hover:text-accent" />
                     <span className="text-gray-300 text-sm group-hover:text-white">
                       {item.name}
                     </span>

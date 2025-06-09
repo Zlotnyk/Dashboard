@@ -2,6 +2,11 @@
 @import url('https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&display=swap');
 @import 'tailwindcss';
 
+/* CSS Variables for dynamic theming */
+:root {
+  --accent-color: #97e7aa;
+}
+
 /* Base container for the flip clock */
 .flip-clock-container {
 	display: flex; /* Включаємо Flexbox */
@@ -22,7 +27,7 @@
 	border-radius: 8px;
 	font-family: 'Bebas Neue';
 	perspective: 600px;
-	background-color: hsl(134, 63%, 75%);
+	background-color: var(--accent-color);
 	box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
 }
 
@@ -50,7 +55,7 @@
 	overflow: hidden;
 	display: flex;
 	justify-content: center;
-	background-color: hsl(134, 63%, 75%);
+	background-color: var(--accent-color);
 	color: #ffffff;
 	border: 1px solid rgba(0, 0, 0, 0.1);
 }
@@ -243,16 +248,49 @@
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb {
-	background: #97e7aa;
+	background: var(--accent-color);
 	border-radius: 4px;
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-	background: #75b384;
+	background: color-mix(in srgb, var(--accent-color) 80%, black);
 }
 
 /* Firefox scrollbar styling */
 .custom-scrollbar {
 	scrollbar-width: thin;
-	scrollbar-color: #97e7aa transparent;
+	scrollbar-color: var(--accent-color) transparent;
+}
+
+/* Utility classes for accent color */
+.bg-accent {
+	background-color: var(--accent-color) !important;
+}
+
+.text-accent {
+	color: var(--accent-color) !important;
+}
+
+.border-accent {
+	border-color: var(--accent-color) !important;
+}
+
+.hover\:text-accent:hover {
+	color: var(--accent-color) !important;
+}
+
+.hover\:bg-accent:hover {
+	background-color: var(--accent-color) !important;
+}
+
+.hover\:bg-accent-80:hover {
+	background-color: color-mix(in srgb, var(--accent-color) 80%, transparent) !important;
+}
+
+.focus\:ring-accent:focus {
+	--tw-ring-color: var(--accent-color) !important;
+}
+
+.ring-accent {
+	--tw-ring-color: var(--accent-color) !important;
 }
