@@ -7,6 +7,7 @@ import WavyLines from './components/wavy-lines'
 import QuickLinks from './components/quick-links'
 import BigCalendar from './components/big-calendar'
 import MiniCalendar from './components/mini-calendar'
+import RightSidebar from './components/right-sidebar'
 import './App.css'
 import TaskTimeline from './components/Task_Timeline/task_timeline'
 import { generateMockTasks } from './components/Task_Timeline/timeline_utils'
@@ -14,6 +15,7 @@ import { generateMockTasks } from './components/Task_Timeline/timeline_utils'
 function App() {
 	const [selectedDate, setSelectedDate] = useState(new Date())
 	const [tasks, setTasks] = useState(generateMockTasks())
+	const [events, setEvents] = useState([])
 
 	const handleTaskAdd = task => {
 		setTasks(prevTasks => [...prevTasks, task])
@@ -27,6 +29,10 @@ function App() {
 
 	const handleTaskDelete = taskId => {
 		setTasks(prevTasks => prevTasks.filter(task => task.id !== taskId))
+	}
+
+	const handleEventAdd = event => {
+		setEvents(prevEvents => [...prevEvents, event])
 	}
 
 	const [widths, setWidths] = useState({
@@ -44,18 +50,21 @@ function App() {
 
 				{/* Header content between photo and wavy lines */}
 				<div className="bg-[#1a1a1a] py-8">
-					<div className="flex items-center justify-between px-8">
-						{/* Left side - Title and quote */}
-						<div className="flex-1">
-							<h1 className="text-4xl font-bold text-white mb-2 font-[Libre_Baskerville]">
-								Student Planner
-							</h1>
-							<blockquote className="text-lg italic text-white/90 font-[Libre_Baskerville]">
+					<div className="max-w-7xl mx-auto px-8">
+						{/* Title */}
+						<h1 className="text-4xl font-bold text-white mb-4 font-[Libre_Baskerville]">
+							Student Planner
+						</h1>
+						
+						{/* Quote with left border */}
+						<div className="flex items-start mb-6">
+							<div className="w-1 h-16 bg-[#97e7aa] mr-4 flex-shrink-0"></div>
+							<blockquote className="text-lg italic text-white/90 font-[Libre_Baskerville] leading-relaxed">
 								"Miracles happen everyday, change your perception of what a miracle is and you'll see them all around you."
 							</blockquote>
 						</div>
 						
-						{/* Center - Navigation links */}
+						{/* Navigation links */}
 						<div className="flex items-center justify-center gap-8 text-sm text-white/80">
 							<a href="#" className="flex items-center gap-2 hover:text-[#97e7aa] transition-colors">
 								<span className="w-2 h-2 bg-[#97e7aa] rounded-full"></span>
@@ -78,9 +87,6 @@ function App() {
 								Finance
 							</a>
 						</div>
-						
-						{/* Right side - empty for balance */}
-						<div className="flex-1"></div>
 					</div>
 				</div>
 
@@ -122,7 +128,10 @@ function App() {
 								onDeleteTask={handleTaskDelete}
 							/>
 
-							<BigCalendar />
+							<BigCalendar 
+								events={events}
+								onAddEvent={handleEventAdd}
+							/>
 						</section>
 					</section>
 
@@ -132,9 +141,7 @@ function App() {
 						style={{ width: `${widths.right}%` }}
 					>
 						<MiniCalendar />
-						<div className='border-2 border-dashed border-gray-400 p-4 '>
-							Права 2
-						</div>
+						<RightSidebar />
 					</section>
 				</main>
 			</div>

@@ -101,7 +101,11 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
       const dayIndex = daysToShow.findIndex(d => d.toDateString() === date.toDateString())
       return dayIndex >= 0 ? dayIndex * dayWidth : 0
     } else {
-      return (date.getDate() - 1) * dayWidth
+      // Fix for month view - ensure we're working with the same month
+      if (date.getMonth() === currentMonth && date.getFullYear() === currentYear) {
+        return (date.getDate() - 1) * dayWidth
+      }
+      return 0
     }
   }
 
@@ -114,9 +118,16 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
       }
       return dayWidth
     } else {
+      // Fix for month view - calculate duration properly
       const startDay = task.start.getDate()
       const endDay = task.end.getDate()
-      return (endDay - startDay + 1) * dayWidth
+      
+      // Ensure both dates are in the current month
+      if (task.start.getMonth() === currentMonth && task.end.getMonth() === currentMonth &&
+          task.start.getFullYear() === currentYear && task.end.getFullYear() === currentYear) {
+        return Math.max(1, (endDay - startDay + 1)) * dayWidth
+      }
+      return dayWidth
     }
   }
 
@@ -139,7 +150,7 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
   const handleAddTask = () => {
     const newTask = {
       id: crypto.randomUUID(),
-      title: 'New page',
+      title: 'New Task',
       start: viewMode === 'Week' ? daysToShow[0] : new Date(currentYear, currentMonth, 1),
       end: viewMode === 'Week' ? daysToShow[2] : new Date(currentYear, currentMonth, 3),
       progress: 0,
