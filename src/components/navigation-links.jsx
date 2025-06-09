@@ -30,9 +30,9 @@ const NavigationLinks = () => {
               <button 
                 key={index} 
                 onClick={() => handleNavigation(link.href)}
-                className="flex items-center gap-2 hover:text-[#97e7aa] transition-colors text-base"
+                className="flex items-center gap-2 hover:text-[#97e7aa] transition-colors text-base group"
               >
-                <IconComponent size={18} className="text-[#97e7aa]" />
+                <IconComponent size={18} className="text-[#97e7aa] group-hover:text-[#97e7aa]" />
                 {link.name}
               </button>
             )

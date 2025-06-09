@@ -293,14 +293,14 @@ const BigCalendar = ({ events = [], onAddEvent, onDeleteEvent }) => {
                 <div className="space-y-6">
                   {/* Date Field */}
                   <div className="flex items-center gap-4">
-                    <Calendar size={20} className="text-gray-400 flex-shrink-0 cursor-pointer" />
+                    <Calendar size={20} className="text-gray-400 flex-shrink-0" />
                     <div className="flex-1">
                       <div className="text-sm text-gray-400 mb-1">Date</div>
                       <input
                         type="date"
                         value={eventForm.date}
                         onChange={(e) => setEventForm(prev => ({ ...prev, date: e.target.value }))}
-                        className="w-full bg-transparent text-white text-base border-none outline-none cursor-pointer"
+                        className="w-full bg-transparent text-white text-base border-none outline-none"
                       />
                     </div>
                   </div>
@@ -322,7 +322,7 @@ const BigCalendar = ({ events = [], onAddEvent, onDeleteEvent }) => {
 
                   {/* Time Field */}
                   <div className="flex items-center gap-4">
-                    <Clock size={20} className="text-gray-400 flex-shrink-0 cursor-pointer" />
+                    <Clock size={20} className="text-gray-400 flex-shrink-0" />
                     <div className="flex-1">
                       <div className="text-sm text-gray-400 mb-1">Time</div>
                       <input
@@ -330,7 +330,7 @@ const BigCalendar = ({ events = [], onAddEvent, onDeleteEvent }) => {
                         value={eventForm.time}
                         onChange={(e) => setEventForm(prev => ({ ...prev, time: e.target.value }))}
                         placeholder="Empty"
-                        className="w-full bg-transparent text-white text-base border-none outline-none placeholder-gray-500 cursor-pointer"
+                        className="w-full bg-transparent text-white text-base border-none outline-none placeholder-gray-500"
                       />
                     </div>
                   </div>

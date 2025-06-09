@@ -23,11 +23,11 @@ const Navbar = () => {
     { name: 'Pink', value: '#ec4899' }
   ]
 
-  // Apply accent color changes globally to the entire site
+  // Apply accent color changes more selectively
   useEffect(() => {
     document.documentElement.style.setProperty('--accent-color', accentColor)
     
-    // Update all accent color elements across the site
+    // Update specific accent color elements
     const style = document.createElement('style')
     style.id = 'global-accent-style'
     
@@ -38,15 +38,6 @@ const Navbar = () => {
     }
     
     style.textContent = `
-      /* Global accent color application */
-      .bg-\\[\\#97e7aa\\] { background-color: ${accentColor} !important; }
-      .text-\\[\\#97e7aa\\] { color: ${accentColor} !important; }
-      .border-\\[\\#97e7aa\\] { border-color: ${accentColor} !important; }
-      .hover\\:bg-\\[\\#75b384\\]:hover { background-color: ${accentColor}dd !important; }
-      .hover\\:text-\\[\\#97e7aa\\]:hover { color: ${accentColor} !important; }
-      .focus\\:ring-\\[\\#97e7aa\\]:focus { --tw-ring-color: ${accentColor} !important; }
-      .accent-color { accent-color: ${accentColor} !important; }
-      
       /* Flip clock accent color */
       .flip-unit-container { background-color: ${accentColor} !important; }
       .static-card { background-color: ${accentColor} !important; }
@@ -55,35 +46,32 @@ const Navbar = () => {
       /* Wavy lines accent color */
       svg path[stroke="hsl(134, 63%, 75%)"] { stroke: ${accentColor} !important; }
       
-      /* Day of week accent color */
-      .day-of-week { color: #ffffff !important; }
+      /* Quote border */
+      .w-0\\.5.h-8.bg-\\[\\#97e7aa\\] { background-color: ${accentColor} !important; }
       
-      /* Today marker in calendars */
+      /* Navigation links hover */
+      .hover\\:text-\\[\\#97e7aa\\]:hover { color: ${accentColor} !important; }
+      
+      /* Navigation icons */
+      .text-\\[\\#97e7aa\\] { color: ${accentColor} !important; }
+      
+      /* Today markers in calendars */
       .bg-\\[\\#97e7aa\\] { background-color: ${accentColor} !important; }
       
-      /* Buttons and interactive elements */
-      button[style*="background-color"] { background-color: ${accentColor} !important; }
+      /* Primary buttons */
+      .bg-\\[\\#97e7aa\\] { background-color: ${accentColor} !important; }
+      .hover\\:bg-\\[\\#75b384\\]:hover { background-color: ${accentColor}dd !important; }
       
       /* Custom scrollbar */
       .custom-scrollbar::-webkit-scrollbar-thumb { background: ${accentColor} !important; }
       .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: ${accentColor}cc !important; }
       .custom-scrollbar { scrollbar-color: ${accentColor} transparent !important; }
       
-      /* Quote border */
-      .w-0\\.5.h-8.bg-\\[\\#97e7aa\\] { background-color: ${accentColor} !important; }
-      
-      /* Navigation links */
-      .text-\\[\\#97e7aa\\] { color: ${accentColor} !important; }
+      /* Focus rings */
+      .focus\\:ring-\\[\\#97e7aa\\]:focus { --tw-ring-color: ${accentColor} !important; }
       
       /* Task timeline elements */
-      .bg-\\[\\#97e7aa\\] { background-color: ${accentColor} !important; }
-      
-      /* All other accent elements */
-      [class*="97e7aa"] { 
-        background-color: ${accentColor} !important; 
-        color: ${accentColor} !important; 
-        border-color: ${accentColor} !important; 
-      }
+      .ring-\\[\\#97e7aa\\] { --tw-ring-color: ${accentColor} !important; }
     `
     document.head.appendChild(style)
   }, [accentColor])
@@ -177,7 +165,6 @@ const Navbar = () => {
                           value="dark" 
                           checked={true}
                           readOnly
-                          className="accent-color"
                           style={{ accentColor }}
                         />
                         <span className="text-gray-300">Dark</span>
@@ -188,7 +175,7 @@ const Navbar = () => {
                           name="theme" 
                           value="light" 
                           disabled
-                          className="accent-color opacity-50"
+                          className="opacity-50"
                           style={{ accentColor }}
                         />
                         <span className="text-gray-500">Light (in development)</span>
@@ -233,7 +220,6 @@ const Navbar = () => {
                             ...prev,
                             examReminders: e.target.checked
                           }))}
-                          className="accent-color"
                           style={{ accentColor }}
                         />
                       </label>
@@ -246,7 +232,6 @@ const Navbar = () => {
                             ...prev,
                             assignmentReminders: e.target.checked
                           }))}
-                          className="accent-color"
                           style={{ accentColor }}
                         />
                       </label>
