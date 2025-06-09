@@ -16,7 +16,7 @@ const Navbar = () => {
   })
 
   const colorOptions = [
-    { name: 'Green', value: '#97e7aa', gif: 'Green2.gif' },
+    { name: 'Green', value: '#97e7aa', gif: 'Green.gif' },
     { name: 'Purple', value: '#a855f7', gif: 'Purple.gif' },
     { name: 'Blue', value: '#3b82f6', gif: 'Blue.gif' },
     { name: 'Red', value: '#ef4444', gif: 'Red.gif' },
