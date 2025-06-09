@@ -114,7 +114,7 @@ const TodayTasks = ({ tasks = [], onAddTask, onUpdateTask, onDeleteTask }) => {
               return (
                 <div
                   key={task.id}
-                  className='bg-[#2a2a2a] rounded-lg p-3 hover:bg-[#333333] transition-colors group'
+                  className='bg-transparent rounded-lg p-3 hover:bg-gray-800/30 transition-colors group'
                 >
                   <div className='flex items-center justify-between'>
                     <div className='flex items-center gap-2 flex-1'>

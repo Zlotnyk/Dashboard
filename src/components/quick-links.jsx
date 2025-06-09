@@ -13,8 +13,8 @@ const QuickLinks = () => {
       title: 'Course',
       items: [
         { name: 'Timetable', icon: Clock, href: '/timetable' },
-        { name: 'Course Materials', icon: BookOpen, href: '#materials' },
-        { name: 'Study Checklist', icon: Target, href: '#checklist' }
+        { name: 'Course Materials', icon: BookOpen, href: '/course-materials' },
+        { name: 'Study Checklist', icon: Target, href: '/study-checklist' }
       ]
     },
     {
@@ -110,40 +110,13 @@ const QuickLinks = () => {
     }
   ]
 
-  const timetableLinks = [
-    {
-      title: 'Schedule',
-      items: [
-        { name: 'Weekly View', icon: Calendar, href: '#weekly-view' },
-        { name: 'Daily View', icon: Clock, href: '#daily-view' },
-        { name: 'Monthly View', icon: Calendar, href: '#monthly-view' }
-      ]
-    },
-    {
-      title: 'Classes',
-      items: [
-        { name: 'Add Class', icon: BookOpen, href: '#add-class' },
-        { name: 'Class List', icon: FileText, href: '#class-list' },
-        { name: 'Attendance', icon: Target, href: '#attendance' }
-      ]
-    },
-    {
-      title: 'Planning',
-      items: [
-        { name: 'Study Blocks', icon: Clock, href: '#study-blocks' },
-        { name: 'Free Time', icon: Heart, href: '#free-time' },
-        { name: 'Reminders', icon: Target, href: '#reminders' }
-      ]
-    }
-  ]
-
   let links = mainLinks
   if (isLifestylePage) {
     links = lifestyleLinks
   } else if (isHealthFitnessPage) {
     links = healthFitnessLinks
   } else if (isTimetablePage) {
-    links = timetableLinks
+    links = mainLinks // Use same links as student planner for timetable
   }
 
   return (
