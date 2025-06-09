@@ -13,7 +13,7 @@ const HeaderContent = () => {
           
           {/* Quote with left border - positioned parallel to wavy line */}
           <div className="flex items-start mb-6 -ml-4">
-            <div className="w-0.5 h-8 bg-[#97e7aa] mr-4 flex-shrink-0"></div>
+            <div className="w-0.5 h-8 mr-4 flex-shrink-0" style={{ backgroundColor: 'var(--accent-color)' }}></div>
             <blockquote className="text-lg italic text-white/90 font-[Libre_Baskerville] leading-relaxed">
               "Miracles happen everyday, change your perception of what a miracle is and you'll see them all around you."
             </blockquote>
