@@ -134,83 +134,61 @@ const UpcomingBirthdays = ({ events = [] }) => {
 
   return (
     <>
-      <div className="w-full h-full bg-[#1a1a1a] rounded-lg p-4">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-[Libre_Baskerville] italic text-white">
+      <div className="w-full h-full bg-transparent rounded-lg p-4">
+        {/* Header with golden text */}
+        <div className="mb-4">
+          <h3 className="text-lg font-[Libre_Baskerville] italic text-[#d4af37] mb-2">
             Upcoming Birthdays
           </h3>
-          <button
-            onClick={handleAddBirthday}
-            className="flex items-center gap-1 px-2 py-1 bg-accent text-white rounded text-sm hover:bg-accent-80"
-          >
-            <Plus size={14} />
-            Add
-          </button>
+          <div className="flex items-center gap-2 text-gray-400 text-sm">
+            <Calendar size={16} />
+            <span>Next 30 Days</span>
+          </div>
         </div>
 
-        {/* Horizontal line under header */}
-        <div className="w-full h-px bg-gray-700 mb-4"></div>
-
-        <div className="space-y-3 max-h-48 overflow-y-auto custom-scrollbar">
+        {/* Birthday list */}
+        <div className="space-y-2">
           {birthdays.length === 0 ? (
-            <div className="text-gray-500 text-sm text-center py-4">
+            <div className="text-gray-500 text-sm py-4">
               No upcoming birthdays in 30 days
             </div>
           ) : (
             birthdays.map(birthday => (
               <div 
                 key={birthday.id}
-                className="bg-gray-800/50 rounded-lg p-3 hover:bg-gray-700/50 transition-colors group"
+                className="flex items-center justify-between p-2 hover:bg-gray-800/30 rounded transition-colors group"
               >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Cake size={16} className="text-accent flex-shrink-0" />
-                    <div>
-                      <div className="text-white text-sm font-medium">
-                        {birthday.name}
-                      </div>
-                      <div className="text-gray-400 text-xs">
-                        Currently {birthday.currentAge} • Will be {birthday.nextAge}
-                      </div>
+                <div className="flex items-center gap-2">
+                  <Cake size={16} className="text-gray-400" />
+                  <div>
+                    <div className="text-gray-300 text-sm">
+                      {birthday.name}
                     </div>
-                  </div>
-                  
-                  <div className="flex items-center gap-2">
-                    <div className="text-right">
-                      <div className={`text-sm font-medium ${
-                        birthday.daysUntil === 0 ? 'text-accent' : 
-                        birthday.daysUntil <= 7 ? 'text-orange-400' : 'text-gray-300'
-                      }`}>
-                        {formatDaysUntil(birthday.daysUntil)}
-                      </div>
-                      <div className="text-gray-400 text-xs">
-                        {birthday.nextBirthday.toLocaleDateString('en-US', { 
-                          month: 'short', 
-                          day: 'numeric' 
-                        })}
-                      </div>
+                    <div className="text-gray-500 text-xs">
+                      Will be {birthday.nextAge} • {formatDaysUntil(birthday.daysUntil)}
                     </div>
-                    
-                    {birthday.source === 'manual' && (
-                      <button
-                        onClick={() => handleDeleteBirthday(birthday)}
-                        className="opacity-0 group-hover:opacity-100 p-1 hover:bg-red-600 rounded transition-all"
-                      >
-                        <X size={12} className="text-white" />
-                      </button>
-                    )}
                   </div>
                 </div>
+                
+                {birthday.source === 'manual' && (
+                  <button
+                    onClick={() => handleDeleteBirthday(birthday)}
+                    className="opacity-0 group-hover:opacity-100 p-1 hover:bg-red-600 rounded transition-all"
+                  >
+                    <X size={12} className="text-white" />
+                  </button>
+                )}
               </div>
             ))
           )}
 
+          {/* New page button */}
           <button
             onClick={handleAddBirthday}
-            className="w-full flex items-center gap-2 p-2 text-gray-400 hover:text-white hover:bg-gray-800/50 rounded transition-colors"
+            className="w-full flex items-center justify-center gap-2 py-3 px-4 border border-gray-600 rounded-lg text-gray-400 hover:text-white hover:border-gray-500 transition-colors"
           >
             <Plus size={16} />
-            <span className="text-sm">Add birthday</span>
+            <span className="text-sm">New page</span>
           </button>
         </div>
       </div>

@@ -1,9 +1,14 @@
 import React, { useState } from 'react'
-import { Plus, FileText, Pencil, Check } from 'lucide-react'
+import { Plus, FileText, Pencil } from 'lucide-react'
+import TaskDrawer from './Task_Timeline/task_drawer'
 
 const TodayTasks = ({ tasks = [], onAddTask, onUpdateTask, onDeleteTask }) => {
   const [editingId, setEditingId] = useState(null)
   const [editingText, setEditingText] = useState('')
+  const [editingStart, setEditingStart] = useState('')
+  const [editingEnd, setEditingEnd] = useState('')
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false)
+  const [drawerTask, setDrawerTask] = useState(null)
 
   // Filter tasks for today
   const today = new Date()
@@ -12,8 +17,8 @@ const TodayTasks = ({ tasks = [], onAddTask, onUpdateTask, onDeleteTask }) => {
     return taskDate.toDateString() === today.toDateString()
   })
 
-  const addTask = () => {
-    const newTask = {
+  const addTodo = () => {
+    const newTodo = {
       id: crypto.randomUUID(),
       title: 'New Task',
       start: new Date(),
@@ -22,137 +27,159 @@ const TodayTasks = ({ tasks = [], onAddTask, onUpdateTask, onDeleteTask }) => {
       status: 'Not started',
       priority: 'normal',
       description: '',
-      completed: false
+      color: '#3B82F6',
     }
-    onAddTask(newTask)
+    onAddTask(newTodo)
   }
 
-  const startEditing = (task) => {
+  const startEditing = task => {
     setEditingId(task.id)
     setEditingText(task.title)
+    setEditingStart(task.start.toISOString().split('T')[0])
+    setEditingEnd(task.end.toISOString().split('T')[0])
   }
 
   const finishEditing = () => {
     if (!editingText.trim()) return
-    
-    const taskToUpdate = todayTasks.find(task => task.id === editingId)
-    if (taskToUpdate) {
-      onUpdateTask({
-        ...taskToUpdate,
-        title: editingText
-      })
-    }
-    
+    onUpdateTask({
+      id: editingId,
+      title: editingText,
+      start: new Date(editingStart),
+      end: new Date(editingEnd),
+      progress: 0,
+      color: '#3B82F6',
+    })
     setEditingId(null)
     setEditingText('')
+    setEditingStart('')
+    setEditingEnd('')
   }
 
-  const toggleComplete = (task) => {
-    onUpdateTask({
-      ...task,
-      completed: !task.completed,
-      status: !task.completed ? 'Completed' : 'Not started'
-    })
+  const openTaskDrawer = (task) => {
+    setDrawerTask(task)
+    setIsDrawerOpen(true)
+  }
+
+  const handleDrawerSave = (updatedTask) => {
+    onUpdateTask(updatedTask)
+    setIsDrawerOpen(false)
+    setDrawerTask(null)
+  }
+
+  const handleDrawerClose = () => {
+    setIsDrawerOpen(false)
+    setDrawerTask(null)
   }
 
   return (
-    <div className="w-full h-full bg-[#1a1a1a] rounded-lg p-4">
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-[Libre_Baskerville] italic text-white">
-          Today's Tasks
-        </h3>
-        <button
-          onClick={addTask}
-          className="flex items-center gap-1 px-2 py-1 bg-accent text-white rounded text-sm hover:bg-accent-80"
-        >
-          <Plus size={14} />
-          Add
-        </button>
-      </div>
+    <>
+      <div className='w-full min-h-[400px] rounded-lg p-5'>
+        <div className='flex items-center justify-between mb-4'>
+          <h2 className='text-xl font-[Libre_Baskerville] italic text-[#e0e0e0]'>
+            Today's Tasks
+          </h2>
+          <button
+            className='flex items-center gap-2 px-4 py-2 bg-accent text-white rounded-lg hover:bg-accent-80 text-base'
+            onClick={addTodo}
+          >
+            <Plus size={20} />
+            New
+          </button>
+        </div>
 
-      {/* Horizontal line under header */}
-      <div className="w-full h-px bg-gray-700 mb-4"></div>
-
-      <div className="space-y-2 max-h-48 overflow-y-auto custom-scrollbar">
-        {todayTasks.length === 0 ? (
-          <div className="text-gray-500 text-sm text-center py-4">
-            No tasks for today
-          </div>
-        ) : (
-          todayTasks.map(task => (
-            <div
-              key={task.id}
-              className={`flex items-center gap-2 p-2 rounded transition-colors ${
-                task.completed ? 'bg-gray-800/30' : 'hover:bg-gray-800/50'
-              }`}
-            >
-              <button
-                onClick={() => toggleComplete(task)}
-                className={`w-4 h-4 rounded border-2 flex items-center justify-center transition-colors ${
-                  task.completed 
-                    ? 'bg-accent border-accent' 
-                    : 'border-gray-500 hover:border-accent'
-                }`}
+        <div className='space-y-3'>
+          {todayTasks.map(task => {
+            const isUrgent = task.priority === 'urgent'
+            
+            return (
+              <div
+                key={task.id}
+                className='flex items-center justify-between p-2 rounded'
               >
-                {task.completed && <Check size={10} className="text-white" />}
-              </button>
+                <div className='flex items-center gap-2 flex-1'>
+                  <FileText size={20} className='text-[#a0a0a0]' />
+                  {editingId === task.id ? (
+                    <div className='flex flex-col gap-2 w-full'>
+                      <input
+                        autoFocus
+                        type='text'
+                        value={editingText}
+                        onChange={e => setEditingText(e.target.value)}
+                        onBlur={finishEditing}
+                        onKeyDown={e => {
+                          if (e.key === 'Enter') finishEditing()
+                        }}
+                        className='bg-transparent outline-none text-[#a0a0a0] w-full text-base'
+                      />
+                      <input
+                        type='date'
+                        value={editingStart}
+                        onChange={e => setEditingStart(e.target.value)}
+                        className='bg-transparent outline-none text-[#a0a0a0] text-base'
+                      />
+                      <input
+                        type='date'
+                        value={editingEnd}
+                        onChange={e => setEditingEnd(e.target.value)}
+                        className='bg-transparent outline-none text-[#a0a0a0] text-base'
+                      />
+                    </div>
+                  ) : (
+                    <div className='flex flex-col'>
+                      <div className='flex items-center gap-2'>
+                        {isUrgent && <span className="text-orange-500">🔥</span>}
+                        <span className='text-[#a0a0a0] text-base'>{task.title}</span>
+                      </div>
+                      <span className='text-[#a0a0a0] text-sm'>
+                        {task.start.toLocaleDateString()}
+                      </span>
+                    </div>
+                  )}
+                  {editingId !== task.id && (
+                    <button
+                      onClick={() => openTaskDrawer(task)}
+                      className='border border-gray-500 rounded p-1 hover:bg-gray-700 ml-2'
+                      title='Edit Task Details'
+                    >
+                      <Pencil size={16} className='text-gray-400' />
+                    </button>
+                  )}
+                </div>
 
-              <FileText size={16} className="text-gray-400 flex-shrink-0" />
-
-              {editingId === task.id ? (
                 <input
-                  autoFocus
-                  type="text"
-                  value={editingText}
-                  onChange={(e) => setEditingText(e.target.value)}
-                  onBlur={finishEditing}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter') finishEditing()
-                    if (e.key === 'Escape') {
-                      setEditingId(null)
-                      setEditingText('')
-                    }
-                  }}
-                  className="flex-1 bg-transparent outline-none text-white text-sm"
+                  type='checkbox'
+                  onChange={() => onDeleteTask(task.id)}
+                  className='w-4 h-4 cursor-pointer bg-transparent appearance-none border border-gray-400 rounded checked:bg-blue-500 checked:border-transparent'
+                  title='Delete'
                 />
-              ) : (
-                <span 
-                  className={`flex-1 text-sm cursor-pointer ${
-                    task.completed 
-                      ? 'text-gray-500 line-through' 
-                      : 'text-gray-300'
-                  }`}
-                  onClick={() => startEditing(task)}
-                >
-                  {task.title}
-                </span>
-              )}
+              </div>
+            )
+          })}
 
-              {task.priority === 'urgent' && !task.completed && (
-                <span className="text-orange-500 text-sm">🔥</span>
-              )}
-
-              {editingId !== task.id && (
-                <button
-                  onClick={() => startEditing(task)}
-                  className="opacity-0 group-hover:opacity-100 p-1 hover:bg-gray-700 rounded"
-                >
-                  <Pencil size={12} className="text-gray-400" />
-                </button>
-              )}
-            </div>
-          ))
-        )}
-
-        <button
-          onClick={addTask}
-          className="w-full flex items-center gap-2 p-2 text-gray-400 hover:text-white hover:bg-gray-800/50 rounded transition-colors"
-        >
-          <Plus size={16} />
-          <span className="text-sm">Add new task</span>
-        </button>
+          <div
+            className='flex items-center gap-3 p-2 hover:bg-[#333] rounded cursor-pointer'
+            onClick={addTodo}
+          >
+            <Plus size={20} className='text-[#a0a0a0]' />
+            <span className='text-[#a0a0a0] text-base'>New task</span>
+          </div>
+        </div>
       </div>
-    </div>
+
+      {/* Task Drawer */}
+      <TaskDrawer
+        isOpen={isDrawerOpen}
+        task={drawerTask}
+        onSave={handleDrawerSave}
+        onClose={handleDrawerClose}
+        onDelete={() => {
+          if (drawerTask) {
+            onDeleteTask(drawerTask.id)
+            handleDrawerClose()
+          }
+        }}
+      />
+    </>
   )
 }
 
