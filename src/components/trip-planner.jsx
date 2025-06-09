@@ -386,7 +386,6 @@ const TripPlanner = () => {
         open={isModalOpen} 
         onClose={() => setIsModalOpen(false)} 
         className="relative z-50"
-        static
       >
         <DialogBackdrop 
           className="fixed inset-0 bg-black/50"

@@ -373,7 +373,6 @@ const RightSidebar = () => {
         open={isExamModalOpen} 
         onClose={() => setIsExamModalOpen(false)} 
         className="relative z-50"
-        static
       >
         <DialogBackdrop 
           className="fixed inset-0 bg-black/50"
@@ -543,7 +542,6 @@ const RightSidebar = () => {
         open={isAssignmentModalOpen} 
         onClose={() => setIsAssignmentModalOpen(false)} 
         className="relative z-50"
-        static
       >
         <DialogBackdrop 
           className="fixed inset-0 bg-black/50"
