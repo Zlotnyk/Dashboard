@@ -330,271 +330,283 @@ const UpcomingBirthdays = ({ events = [] }) => {
       </div>
 
       {/* Add/Edit Birthday Modal */}
-      <Dialog open={isModalOpen} onClose={() => setIsModalOpen(false)} className="relative z-50">
+      <Dialog open={isModalOpen} onClose={setIsModalOpen} className="relative z-50">
         <DialogBackdrop 
-          className="fixed inset-0 bg-black/50"
+          transition
+          className="fixed inset-0 bg-black/50 transition-opacity data-closed:opacity-0 data-enter:duration-300 data-enter:ease-out data-leave:duration-200 data-leave:ease-in"
         />
         
-        <div className="fixed inset-0 z-10 flex items-center justify-center p-4">
-          <DialogPanel 
-            className="relative transform overflow-hidden rounded-lg bg-[#1a1a1a] text-left shadow-xl w-full max-w-md"
-          >
-            <div className="bg-[#1a1a1a] px-6 pt-6 pb-4">
-              <div className="flex items-center justify-between mb-6">
-                <DialogTitle className="text-xl font-semibold text-white">
-                  {selectedBirthday ? 'Edit Birthday' : 'Add Birthday'}
-                </DialogTitle>
-                <button
-                  onClick={() => setIsModalOpen(false)}
-                  className="text-gray-400 hover:text-white"
-                >
-                  <X size={24} />
-                </button>
-              </div>
-
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm text-gray-300 mb-2">Name</label>
-                  <input
-                    type="text"
-                    value={birthdayForm.name}
-                    onChange={(e) => handleFormChange('name', e.target.value)}
-                    className={`w-full px-3 py-2 bg-transparent border-none outline-none placeholder-gray-400 focus:outline-none ${
-                      validationErrors.name ? 'text-red-400' : 'text-white'
-                    }`}
-                    placeholder="Enter person's name"
-                  />
-                  {validationErrors.name && (
-                    <div className="flex items-center gap-2 mt-1">
-                      <AlertCircle size={14} className="text-red-400" />
-                      <span className="text-red-400 text-sm">{validationErrors.name}</span>
-                    </div>
-                  )}
+        <div className="fixed inset-0 z-10 w-screen overflow-y-auto">
+          <div className="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+            <DialogPanel 
+              transition
+              className="relative transform overflow-hidden rounded-lg bg-[#1a1a1a] text-left shadow-xl transition-all data-closed:translate-y-4 data-closed:opacity-0 data-enter:duration-300 data-enter:ease-out data-leave:duration-200 data-leave:ease-in sm:my-8 sm:w-full sm:max-w-md data-closed:sm:translate-y-0 data-closed:sm:scale-95"
+            >
+              <div className="bg-[#1a1a1a] px-6 pt-6 pb-4">
+                <div className="flex items-center justify-between mb-6">
+                  <DialogTitle className="text-xl font-semibold text-white">
+                    {selectedBirthday ? 'Edit Birthday' : 'Add Birthday'}
+                  </DialogTitle>
+                  <button
+                    onClick={() => setIsModalOpen(false)}
+                    className="text-gray-400 hover:text-white"
+                  >
+                    <X size={24} />
+                  </button>
                 </div>
 
-                <div>
-                  <label className="block text-sm text-gray-300 mb-2">Birth Date</label>
-                  <input
-                    type="date"
-                    value={birthdayForm.birthDate}
-                    onChange={(e) => handleFormChange('birthDate', e.target.value)}
-                    className={`w-full px-3 py-2 bg-transparent border-none outline-none focus:outline-none ${
-                      validationErrors.birthDate ? 'text-red-400' : 'text-white'
-                    }`}
-                  />
-                  {validationErrors.birthDate && (
-                    <div className="flex items-center gap-2 mt-1">
-                      <AlertCircle size={14} className="text-red-400" />
-                      <span className="text-red-400 text-sm">{validationErrors.birthDate}</span>
-                    </div>
-                  )}
-                </div>
-
-                {birthdayForm.birthDate && !validationErrors.birthDate && (
-                  <div className="bg-[#2a2a2a] p-3 rounded-lg">
-                    <div className="text-sm text-gray-300">
-                      {(() => {
-                        const info = calculateBirthdayInfo(birthdayForm.birthDate)
-                        return (
-                          <div>
-                            <div>Current age: {info.currentAge} years</div>
-                            <div>Next birthday: {formatDaysUntil(info.daysUntil)}</div>
-                            <div>Will turn: {info.nextAge} years</div>
-                          </div>
-                        )
-                      })()}
-                    </div>
+                <div className="space-y-4">
+                  <div>
+                    <label className="block text-sm text-gray-300 mb-2">Name</label>
+                    <input
+                      type="text"
+                      value={birthdayForm.name}
+                      onChange={(e) => handleFormChange('name', e.target.value)}
+                      className={`w-full px-3 py-2 bg-transparent border-none outline-none placeholder-gray-400 focus:outline-none ${
+                        validationErrors.name ? 'text-red-400' : 'text-white'
+                      }`}
+                      placeholder="Enter person's name"
+                    />
+                    {validationErrors.name && (
+                      <div className="flex items-center gap-2 mt-1">
+                        <AlertCircle size={14} className="text-red-400" />
+                        <span className="text-red-400 text-sm">{validationErrors.name}</span>
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
-            </div>
 
-            <div className="bg-[#1a1a1a] px-6 py-4 border-t border-gray-700">
-              <div className="flex justify-end gap-3">
-                <button
-                  onClick={() => setIsModalOpen(false)}
-                  className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors text-sm"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleSaveBirthday}
-                  className="px-4 py-2 bg-accent text-white rounded-lg hover:bg-accent-80 transition-colors text-sm"
-                >
-                  {selectedBirthday ? 'Update' : 'Add'} Birthday
-                </button>
+                  <div>
+                    <label className="block text-sm text-gray-300 mb-2">Birth Date</label>
+                    <input
+                      type="date"
+                      value={birthdayForm.birthDate}
+                      onChange={(e) => handleFormChange('birthDate', e.target.value)}
+                      className={`w-full px-3 py-2 bg-transparent border-none outline-none focus:outline-none ${
+                        validationErrors.birthDate ? 'text-red-400' : 'text-white'
+                      }`}
+                    />
+                    {validationErrors.birthDate && (
+                      <div className="flex items-center gap-2 mt-1">
+                        <AlertCircle size={14} className="text-red-400" />
+                        <span className="text-red-400 text-sm">{validationErrors.birthDate}</span>
+                      </div>
+                    )}
+                  </div>
+
+                  {birthdayForm.birthDate && !validationErrors.birthDate && (
+                    <div className="bg-[#2a2a2a] p-3 rounded-lg">
+                      <div className="text-sm text-gray-300">
+                        {(() => {
+                          const info = calculateBirthdayInfo(birthdayForm.birthDate)
+                          return (
+                            <div>
+                              <div>Current age: {info.currentAge} years</div>
+                              <div>Next birthday: {formatDaysUntil(info.daysUntil)}</div>
+                              <div>Will turn: {info.nextAge} years</div>
+                            </div>
+                          )
+                        })()}
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>
-          </DialogPanel>
+
+              <div className="bg-[#1a1a1a] px-6 py-4 border-t border-gray-700">
+                <div className="flex justify-end gap-3">
+                  <button
+                    onClick={() => setIsModalOpen(false)}
+                    className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors text-sm"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleSaveBirthday}
+                    className="px-4 py-2 bg-accent text-white rounded-lg hover:bg-accent-80 transition-colors text-sm"
+                  >
+                    {selectedBirthday ? 'Update' : 'Add'} Birthday
+                  </button>
+                </div>
+              </div>
+            </DialogPanel>
+          </div>
         </div>
       </Dialog>
 
       {/* Settings Modal */}
-      <Dialog open={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} className="relative z-50">
+      <Dialog open={isSettingsOpen} onClose={setIsSettingsOpen} className="relative z-50">
         <DialogBackdrop 
-          className="fixed inset-0 bg-black/50"
+          transition
+          className="fixed inset-0 bg-black/50 transition-opacity data-closed:opacity-0 data-enter:duration-300 data-enter:ease-out data-leave:duration-200 data-leave:ease-in"
         />
         
-        <div className="fixed inset-0 z-10 flex items-center justify-center p-4">
-          <DialogPanel 
-            className="relative transform overflow-hidden rounded-lg bg-[#1a1a1a] text-left shadow-xl w-full max-w-md"
-          >
-            <div className="bg-[#1a1a1a] px-6 pt-6 pb-4">
-              <div className="flex items-center justify-between mb-6">
-                <DialogTitle className="text-xl font-semibold text-white">
-                  Birthday Settings
-                </DialogTitle>
-                <button
-                  onClick={() => setIsSettingsOpen(false)}
-                  className="text-gray-400 hover:text-white"
-                >
-                  <X size={24} />
-                </button>
-              </div>
-
-              <div className="space-y-6">
-                {/* Filter Settings */}
-                <div className="bg-[#2a2a2a] rounded-lg p-4">
-                  <h4 className="text-white font-medium mb-3">Filter Settings</h4>
-                  <div className="space-y-2">
-                    <div className="text-sm text-gray-300">
-                      Currently showing: <span className="text-white">{getFilterLabel()}</span>
-                    </div>
-                    <div className="text-xs text-gray-400">
-                      Change the filter in the main view to see birthdays for different time periods.
-                    </div>
-                  </div>
-                </div>
-
-                {/* Statistics */}
-                <div className="bg-[#2a2a2a] rounded-lg p-4">
-                  <h4 className="text-white font-medium mb-3">Statistics</h4>
-                  <div className="space-y-2 text-sm text-gray-300">
-                    <div className="flex justify-between">
-                      <span>Total birthdays:</span>
-                      <span>{birthdays.length}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>From calendar:</span>
-                      <span>{birthdays.filter(b => b.source === 'calendar').length}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>Manual entries:</span>
-                      <span>{birthdays.filter(b => b.source === 'manual').length}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>In current filter:</span>
-                      <span>{filteredBirthdays.length}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>This week:</span>
-                      <span>{birthdays.filter(b => b.daysUntil <= 7).length}</span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Actions */}
-                <div className="space-y-3">
-                  <h4 className="text-white font-medium">Actions</h4>
-                  
+        <div className="fixed inset-0 z-10 w-screen overflow-y-auto">
+          <div className="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+            <DialogPanel 
+              transition
+              className="relative transform overflow-hidden rounded-lg bg-[#1a1a1a] text-left shadow-xl transition-all data-closed:translate-y-4 data-closed:opacity-0 data-enter:duration-300 data-enter:ease-out data-leave:duration-200 data-leave:ease-in sm:my-8 sm:w-full sm:max-w-md data-closed:sm:translate-y-0 data-closed:sm:scale-95"
+            >
+              <div className="bg-[#1a1a1a] px-6 pt-6 pb-4">
+                <div className="flex items-center justify-between mb-6">
+                  <DialogTitle className="text-xl font-semibold text-white">
+                    Birthday Settings
+                  </DialogTitle>
                   <button
-                    onClick={() => setIsDeleteConfirmOpen(true)}
-                    className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                    onClick={() => setIsSettingsOpen(false)}
+                    className="text-gray-400 hover:text-white"
                   >
-                    <Trash2 size={16} />
-                    Delete All Manual Birthdays
+                    <X size={24} />
                   </button>
-                  
-                  <div className="text-xs text-gray-400 text-center">
-                    This will only delete manually added birthdays, not calendar events
-                  </div>
                 </div>
 
-                {/* Info */}
-                <div className="bg-blue-900/20 border border-blue-700/30 rounded-lg p-4">
-                  <div className="text-sm text-gray-300">
-                    <div className="font-medium text-blue-400 mb-2">How it works:</div>
-                    <ul className="space-y-1 text-xs">
-                      <li>• Birthdays from calendar events automatically appear here</li>
-                      <li>• Manual birthdays are stored locally on your device</li>
-                      <li>• Use the filter to see birthdays for different time periods</li>
-                      <li>• Calendar birthdays repeat yearly automatically</li>
-                    </ul>
+                <div className="space-y-6">
+                  {/* Filter Settings */}
+                  <div className="bg-[#2a2a2a] rounded-lg p-4">
+                    <h4 className="text-white font-medium mb-3">Filter Settings</h4>
+                    <div className="space-y-2">
+                      <div className="text-sm text-gray-300">
+                        Currently showing: <span className="text-white">{getFilterLabel()}</span>
+                      </div>
+                      <div className="text-xs text-gray-400">
+                        Change the filter in the main view to see birthdays for different time periods.
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Statistics */}
+                  <div className="bg-[#2a2a2a] rounded-lg p-4">
+                    <h4 className="text-white font-medium mb-3">Statistics</h4>
+                    <div className="space-y-2 text-sm text-gray-300">
+                      <div className="flex justify-between">
+                        <span>Total birthdays:</span>
+                        <span>{birthdays.length}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>From calendar:</span>
+                        <span>{birthdays.filter(b => b.source === 'calendar').length}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Manual entries:</span>
+                        <span>{birthdays.filter(b => b.source === 'manual').length}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>In current filter:</span>
+                        <span>{filteredBirthdays.length}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>This week:</span>
+                        <span>{birthdays.filter(b => b.daysUntil <= 7).length}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Actions */}
+                  <div className="space-y-3">
+                    <h4 className="text-white font-medium">Actions</h4>
+                    
+                    <button
+                      onClick={() => setIsDeleteConfirmOpen(true)}
+                      className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                    >
+                      <Trash2 size={16} />
+                      Delete All Manual Birthdays
+                    </button>
+                    
+                    <div className="text-xs text-gray-400 text-center">
+                      This will only delete manually added birthdays, not calendar events
+                    </div>
+                  </div>
+
+                  {/* Info */}
+                  <div className="bg-blue-900/20 border border-blue-700/30 rounded-lg p-4">
+                    <div className="text-sm text-gray-300">
+                      <div className="font-medium text-blue-400 mb-2">How it works:</div>
+                      <ul className="space-y-1 text-xs">
+                        <li>• Birthdays from calendar events automatically appear here</li>
+                        <li>• Manual birthdays are stored locally on your device</li>
+                        <li>• Use the filter to see birthdays for different time periods</li>
+                        <li>• Calendar birthdays repeat yearly automatically</li>
+                      </ul>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
 
-            <div className="bg-[#1a1a1a] px-6 py-4 border-t border-gray-700">
-              <div className="flex justify-end">
-                <button
-                  onClick={() => setIsSettingsOpen(false)}
-                  className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors text-sm"
-                >
-                  Close
-                </button>
+              <div className="bg-[#1a1a1a] px-6 py-4 border-t border-gray-700">
+                <div className="flex justify-end">
+                  <button
+                    onClick={() => setIsSettingsOpen(false)}
+                    className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors text-sm"
+                  >
+                    Close
+                  </button>
+                </div>
               </div>
-            </div>
-          </DialogPanel>
+            </DialogPanel>
+          </div>
         </div>
       </Dialog>
 
       {/* Delete Confirmation Modal */}
-      <Dialog open={isDeleteConfirmOpen} onClose={() => setIsDeleteConfirmOpen(false)} className="relative z-50">
+      <Dialog open={isDeleteConfirmOpen} onClose={setIsDeleteConfirmOpen} className="relative z-50">
         <DialogBackdrop 
-          className="fixed inset-0 bg-black/50"
+          transition
+          className="fixed inset-0 bg-black/50 transition-opacity data-closed:opacity-0 data-enter:duration-300 data-enter:ease-out data-leave:duration-200 data-leave:ease-in"
         />
         
-        <div className="fixed inset-0 z-10 flex items-center justify-center p-4">
-          <DialogPanel 
-            className="relative transform overflow-hidden rounded-lg bg-[#1a1a1a] text-left shadow-xl w-full max-w-md"
-          >
-            <div className="bg-[#1a1a1a] px-6 pt-6 pb-4">
-              <div className="flex items-center justify-between mb-6">
-                <DialogTitle className="text-xl font-semibold text-white">
-                  Confirm Delete
-                </DialogTitle>
-                <button
-                  onClick={() => setIsDeleteConfirmOpen(false)}
-                  className="text-gray-400 hover:text-white"
-                >
-                  <X size={24} />
-                </button>
-              </div>
+        <div className="fixed inset-0 z-10 w-screen overflow-y-auto">
+          <div className="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+            <DialogPanel 
+              transition
+              className="relative transform overflow-hidden rounded-lg bg-[#1a1a1a] text-left shadow-xl transition-all data-closed:translate-y-4 data-closed:opacity-0 data-enter:duration-300 data-enter:ease-out data-leave:duration-200 data-leave:ease-in sm:my-8 sm:w-full sm:max-w-md data-closed:sm:translate-y-0 data-closed:sm:scale-95"
+            >
+              <div className="bg-[#1a1a1a] px-6 pt-6 pb-4">
+                <div className="flex items-center justify-between mb-6">
+                  <DialogTitle className="text-xl font-semibold text-white">
+                    Confirm Delete
+                  </DialogTitle>
+                  <button
+                    onClick={() => setIsDeleteConfirmOpen(false)}
+                    className="text-gray-400 hover:text-white"
+                  >
+                    <X size={24} />
+                  </button>
+                </div>
 
-              <div className="space-y-4">
-                <div className="bg-red-900/20 border border-red-700/30 rounded-lg p-4">
-                  <div className="flex items-center gap-3 mb-3">
-                    <AlertCircle size={20} className="text-red-400" />
-                    <span className="text-red-400 font-medium">Warning</span>
+                <div className="space-y-4">
+                  <div className="bg-red-900/20 border border-red-700/30 rounded-lg p-4">
+                    <div className="flex items-center gap-3 mb-3">
+                      <AlertCircle size={20} className="text-red-400" />
+                      <span className="text-red-400 font-medium">Warning</span>
+                    </div>
+                    <p className="text-gray-300 text-sm">
+                      Are you sure you want to delete all manually added birthdays? This action cannot be undone.
+                    </p>
+                    <p className="text-gray-400 text-xs mt-2">
+                      This will only delete manually added birthdays. Calendar events will not be affected.
+                    </p>
                   </div>
-                  <p className="text-gray-300 text-sm">
-                    Are you sure you want to delete all manually added birthdays? This action cannot be undone.
-                  </p>
-                  <p className="text-gray-400 text-xs mt-2">
-                    This will only delete manually added birthdays. Calendar events will not be affected.
-                  </p>
                 </div>
               </div>
-            </div>
 
-            <div className="bg-[#1a1a1a] px-6 py-4 border-t border-gray-700">
-              <div className="flex justify-end gap-3">
-                <button
-                  onClick={() => setIsDeleteConfirmOpen(false)}
-                  className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors text-sm"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleDeleteAllBirthdays}
-                  className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm"
-                >
-                  Delete All
-                </button>
+              <div className="bg-[#1a1a1a] px-6 py-4 border-t border-gray-700">
+                <div className="flex justify-end gap-3">
+                  <button
+                    onClick={() => setIsDeleteConfirmOpen(false)}
+                    className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors text-sm"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleDeleteAllBirthdays}
+                    className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm"
+                  >
+                    Delete All
+                  </button>
+                </div>
               </div>
-            </div>
-          </DialogPanel>
+            </DialogPanel>
+          </div>
         </div>
       </Dialog>
     </>

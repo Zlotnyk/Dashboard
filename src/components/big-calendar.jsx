@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState } from 'react'
 import { ChevronLeft, ChevronRight, Plus, X, Calendar, MapPin, Clock, ChevronDown, AlertCircle } from 'lucide-react'
 import { Dialog, DialogBackdrop, DialogPanel, DialogTitle } from '@headlessui/react'
 
@@ -131,72 +131,33 @@ const BigCalendar = ({ events = [], onAddEvent, onDeleteEvent }) => {
     }
   }
 
-  // Prevent scroll to top when opening modal
-  const openModal = (day = null, event = null) => {
-    // Store current scroll position
-    const scrollY = window.scrollY
-    
-    // Prevent default behavior and stop propagation
-    if (day !== null) {
-      const selectedDate = new Date(currentYear, currentMonth, day)
-      setSelectedDay(day)
-      setSelectedEvent(null)
-      setValidationErrors({})
-      setEventForm({
-        title: 'New page',
-        date: selectedDate.toISOString().split('T')[0],
-        time: '',
-        location: '',
-        category: 'meeting'
-      })
-    } else if (event) {
-      setSelectedEvent(event)
-      setValidationErrors({})
-      setEventForm({
-        title: event.title,
-        date: event.date.toISOString().split('T')[0],
-        time: event.time,
-        location: event.location,
-        category: event.category
-      })
-    }
-    
-    // Open modal
-    setIsModalOpen(true)
-    
-    // Restore scroll position after a small delay
-    requestAnimationFrame(() => {
-      window.scrollTo(0, scrollY)
-    })
-  }
-
-  const closeModal = () => {
-    setIsModalOpen(false)
+  const handlePlusClick = (day) => {
+    const selectedDate = new Date(currentYear, currentMonth, day)
+    setSelectedDay(day)
+    setSelectedEvent(null)
     setValidationErrors({})
     setEventForm({
-      title: '',
-      date: '',
+      title: 'New page',
+      date: selectedDate.toISOString().split('T')[0],
       time: '',
       location: '',
       category: 'meeting'
     })
-    setSelectedEvent(null)
-  }
-
-  const handlePlusClick = (day, e) => {
-    if (e) {
-      e.preventDefault()
-      e.stopPropagation()
-    }
-    openModal(day)
+    setIsModalOpen(true)
   }
 
   const handleEventClick = (event, e) => {
-    if (e) {
-      e.stopPropagation()
-      e.preventDefault()
-    }
-    openModal(null, event)
+    e.stopPropagation()
+    setSelectedEvent(event)
+    setValidationErrors({})
+    setEventForm({
+      title: event.title,
+      date: event.date.toISOString().split('T')[0],
+      time: event.time,
+      location: event.location,
+      category: event.category
+    })
+    setIsModalOpen(true)
   }
 
   const handleSaveEvent = () => {
@@ -236,13 +197,23 @@ const BigCalendar = ({ events = [], onAddEvent, onDeleteEvent }) => {
       onAddEvent(newEvent)
     }
     
-    closeModal()
+    setIsModalOpen(false)
+    setValidationErrors({})
+    setEventForm({
+      title: '',
+      date: '',
+      time: '',
+      location: '',
+      category: 'meeting'
+    })
+    setSelectedEvent(null)
   }
 
   const handleDeleteEvent = () => {
     if (selectedEvent) {
       onDeleteEvent(selectedEvent.id)
-      closeModal()
+      setIsModalOpen(false)
+      setSelectedEvent(null)
     }
   }
 
@@ -285,29 +256,6 @@ const BigCalendar = ({ events = [], onAddEvent, onDeleteEvent }) => {
     
     return [...regularEvents, ...birthdayEvents]
   }
-
-  // Prevent body scroll when modal is open
-  useEffect(() => {
-    if (isModalOpen) {
-      // Store current scroll position
-      const scrollY = window.scrollY
-      
-      // Prevent body scroll
-      document.body.style.position = 'fixed'
-      document.body.style.top = `-${scrollY}px`
-      document.body.style.width = '100%'
-      
-      return () => {
-        // Restore body scroll
-        document.body.style.position = ''
-        document.body.style.top = ''
-        document.body.style.width = ''
-        
-        // Restore scroll position
-        window.scrollTo(0, scrollY)
-      }
-    }
-  }, [isModalOpen])
 
   return (
     <>
@@ -449,7 +397,7 @@ const BigCalendar = ({ events = [], onAddEvent, onDeleteEvent }) => {
                   <Plus 
                     size={12} 
                     className="text-gray-500 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer hover:text-accent" 
-                    onClick={(e) => handlePlusClick(day, e)}
+                    onClick={() => handlePlusClick(day)}
                   />
                 </div>
                 
@@ -494,22 +442,20 @@ const BigCalendar = ({ events = [], onAddEvent, onDeleteEvent }) => {
         </div>
       </div>
 
-      {/* Event Modal - Fixed positioning */}
-      <Dialog 
-        open={isModalOpen} 
-        onClose={closeModal} 
-        className="relative z-50"
-      >
+      {/* Event Modal - Redesigned */}
+      <Dialog open={isModalOpen} onClose={setIsModalOpen} className="relative z-50">
         <DialogBackdrop 
-          className="fixed inset-0 bg-black/30 backdrop-blur-sm"
+          transition
+          className="fixed inset-0 bg-black/50 transition-opacity data-closed:opacity-0 data-enter:duration-300 data-enter:ease-out data-leave:duration-200 data-leave:ease-in"
         />
         
-        <div className="fixed inset-0 z-10 overflow-y-auto">
-          <div className="flex min-h-full items-center justify-center p-4 text-center">
+        <div className="fixed inset-0 z-10 w-screen overflow-y-auto">
+          <div className="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
             <DialogPanel 
-              className="relative transform overflow-hidden rounded-lg bg-[#1a1a1a]/90 backdrop-blur-md text-left shadow-xl w-full max-w-lg border border-gray-600"
+              transition
+              className="relative transform overflow-hidden rounded-lg bg-[#1a1a1a] text-left shadow-xl transition-all data-closed:translate-y-4 data-closed:opacity-0 data-enter:duration-300 data-enter:ease-out data-leave:duration-200 data-leave:ease-in sm:my-8 sm:w-full sm:max-w-lg data-closed:sm:translate-y-0 data-closed:sm:scale-95"
             >
-              <div className="bg-transparent px-6 pt-6 pb-4">
+              <div className="bg-[#1a1a1a] px-6 pt-6 pb-4">
                 <div className="flex items-center justify-between mb-8">
                   <div className="flex-1">
                     <input
@@ -529,7 +475,7 @@ const BigCalendar = ({ events = [], onAddEvent, onDeleteEvent }) => {
                     )}
                   </div>
                   <button
-                    onClick={closeModal}
+                    onClick={() => setIsModalOpen(false)}
                     className="text-gray-400 hover:text-white ml-4"
                   >
                     <X size={24} />
@@ -628,7 +574,7 @@ const BigCalendar = ({ events = [], onAddEvent, onDeleteEvent }) => {
               </div>
 
               {/* Footer with action buttons */}
-              <div className="bg-transparent px-6 py-4 border-t border-gray-600">
+              <div className="bg-[#1a1a1a] px-6 py-4 border-t border-gray-700">
                 <div className="flex gap-3">
                   {selectedEvent && (
                     <button
@@ -640,7 +586,7 @@ const BigCalendar = ({ events = [], onAddEvent, onDeleteEvent }) => {
                   )}
                   <div className="flex-1"></div>
                   <button
-                    onClick={closeModal}
+                    onClick={() => setIsModalOpen(false)}
                     className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors text-sm"
                   >
                     Cancel
