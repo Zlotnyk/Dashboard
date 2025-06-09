@@ -112,7 +112,11 @@ const BigCalendar = ({ events = [], onAddEvent, onDeleteEvent }) => {
         date: new Date(eventForm.date),
         time: eventForm.time,
         location: eventForm.location,
-        category: eventForm.category
+        category: eventForm.category,
+        // Keep birthday flag if it was a birthday
+        isBirthday: selectedEvent.isBirthday || eventForm.category === 'birthday',
+        // Keep original birth year for age calculation
+        originalBirthYear: selectedEvent.originalBirthYear || (eventForm.category === 'birthday' ? new Date(eventForm.date).getFullYear() : null)
       }
       onAddEvent(updatedEvent) // This should be onUpdateEvent, but using onAddEvent for now
     } else {
@@ -123,7 +127,11 @@ const BigCalendar = ({ events = [], onAddEvent, onDeleteEvent }) => {
         date: new Date(eventForm.date),
         time: eventForm.time,
         location: eventForm.location,
-        category: eventForm.category
+        category: eventForm.category,
+        // Mark as birthday if category is birthday
+        isBirthday: eventForm.category === 'birthday',
+        // Store original birth year for age calculation
+        originalBirthYear: eventForm.category === 'birthday' ? new Date(eventForm.date).getFullYear() : null
       }
       onAddEvent(newEvent)
     }
@@ -147,11 +155,42 @@ const BigCalendar = ({ events = [], onAddEvent, onDeleteEvent }) => {
     }
   }
 
+  // Enhanced function to get events for a day, including recurring birthdays
   const getEventsForDay = (day) => {
     const dayDate = new Date(currentYear, currentMonth, day)
-    return events.filter(event => 
-      event.date.toDateString() === dayDate.toDateString()
+    
+    // Get regular events for this exact date
+    const regularEvents = events.filter(event => 
+      !event.isBirthday && event.date.toDateString() === dayDate.toDateString()
     )
+    
+    // Get birthday events that should repeat yearly
+    const birthdayEvents = events
+      .filter(event => event.isBirthday || event.category === 'birthday')
+      .filter(event => {
+        const eventDate = new Date(event.date)
+        // Check if month and day match (yearly repeat)
+        return eventDate.getMonth() === dayDate.getMonth() && 
+               eventDate.getDate() === dayDate.getDate()
+      })
+      .map(event => {
+        // Calculate current age if it's a birthday
+        let ageText = ''
+        if (event.originalBirthYear) {
+          const currentAge = currentYear - event.originalBirthYear
+          ageText = ` (${currentAge})`
+        }
+        
+        return {
+          ...event,
+          // Update the display title to include age
+          displayTitle: `${event.title}${ageText}`,
+          // Keep the original date for reference but mark as current year occurrence
+          currentYearDate: dayDate
+        }
+      })
+    
+    return [...regularEvents, ...birthdayEvents]
   }
 
   return (
@@ -236,16 +275,31 @@ const BigCalendar = ({ events = [], onAddEvent, onDeleteEvent }) => {
                 
                 {/* Events - increased height */}
                 <div className="mt-1 space-y-1">
-                  {dayEvents.map(event => (
-                    <div 
-                      key={event.id}
-                      className="w-full h-10 bg-gray-600 rounded text-xs text-white px-2 flex items-center truncate cursor-pointer hover:bg-gray-500"
-                      title={`${event.title} ${event.time ? `at ${event.time}` : ''}`}
-                      onClick={(e) => handleEventClick(event, e)}
-                    >
-                      {event.title}
-                    </div>
-                  ))}
+                  {dayEvents.map(event => {
+                    const isBirthday = event.isBirthday || event.category === 'birthday'
+                    const eventTitle = event.displayTitle || event.title
+                    
+                    return (
+                      <div 
+                        key={`${event.id}-${day}`}
+                        className={`w-full h-10 rounded text-xs text-white px-2 flex items-center truncate cursor-pointer transition-colors ${
+                          isBirthday 
+                            ? 'bg-pink-600 hover:bg-pink-500' 
+                            : 'bg-gray-600 hover:bg-gray-500'
+                        }`}
+                        title={`${eventTitle} ${event.time ? `at ${event.time}` : ''} ${isBirthday ? '🎂' : ''}`}
+                        onClick={(e) => handleEventClick(event, e)}
+                      >
+                        <div className="flex items-center gap-1 w-full">
+                          {isBirthday && <span className="text-xs">🎂</span>}
+                          <span className="truncate flex-1">{eventTitle}</span>
+                          {isBirthday && (
+                            <span className="text-xs opacity-75 ml-1">Birthday</span>
+                          )}
+                        </div>
+                      </div>
+                    )
+                  })}
                 </div>
               </div>
             )
@@ -352,6 +406,24 @@ const BigCalendar = ({ events = [], onAddEvent, onDeleteEvent }) => {
                       </select>
                     </div>
                   </div>
+
+                  {/* Birthday Info */}
+                  {eventForm.category === 'birthday' && (
+                    <div className="bg-pink-900/20 border border-pink-700/30 rounded-lg p-4">
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className="text-pink-400">🎂</span>
+                        <span className="text-pink-400 font-medium">Birthday Event</span>
+                      </div>
+                      <div className="text-sm text-gray-300">
+                        This event will repeat every year on the same date.
+                        {eventForm.date && (
+                          <div className="mt-1">
+                            Age in {currentYear}: {currentYear - new Date(eventForm.date).getFullYear()} years
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
 
