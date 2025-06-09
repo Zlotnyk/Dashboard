@@ -6,7 +6,7 @@ import NavigationLinks from '../../components/navigation-links'
 import WavyLines from '../../components/wavy-lines'
 import FlipClock from '../../components/FlipClock/'
 import QuickLinks from '../../components/quick-links'
-import '../App.css'
+import '../../App.css'
 
 function AssignmentPlannerPage() {
   return (
