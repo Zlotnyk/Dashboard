@@ -182,7 +182,7 @@ const UpcomingEvents = ({ events = [] }) => {
         {/* Header */}
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-[Libre_Baskerville] italic text-white">
-            Upcoming Events in 30 Days
+            Upcoming Events
           </h3>
           <button
             onClick={() => setIsSettingsOpen(true)}
