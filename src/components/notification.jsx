@@ -63,28 +63,28 @@ const Notification = ({
   return (
     <div className="fixed top-4 right-4 z-50">
       <div
-        className={`max-w-md w-full bg-[#1a1a1a] shadow-lg rounded-lg pointer-events-auto ring-1 ring-black ring-opacity-5 border-l-4 ${getBorderColor()} transform transition-all duration-300 ease-in-out ${
+        className={`max-w-xl w-full bg-[#1a1a1a] shadow-lg rounded-lg pointer-events-auto ring-1 ring-black ring-opacity-5 border-l-4 ${getBorderColor()} transform transition-all duration-300 ease-in-out ${
           show 
             ? 'translate-x-0 opacity-100 scale-100' 
             : 'translate-x-full opacity-0 scale-95'
         }`}
       >
-        <div className="p-5">
+        <div className="p-6">
           <div className="flex items-start">
             <div className="flex-shrink-0">
               {getIcon()}
             </div>
-            <div className="ml-4 w-0 flex-1 pt-0.5">
-              <p className="text-base font-medium text-white">
+            <div className="ml-5 w-0 flex-1 pt-0.5">
+              <p className="text-lg font-medium text-white">
                 {title}
               </p>
               {message && (
-                <p className="mt-2 text-sm text-gray-300 leading-relaxed">
+                <p className="mt-3 text-base text-gray-300 leading-relaxed">
                   {message}
                 </p>
               )}
             </div>
-            <div className="ml-4 flex-shrink-0 flex">
+            <div className="ml-5 flex-shrink-0 flex">
               <button
                 className="bg-transparent rounded-md inline-flex text-gray-400 hover:text-gray-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors"
                 onClick={handleClose}
