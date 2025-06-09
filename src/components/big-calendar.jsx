@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { ChevronLeft, ChevronRight, Plus, X, Calendar, MapPin, Clock, ChevronDown, AlertCircle } from 'lucide-react'
 import { Dialog, DialogBackdrop, DialogPanel, DialogTitle } from '@headlessui/react'
 
@@ -131,23 +131,51 @@ const BigCalendar = ({ events = [], onAddEvent, onDeleteEvent }) => {
     }
   }
 
+  // Prevent scroll to top when opening modal
+  const openModal = (day = null, event = null) => {
+    // Prevent default behavior and stop propagation
+    if (day !== null) {
+      const selectedDate = new Date(currentYear, currentMonth, day)
+      setSelectedDay(day)
+      setSelectedEvent(null)
+      setValidationErrors({})
+      setEventForm({
+        title: 'New page',
+        date: selectedDate.toISOString().split('T')[0],
+        time: '',
+        location: '',
+        category: 'meeting'
+      })
+    } else if (event) {
+      setSelectedEvent(event)
+      setValidationErrors({})
+      setEventForm({
+        title: event.title,
+        date: event.date.toISOString().split('T')[0],
+        time: event.time,
+        location: event.location,
+        category: event.category
+      })
+    }
+    
+    // Store current scroll position
+    const scrollY = window.scrollY
+    
+    // Open modal
+    setIsModalOpen(true)
+    
+    // Restore scroll position after a small delay
+    setTimeout(() => {
+      window.scrollTo(0, scrollY)
+    }, 0)
+  }
+
   const handlePlusClick = (day, e) => {
     if (e) {
       e.preventDefault()
       e.stopPropagation()
     }
-    const selectedDate = new Date(currentYear, currentMonth, day)
-    setSelectedDay(day)
-    setSelectedEvent(null)
-    setValidationErrors({})
-    setEventForm({
-      title: 'New page',
-      date: selectedDate.toISOString().split('T')[0],
-      time: '',
-      location: '',
-      category: 'meeting'
-    })
-    setIsModalOpen(true)
+    openModal(day)
   }
 
   const handleEventClick = (event, e) => {
@@ -155,16 +183,7 @@ const BigCalendar = ({ events = [], onAddEvent, onDeleteEvent }) => {
       e.stopPropagation()
       e.preventDefault()
     }
-    setSelectedEvent(event)
-    setValidationErrors({})
-    setEventForm({
-      title: event.title,
-      date: event.date.toISOString().split('T')[0],
-      time: event.time,
-      location: event.location,
-      category: event.category
-    })
-    setIsModalOpen(true)
+    openModal(null, event)
   }
 
   const handleSaveEvent = () => {
@@ -263,6 +282,29 @@ const BigCalendar = ({ events = [], onAddEvent, onDeleteEvent }) => {
     
     return [...regularEvents, ...birthdayEvents]
   }
+
+  // Prevent body scroll when modal is open
+  useEffect(() => {
+    if (isModalOpen) {
+      // Store current scroll position
+      const scrollY = window.scrollY
+      
+      // Prevent body scroll
+      document.body.style.position = 'fixed'
+      document.body.style.top = `-${scrollY}px`
+      document.body.style.width = '100%'
+      
+      return () => {
+        // Restore body scroll
+        document.body.style.position = ''
+        document.body.style.top = ''
+        document.body.style.width = ''
+        
+        // Restore scroll position
+        window.scrollTo(0, scrollY)
+      }
+    }
+  }, [isModalOpen])
 
   return (
     <>
@@ -449,165 +491,168 @@ const BigCalendar = ({ events = [], onAddEvent, onDeleteEvent }) => {
         </div>
       </div>
 
-      {/* Event Modal - Redesigned */}
+      {/* Event Modal - Fixed positioning */}
       <Dialog 
         open={isModalOpen} 
         onClose={() => setIsModalOpen(false)} 
         className="relative z-50"
+        static
       >
         <DialogBackdrop 
           className="fixed inset-0 bg-black/50"
         />
         
-        <div className="fixed inset-0 z-10 flex items-center justify-center p-4">
-          <DialogPanel 
-            className="relative transform overflow-hidden rounded-lg bg-[#1a1a1a] text-left shadow-xl w-full max-w-lg"
-          >
-            <div className="bg-[#1a1a1a] px-6 pt-6 pb-4">
-              <div className="flex items-center justify-between mb-8">
-                <div className="flex-1">
-                  <input
-                    type="text"
-                    value={eventForm.title}
-                    onChange={(e) => handleFormChange('title', e.target.value)}
-                    className={`text-2xl font-medium bg-transparent border-none outline-none flex-1 w-full ${
-                      validationErrors.title ? 'text-red-400' : 'text-white'
-                    }`}
-                    placeholder="New page"
-                  />
-                  {validationErrors.title && (
-                    <div className="flex items-center gap-2 mt-1">
-                      <AlertCircle size={14} className="text-red-400" />
-                      <span className="text-red-400 text-sm">{validationErrors.title}</span>
-                    </div>
-                  )}
-                </div>
-                <button
-                  onClick={() => setIsModalOpen(false)}
-                  className="text-gray-400 hover:text-white ml-4"
-                >
-                  <X size={24} />
-                </button>
-              </div>
-
-              <div className="space-y-6">
-                {/* Date Field */}
-                <div className="flex items-start gap-4">
-                  <Calendar size={20} className="text-gray-400 flex-shrink-0 mt-1" />
+        <div className="fixed inset-0 z-10 overflow-y-auto">
+          <div className="flex min-h-full items-center justify-center p-4 text-center">
+            <DialogPanel 
+              className="relative transform overflow-hidden rounded-lg bg-[#1a1a1a] text-left shadow-xl w-full max-w-lg"
+            >
+              <div className="bg-[#1a1a1a] px-6 pt-6 pb-4">
+                <div className="flex items-center justify-between mb-8">
                   <div className="flex-1">
-                    <div className="text-sm text-gray-400 mb-1">Date</div>
                     <input
-                      type="date"
-                      value={eventForm.date}
-                      onChange={(e) => handleFormChange('date', e.target.value)}
-                      className={`w-full bg-transparent text-base border-none outline-none ${
-                        validationErrors.date ? 'text-red-400' : 'text-white'
+                      type="text"
+                      value={eventForm.title}
+                      onChange={(e) => handleFormChange('title', e.target.value)}
+                      className={`text-2xl font-medium bg-transparent border-none outline-none flex-1 w-full ${
+                        validationErrors.title ? 'text-red-400' : 'text-white'
                       }`}
+                      placeholder="New page"
                     />
-                    {validationErrors.date && (
+                    {validationErrors.title && (
                       <div className="flex items-center gap-2 mt-1">
                         <AlertCircle size={14} className="text-red-400" />
-                        <span className="text-red-400 text-sm">{validationErrors.date}</span>
+                        <span className="text-red-400 text-sm">{validationErrors.title}</span>
                       </div>
                     )}
                   </div>
+                  <button
+                    onClick={() => setIsModalOpen(false)}
+                    className="text-gray-400 hover:text-white ml-4"
+                  >
+                    <X size={24} />
+                  </button>
                 </div>
 
-                {/* Location Field */}
-                <div className="flex items-center gap-4">
-                  <MapPin size={20} className="text-gray-400 flex-shrink-0" />
-                  <div className="flex-1">
-                    <div className="text-sm text-gray-400 mb-1">Location</div>
-                    <input
-                      type="text"
-                      value={eventForm.location}
-                      onChange={(e) => handleFormChange('location', e.target.value)}
-                      placeholder="Empty"
-                      className="w-full bg-transparent text-white text-base border-none outline-none placeholder-gray-500"
-                    />
-                  </div>
-                </div>
-
-                {/* Time Field */}
-                <div className="flex items-center gap-4">
-                  <Clock size={20} className="text-gray-400 flex-shrink-0" />
-                  <div className="flex-1">
-                    <div className="text-sm text-gray-400 mb-1">Time</div>
-                    <input
-                      type="time"
-                      value={eventForm.time}
-                      onChange={(e) => handleFormChange('time', e.target.value)}
-                      placeholder="Empty"
-                      className="w-full bg-transparent text-white text-base border-none outline-none placeholder-gray-500"
-                    />
-                  </div>
-                </div>
-
-                {/* Category Field */}
-                <div className="flex items-center gap-4">
-                  <Calendar size={20} className="text-gray-400 flex-shrink-0" />
-                  <div className="flex-1">
-                    <div className="text-sm text-gray-400 mb-1">Category</div>
-                    <select
-                      value={eventForm.category}
-                      onChange={(e) => handleFormChange('category', e.target.value)}
-                      className="w-full bg-transparent text-white text-base border-none outline-none"
-                    >
-                      <option value="meeting" className="bg-[#1a1a1a]">Meeting</option>
-                      <option value="birthday" className="bg-[#1a1a1a]">Birthday</option>
-                      <option value="event" className="bg-[#1a1a1a]">Event</option>
-                      <option value="other" className="bg-[#1a1a1a]">Other</option>
-                    </select>
-                  </div>
-                </div>
-
-                {/* Birthday Info */}
-                {eventForm.category === 'birthday' && (
-                  <div className="bg-pink-900/20 border border-pink-700/30 rounded-lg p-4">
-                    <div className="flex items-center gap-2 mb-2">
-                      <span className="text-pink-400">🎂</span>
-                      <span className="text-pink-400 font-medium">Birthday Event</span>
-                    </div>
-                    <div className="text-sm text-gray-300">
-                      This event will repeat every year on the same date.
-                      {eventForm.date && (
-                        <div className="mt-1">
-                          Age in {currentYear}: {currentYear - new Date(eventForm.date).getFullYear()} years
+                <div className="space-y-6">
+                  {/* Date Field */}
+                  <div className="flex items-start gap-4">
+                    <Calendar size={20} className="text-gray-400 flex-shrink-0 mt-1" />
+                    <div className="flex-1">
+                      <div className="text-sm text-gray-400 mb-1">Date</div>
+                      <input
+                        type="date"
+                        value={eventForm.date}
+                        onChange={(e) => handleFormChange('date', e.target.value)}
+                        className={`w-full bg-transparent text-base border-none outline-none ${
+                          validationErrors.date ? 'text-red-400' : 'text-white'
+                        }`}
+                      />
+                      {validationErrors.date && (
+                        <div className="flex items-center gap-2 mt-1">
+                          <AlertCircle size={14} className="text-red-400" />
+                          <span className="text-red-400 text-sm">{validationErrors.date}</span>
                         </div>
                       )}
                     </div>
                   </div>
-                )}
-              </div>
-            </div>
 
-            {/* Footer with action buttons */}
-            <div className="bg-[#1a1a1a] px-6 py-4 border-t border-gray-700">
-              <div className="flex gap-3">
-                {selectedEvent && (
-                  <button
-                    onClick={handleDeleteEvent}
-                    className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm"
-                  >
-                    Delete
-                  </button>
-                )}
-                <div className="flex-1"></div>
-                <button
-                  onClick={() => setIsModalOpen(false)}
-                  className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors text-sm"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleSaveEvent}
-                  className="px-4 py-2 bg-accent text-white rounded-lg hover:bg-accent-80 transition-colors text-sm"
-                >
-                  Save
-                </button>
+                  {/* Location Field */}
+                  <div className="flex items-center gap-4">
+                    <MapPin size={20} className="text-gray-400 flex-shrink-0" />
+                    <div className="flex-1">
+                      <div className="text-sm text-gray-400 mb-1">Location</div>
+                      <input
+                        type="text"
+                        value={eventForm.location}
+                        onChange={(e) => handleFormChange('location', e.target.value)}
+                        placeholder="Empty"
+                        className="w-full bg-transparent text-white text-base border-none outline-none placeholder-gray-500"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Time Field */}
+                  <div className="flex items-center gap-4">
+                    <Clock size={20} className="text-gray-400 flex-shrink-0" />
+                    <div className="flex-1">
+                      <div className="text-sm text-gray-400 mb-1">Time</div>
+                      <input
+                        type="time"
+                        value={eventForm.time}
+                        onChange={(e) => handleFormChange('time', e.target.value)}
+                        placeholder="Empty"
+                        className="w-full bg-transparent text-white text-base border-none outline-none placeholder-gray-500"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Category Field */}
+                  <div className="flex items-center gap-4">
+                    <Calendar size={20} className="text-gray-400 flex-shrink-0" />
+                    <div className="flex-1">
+                      <div className="text-sm text-gray-400 mb-1">Category</div>
+                      <select
+                        value={eventForm.category}
+                        onChange={(e) => handleFormChange('category', e.target.value)}
+                        className="w-full bg-transparent text-white text-base border-none outline-none"
+                      >
+                        <option value="meeting" className="bg-[#1a1a1a]">Meeting</option>
+                        <option value="birthday" className="bg-[#1a1a1a]">Birthday</option>
+                        <option value="event" className="bg-[#1a1a1a]">Event</option>
+                        <option value="other" className="bg-[#1a1a1a]">Other</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  {/* Birthday Info */}
+                  {eventForm.category === 'birthday' && (
+                    <div className="bg-pink-900/20 border border-pink-700/30 rounded-lg p-4">
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className="text-pink-400">🎂</span>
+                        <span className="text-pink-400 font-medium">Birthday Event</span>
+                      </div>
+                      <div className="text-sm text-gray-300">
+                        This event will repeat every year on the same date.
+                        {eventForm.date && (
+                          <div className="mt-1">
+                            Age in {currentYear}: {currentYear - new Date(eventForm.date).getFullYear()} years
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>
-          </DialogPanel>
+
+              {/* Footer with action buttons */}
+              <div className="bg-[#1a1a1a] px-6 py-4 border-t border-gray-700">
+                <div className="flex gap-3">
+                  {selectedEvent && (
+                    <button
+                      onClick={handleDeleteEvent}
+                      className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm"
+                    >
+                      Delete
+                    </button>
+                  )}
+                  <div className="flex-1"></div>
+                  <button
+                    onClick={() => setIsModalOpen(false)}
+                    className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors text-sm"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleSaveEvent}
+                    className="px-4 py-2 bg-accent text-white rounded-lg hover:bg-accent-80 transition-colors text-sm"
+                  >
+                    Save
+                  </button>
+                </div>
+              </div>
+            </DialogPanel>
+          </div>
         </div>
       </Dialog>
 
