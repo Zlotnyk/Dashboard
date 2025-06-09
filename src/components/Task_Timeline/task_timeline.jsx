@@ -109,51 +109,49 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
 	)
 
 	return (
-		<div className="w-full bg-[#1a1a1a] rounded-lg border border-gray-700">
-			{/* Header */}
-			<div className="flex items-center justify-between p-4 border-b border-gray-700">
-				<div className="flex items-center gap-4">
-					<div className="flex items-center gap-2">
-						<Calendar size={20} className="text-gray-400" />
-						<span className="text-white font-medium">Task Timeline</span>
-					</div>
-					<MoreHorizontal size={20} className="text-gray-400" />
+		<div className="w-full bg-[#1a1a1a] rounded-lg border border-gray-700 h-[300px] flex flex-col">
+			{/* Compact Header */}
+			<div className="flex items-center justify-between px-3 py-2 border-b border-gray-700 flex-shrink-0">
+				<div className="flex items-center gap-2">
+					<Calendar size={16} className="text-gray-400" />
+					<span className="text-white text-sm font-medium">Task Timeline</span>
+					<MoreHorizontal size={16} className="text-gray-400" />
 				</div>
 
-				<div className="flex items-center gap-4">
-					<div className="flex items-center gap-2">
+				<div className="flex items-center gap-2">
+					<div className="flex items-center gap-1">
 						<button
 							onClick={() => navigateMonth(-1)}
 							className="p-1 hover:bg-gray-700 rounded"
 						>
-							<ChevronLeft size={16} className="text-gray-400" />
+							<ChevronLeft size={14} className="text-gray-400" />
 						</button>
-						<span className="text-white font-medium min-w-[120px] text-center">
-							{monthNames[currentMonth]} {currentYear}
+						<span className="text-white text-xs font-medium min-w-[80px] text-center">
+							{monthNames[currentMonth].slice(0, 3)} {currentYear}
 						</span>
 						<button
 							onClick={() => navigateMonth(1)}
 							className="p-1 hover:bg-gray-700 rounded"
 						>
-							<ChevronRight size={16} className="text-gray-400" />
+							<ChevronRight size={14} className="text-gray-400" />
 						</button>
 					</div>
 
-					<div className="flex items-center gap-2">
-						<button className="px-3 py-1 text-sm text-gray-400 hover:text-white">
+					<div className="flex items-center gap-1">
+						<button className="px-2 py-1 text-xs text-gray-400 hover:text-white">
 							Month
 						</button>
-						<button className="px-3 py-1 text-sm text-gray-400 hover:text-white">
+						<button className="px-2 py-1 text-xs text-gray-400 hover:text-white">
 							Week
 						</button>
-						<button className="px-3 py-1 text-sm text-gray-400 hover:text-white">
+						<button className="px-2 py-1 text-xs text-gray-400 hover:text-white">
 							Today
 						</button>
 						<button
 							onClick={handleAddTask}
-							className="flex items-center gap-1 px-3 py-1 bg-[#97e7aa] text-white rounded text-sm hover:bg-[#75b384]"
+							className="flex items-center gap-1 px-2 py-1 bg-[#97e7aa] text-white rounded text-xs hover:bg-[#75b384]"
 						>
-							<Plus size={14} />
+							<Plus size={12} />
 							New
 						</button>
 					</div>
@@ -161,13 +159,13 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
 			</div>
 
 			{/* Calendar Grid */}
-			<div className="relative" ref={timelineRef}>
-				{/* Days Header */}
-				<div className="flex border-b border-gray-700">
+			<div className="relative flex-1 overflow-hidden" ref={timelineRef}>
+				{/* Compact Days Header */}
+				<div className="flex border-b border-gray-700 h-6">
 					{Array.from({ length: daysInMonth }, (_, i) => (
 						<div
 							key={i + 1}
-							className="flex-1 p-2 text-center text-sm text-gray-400 border-r border-gray-700 last:border-r-0"
+							className="flex-1 flex items-center justify-center text-xs text-gray-400 border-r border-gray-700 last:border-r-0"
 						>
 							{i + 1}
 						</div>
@@ -175,7 +173,7 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
 				</div>
 
 				{/* Vertical Grid Lines */}
-				<div className="absolute inset-0 pointer-events-none">
+				<div className="absolute inset-0 pointer-events-none top-6">
 					{Array.from({ length: daysInMonth - 1 }, (_, i) => (
 						<div
 							key={i}
@@ -185,24 +183,24 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
 					))}
 				</div>
 
-				{/* Tasks Area */}
-				<div className="relative min-h-[200px] p-2">
+				{/* Compact Tasks Area */}
+				<div className="relative h-full p-2 overflow-y-auto custom-scrollbar">
 					{currentMonthTasks.map((task, index) => (
 						<div
 							key={task.id}
-							className={`absolute h-8 rounded cursor-pointer transition-all duration-200 ${
-								selectedTask?.id === task.id ? 'ring-2 ring-[#97e7aa]' : ''
+							className={`absolute h-6 rounded cursor-pointer transition-all duration-200 ${
+								selectedTask?.id === task.id ? 'ring-1 ring-[#97e7aa]' : ''
 							}`}
 							style={{
 								left: `${getDayPosition(task.start)}%`,
 								width: `${getTaskWidth(task)}%`,
-								top: `${index * 40 + 8}px`,
+								top: `${index * 28 + 4}px`,
 								backgroundColor: '#97e7aa'
 							}}
 							onClick={() => handleTaskClick(task)}
 							onMouseDown={(e) => handleMouseDown(e, task)}
 						>
-							<div className="flex items-center h-full px-2 text-white text-sm">
+							<div className="flex items-center h-full px-2 text-white text-xs">
 								<span className="truncate">
 									{task.title} • {task.status || 'Not started'}
 								</span>
@@ -210,14 +208,14 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
 						</div>
 					))}
 
-					{/* Delete Button */}
+					{/* Compact Delete Button */}
 					{selectedTask && (
-						<div className="absolute top-2 left-2">
+						<div className="absolute top-1 left-1">
 							<button
 								onClick={handleDeleteTask}
 								className="flex items-center gap-1 px-2 py-1 bg-red-600 text-white rounded text-xs hover:bg-red-700"
 							>
-								<span>🗑</span>
+								<span className="text-xs">🗑</span>
 								Delete
 							</button>
 						</div>
