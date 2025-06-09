@@ -42,13 +42,15 @@ const QuickLinks = () => {
   ]
 
   return (
-    <div className="w-full bg-[#1a1a1a] rounded-lg p-4">
+    <div className="w-full bg-[#1a1a1a] rounded-lg p-4 pl-6">
       <div className="space-y-6">
         {links.map((section, sectionIndex) => (
           <div key={sectionIndex}>
-            <h3 className="text-white text-base font-medium mb-3 font-[Libre_Baskerville]">
+            <h3 className="text-white text-lg font-medium mb-3 font-[Libre_Baskerville]">
               {section.title}
             </h3>
+            {/* Horizontal line after each title */}
+            <div className="w-full h-px bg-gray-700 mb-3"></div>
             <div className="space-y-2">
               {section.items.map((item, itemIndex) => {
                 const IconComponent = item.icon

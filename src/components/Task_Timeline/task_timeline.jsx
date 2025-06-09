@@ -54,7 +54,7 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
   const today = new Date()
   
   // Adjusted day width for better fit
-  const dayWidth = viewMode === 'Week' ? 140 : 40
+  const dayWidth = viewMode === 'Week' ? 180 : 40
   const totalWidth = daysToShow.length * dayWidth
 
   const navigateTime = (direction) => {
@@ -405,7 +405,7 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
                   return (
                     <div
                       key={i}
-                      className={`flex items-center justify-center text-sm border-r border-gray-800 relative ${
+                      className={`flex items-center justify-center text-sm relative ${
                         isToday
                           ? 'bg-[#97e7aa] text-white font-semibold' 
                           : 'text-gray-300'
@@ -429,11 +429,11 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
               {/* Horizontal line under dates */}
               <div className="absolute top-8 left-0 right-0 h-px bg-gray-700 z-10" />
 
-              {/* Vertical lines for each day */}
+              {/* Vertical lines for each day - background layer */}
               {daysToShow.map((_, i) => (
                 <div
                   key={`vertical-line-${i}`}
-                  className="absolute top-8 bottom-0 w-px bg-gray-800 z-5"
+                  className="absolute top-8 bottom-0 w-px bg-gray-800 z-0"
                   style={{ left: `${(i + 1) * dayWidth}px` }}
                 />
               ))}
@@ -453,7 +453,7 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
               })()}
 
               {/* Tasks Area */}
-              <div className="relative h-full pt-4 pb-4 overflow-y-auto custom-scrollbar">
+              <div className="relative h-full pt-4 pb-4 overflow-y-auto custom-scrollbar z-10">
                 {visibleTasks.map((task, index) => {
                   const isUrgent = task.priority === 'urgent'
                   const taskColor = isUrgent ? '#ff6b35' : '#97e7aa'
@@ -461,7 +461,7 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
                   return (
                     <div
                       key={task.id}
-                      className={`absolute h-8 rounded cursor-pointer transition-all duration-200 group ${
+                      className={`absolute h-8 rounded cursor-pointer transition-all duration-200 group z-20 ${
                         selectedTask?.id === task.id ? 'ring-2 ring-[#97e7aa]' : ''
                       } ${draggedTask?.id === task.id ? 'opacity-80 shadow-lg' : ''}`}
                       style={{

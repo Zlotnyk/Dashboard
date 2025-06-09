@@ -64,7 +64,7 @@ const BigCalendar = () => {
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
-          <span className="text-xl font-[Libre_Baskerville] italic text-[#d4af37]">
+          <span className="text-xl font-[Libre_Baskerville] italic text-white">
             Upcoming Meetings
           </span>
         </div>
@@ -111,7 +111,7 @@ const BigCalendar = () => {
         
         {/* Previous Month Days */}
         {prevMonthDays.map(day => (
-          <div key={`prev-${day}`} className="h-20 border-r border-b border-gray-800 bg-gray-900/30 p-2">
+          <div key={`prev-${day}`} className="h-24 border-r border-b border-gray-800 bg-gray-900/30 p-2">
             <span className="text-sm text-gray-600">{day}</span>
           </div>
         ))}
@@ -120,7 +120,7 @@ const BigCalendar = () => {
         {currentMonthDays.map(day => (
           <div 
             key={day} 
-            className="h-20 border-r border-b border-gray-800 p-2 hover:bg-gray-800/30 cursor-pointer relative group bg-gray-900/10"
+            className="h-24 border-r border-b border-gray-800 p-2 hover:bg-gray-800/30 cursor-pointer relative group bg-gray-900/10"
           >
             <div className="flex items-center justify-between">
               <span className={`text-sm font-medium ${
@@ -133,19 +133,12 @@ const BigCalendar = () => {
                 className="text-gray-500 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer hover:text-[#97e7aa]" 
               />
             </div>
-            
-            {/* Sample events */}
-            {day === 9 && (
-              <div className="mt-1">
-                <div className="w-2 h-2 bg-red-500 rounded-full"></div>
-              </div>
-            )}
           </div>
         ))}
         
         {/* Next Month Days */}
         {nextMonthDays.map(day => (
-          <div key={`next-${day}`} className="h-20 border-r border-b border-gray-800 bg-gray-900/30 p-2">
+          <div key={`next-${day}`} className="h-24 border-r border-b border-gray-800 bg-gray-900/30 p-2">
             <span className="text-sm text-gray-600">{day}</span>
           </div>
         ))}
