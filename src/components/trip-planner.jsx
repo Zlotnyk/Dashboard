@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react'
-import { Plus, Calendar, MapPin, Clock, X, Edit, Trash2, Plane } from 'lucide-react'
+import { Plus, Calendar, MapPin, Clock, X, Edit, Trash2, Plane, AlertCircle } from 'lucide-react'
 import { Dialog, DialogBackdrop, DialogPanel, DialogTitle } from '@headlessui/react'
 
 const TripPlanner = () => {
   const [trips, setTrips] = useState([])
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [selectedTrip, setSelectedTrip] = useState(null)
+  const [validationErrors, setValidationErrors] = useState({})
   const [tripForm, setTripForm] = useState({
     title: '',
     destination: '',
@@ -63,8 +64,40 @@ const TripPlanner = () => {
     return `${diffDays} days`
   }
 
+  const validateForm = () => {
+    const errors = {}
+    
+    if (!tripForm.title.trim()) {
+      errors.title = 'Title is required'
+    }
+    
+    if (!tripForm.destination.trim()) {
+      errors.destination = 'Destination is required'
+    }
+    
+    if (!tripForm.startDate) {
+      errors.startDate = 'Start date is required'
+    }
+    
+    if (!tripForm.endDate) {
+      errors.endDate = 'End date is required'
+    }
+    
+    if (tripForm.startDate && tripForm.endDate) {
+      const start = new Date(tripForm.startDate)
+      const end = new Date(tripForm.endDate)
+      if (end < start) {
+        errors.endDate = 'End date must be after start date'
+      }
+    }
+    
+    setValidationErrors(errors)
+    return Object.keys(errors).length === 0
+  }
+
   const handleAddTrip = () => {
     setSelectedTrip(null)
+    setValidationErrors({})
     setTripForm({
       title: 'New page',
       destination: '',
@@ -79,6 +112,7 @@ const TripPlanner = () => {
 
   const handleEditTrip = (trip) => {
     setSelectedTrip(trip)
+    setValidationErrors({})
     setTripForm({
       title: trip.title,
       destination: trip.destination,
@@ -92,7 +126,9 @@ const TripPlanner = () => {
   }
 
   const handleSaveTrip = () => {
-    if (!tripForm.title.trim() || !tripForm.startDate || !tripForm.endDate) return
+    if (!validateForm()) {
+      return
+    }
 
     const tripData = {
       title: tripForm.title,
@@ -121,6 +157,7 @@ const TripPlanner = () => {
     }
 
     setIsModalOpen(false)
+    setValidationErrors({})
     setTripForm({
       title: '',
       destination: '',
@@ -144,6 +181,19 @@ const TripPlanner = () => {
   const getStatusColor = (status) => {
     const statusOption = statusOptions.find(opt => opt.value === status)
     return statusOption ? statusOption.color : '#6b7280'
+  }
+
+  const handleFormChange = (field, value) => {
+    setTripForm(prev => ({ ...prev, [field]: value }))
+    
+    // Clear validation error for this field when user starts typing
+    if (validationErrors[field]) {
+      setValidationErrors(prev => {
+        const newErrors = { ...prev }
+        delete newErrors[field]
+        return newErrors
+      })
+    }
   }
 
   const sortedTrips = trips.sort((a, b) => new Date(a.startDate) - new Date(b.startDate))
@@ -259,10 +309,10 @@ const TripPlanner = () => {
             )
           })}
 
-          {/* Add New Trip Card */}
+          {/* Add New Trip Card - Updated with solid border */}
           <button
             onClick={handleAddTrip}
-            className="bg-gray-800/30 border-2 border-dashed border-gray-600 rounded-lg p-4 hover:border-gray-500 hover:bg-gray-700/30 transition-colors flex flex-col items-center justify-center min-h-[200px] group"
+            className="bg-gray-800/30 border-2 border-solid border-gray-600 rounded-lg p-4 hover:border-gray-500 hover:bg-gray-700/30 transition-colors flex flex-col items-center justify-center min-h-[200px] group"
           >
             <Plus size={24} className="text-gray-400 group-hover:text-white mb-2" />
             <span className="text-gray-400 group-hover:text-white text-sm">
@@ -287,13 +337,23 @@ const TripPlanner = () => {
             >
               <div className="bg-[#1a1a1a] px-6 pt-6 pb-4">
                 <div className="flex items-center justify-between mb-8">
-                  <input
-                    type="text"
-                    value={tripForm.title}
-                    onChange={(e) => setTripForm(prev => ({ ...prev, title: e.target.value }))}
-                    className="text-2xl font-medium text-white bg-transparent border-none outline-none flex-1"
-                    placeholder="New page"
-                  />
+                  <div className="flex-1">
+                    <input
+                      type="text"
+                      value={tripForm.title}
+                      onChange={(e) => handleFormChange('title', e.target.value)}
+                      className={`text-2xl font-medium bg-transparent border-none outline-none flex-1 w-full ${
+                        validationErrors.title ? 'text-red-400' : 'text-white'
+                      }`}
+                      placeholder="New page"
+                    />
+                    {validationErrors.title && (
+                      <div className="flex items-center gap-2 mt-1">
+                        <AlertCircle size={14} className="text-red-400" />
+                        <span className="text-red-400 text-sm">{validationErrors.title}</span>
+                      </div>
+                    )}
+                  </div>
                   <button
                     onClick={() => setIsModalOpen(false)}
                     className="text-gray-400 hover:text-white ml-4"
@@ -304,51 +364,75 @@ const TripPlanner = () => {
 
                 <div className="space-y-6">
                   {/* Destination Field */}
-                  <div className="flex items-center gap-4">
-                    <MapPin size={20} className="text-gray-400 flex-shrink-0" />
+                  <div className="flex items-start gap-4">
+                    <MapPin size={20} className="text-gray-400 flex-shrink-0 mt-1" />
                     <div className="flex-1">
                       <div className="text-sm text-gray-400 mb-1">Destination</div>
                       <input
                         type="text"
                         value={tripForm.destination}
-                        onChange={(e) => setTripForm(prev => ({ ...prev, destination: e.target.value }))}
+                        onChange={(e) => handleFormChange('destination', e.target.value)}
                         placeholder="Empty"
-                        className="w-full bg-transparent text-white text-base border-none outline-none placeholder-gray-500"
+                        className={`w-full bg-transparent text-base border-none outline-none placeholder-gray-500 ${
+                          validationErrors.destination ? 'text-red-400' : 'text-white'
+                        }`}
                       />
+                      {validationErrors.destination && (
+                        <div className="flex items-center gap-2 mt-1">
+                          <AlertCircle size={14} className="text-red-400" />
+                          <span className="text-red-400 text-sm">{validationErrors.destination}</span>
+                        </div>
+                      )}
                     </div>
                   </div>
 
                   {/* Start Date Field */}
-                  <div className="flex items-center gap-4">
-                    <Calendar size={20} className="text-gray-400 flex-shrink-0" />
+                  <div className="flex items-start gap-4">
+                    <Calendar size={20} className="text-gray-400 flex-shrink-0 mt-1" />
                     <div className="flex-1">
                       <div className="text-sm text-gray-400 mb-1">Start date</div>
                       <input
                         type="date"
                         value={tripForm.startDate}
-                        onChange={(e) => setTripForm(prev => ({ ...prev, startDate: e.target.value }))}
-                        className="w-full bg-transparent text-white text-base border-none outline-none"
+                        onChange={(e) => handleFormChange('startDate', e.target.value)}
+                        className={`w-full bg-transparent text-base border-none outline-none ${
+                          validationErrors.startDate ? 'text-red-400' : 'text-white'
+                        }`}
                       />
+                      {validationErrors.startDate && (
+                        <div className="flex items-center gap-2 mt-1">
+                          <AlertCircle size={14} className="text-red-400" />
+                          <span className="text-red-400 text-sm">{validationErrors.startDate}</span>
+                        </div>
+                      )}
                     </div>
                   </div>
 
                   {/* End Date Field */}
-                  <div className="flex items-center gap-4">
-                    <Calendar size={20} className="text-gray-400 flex-shrink-0" />
+                  <div className="flex items-start gap-4">
+                    <Calendar size={20} className="text-gray-400 flex-shrink-0 mt-1" />
                     <div className="flex-1">
                       <div className="text-sm text-gray-400 mb-1">End date</div>
                       <input
                         type="date"
                         value={tripForm.endDate}
-                        onChange={(e) => setTripForm(prev => ({ ...prev, endDate: e.target.value }))}
+                        onChange={(e) => handleFormChange('endDate', e.target.value)}
                         min={tripForm.startDate}
-                        className="w-full bg-transparent text-white text-base border-none outline-none"
+                        className={`w-full bg-transparent text-base border-none outline-none ${
+                          validationErrors.endDate ? 'text-red-400' : 'text-white'
+                        }`}
                       />
+                      {validationErrors.endDate && (
+                        <div className="flex items-center gap-2 mt-1">
+                          <AlertCircle size={14} className="text-red-400" />
+                          <span className="text-red-400 text-sm">{validationErrors.endDate}</span>
+                        </div>
+                      )}
                     </div>
                   </div>
 
                   {/* Duration Display */}
-                  {tripForm.startDate && tripForm.endDate && (
+                  {tripForm.startDate && tripForm.endDate && !validationErrors.startDate && !validationErrors.endDate && (
                     <div className="flex items-center gap-4">
                       <Clock size={20} className="text-gray-400 flex-shrink-0" />
                       <div className="flex-1">
@@ -370,7 +454,7 @@ const TripPlanner = () => {
                       <div className="text-sm text-gray-400 mb-1">Status</div>
                       <select
                         value={tripForm.status}
-                        onChange={(e) => setTripForm(prev => ({ ...prev, status: e.target.value }))}
+                        onChange={(e) => handleFormChange('status', e.target.value)}
                         className="w-full bg-transparent text-white text-base border-none outline-none"
                       >
                         {statusOptions.map(option => (
@@ -390,7 +474,7 @@ const TripPlanner = () => {
                       <input
                         type="number"
                         value={tripForm.budget}
-                        onChange={(e) => setTripForm(prev => ({ ...prev, budget: e.target.value }))}
+                        onChange={(e) => handleFormChange('budget', e.target.value)}
                         placeholder="Empty"
                         className="w-full bg-transparent text-white text-base border-none outline-none placeholder-gray-500"
                       />
@@ -404,7 +488,7 @@ const TripPlanner = () => {
                       <div className="text-sm text-gray-400 mb-1">Notes</div>
                       <textarea
                         value={tripForm.notes}
-                        onChange={(e) => setTripForm(prev => ({ ...prev, notes: e.target.value }))}
+                        onChange={(e) => handleFormChange('notes', e.target.value)}
                         placeholder="Empty"
                         rows={3}
                         className="w-full bg-transparent text-white text-base border-none outline-none placeholder-gray-500 resize-none"
