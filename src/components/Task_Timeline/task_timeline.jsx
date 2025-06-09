@@ -233,12 +233,12 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
               />
             )}
 
-            {/* Vertical Grid Lines */}
+            {/* Vertical Grid Lines - Made thinner to match header borders */}
             <div className="absolute inset-0 pointer-events-none top-8">
               {Array.from({ length: daysInMonth - 1 }, (_, i) => (
                 <div
                   key={i}
-                  className="absolute top-0 bottom-0 w-px bg-gray-700"
+                  className="absolute top-0 bottom-0 border-r border-gray-700"
                   style={{ left: `${(i + 1) * dayWidth}px` }}
                 />
               ))}
