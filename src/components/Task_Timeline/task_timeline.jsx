@@ -1,12 +1,14 @@
 import React, { useState, useRef, useEffect } from 'react'
-import { ChevronLeft, ChevronRight, Calendar, MoreHorizontal, Plus } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Calendar, Plus } from 'lucide-react'
 
 const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
 	const [currentDate, setCurrentDate] = useState(new Date())
 	const [selectedTask, setSelectedTask] = useState(null)
 	const [draggedTask, setDraggedTask] = useState(null)
 	const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 })
+	const [viewMode, setViewMode] = useState('Month')
 	const timelineRef = useRef(null)
+	const scrollRef = useRef(null)
 
 	const monthNames = [
 		'January', 'February', 'March', 'April', 'May', 'June',
@@ -16,11 +18,28 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
 	const currentMonth = currentDate.getMonth()
 	const currentYear = currentDate.getFullYear()
 	const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate()
+	const today = new Date()
+	const isCurrentMonth = today.getMonth() === currentMonth && today.getFullYear() === currentYear
+	const todayDate = today.getDate()
 
 	const navigateMonth = (direction) => {
 		const newDate = new Date(currentDate)
 		newDate.setMonth(currentMonth + direction)
 		setCurrentDate(newDate)
+	}
+
+	const goToToday = () => {
+		setCurrentDate(new Date())
+		// Scroll to today's position
+		setTimeout(() => {
+			if (scrollRef.current && isCurrentMonth) {
+				const dayWidth = scrollRef.current.scrollWidth / daysInMonth
+				const todayPosition = (todayDate - 1) * dayWidth
+				const containerWidth = scrollRef.current.clientWidth
+				const scrollPosition = Math.max(0, todayPosition - containerWidth / 2)
+				scrollRef.current.scrollLeft = scrollPosition
+			}
+		}, 100)
 	}
 
 	const getDayPosition = (date) => {
@@ -109,117 +128,156 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
 	)
 
 	return (
-		<div className="w-full bg-[#1a1a1a] rounded-lg border border-gray-700 h-[300px] flex flex-col">
-			{/* Compact Header */}
-			<div className="flex items-center justify-between px-3 py-2 border-b border-gray-700 flex-shrink-0">
-				<div className="flex items-center gap-2">
-					<Calendar size={16} className="text-gray-400" />
-					<span className="text-white text-sm font-medium">Task Timeline</span>
-					<MoreHorizontal size={16} className="text-gray-400" />
+		<div className="w-full bg-[#1a1a1a] rounded-lg border border-gray-700 h-[400px] flex flex-col">
+			{/* Header */}
+			<div className="flex items-center justify-between px-4 py-3 border-b border-gray-700 flex-shrink-0">
+				<div className="flex items-center gap-3">
+					<Calendar size={18} className="text-gray-400" />
+					<span className="text-white text-lg font-medium">Task Timeline</span>
 				</div>
 
-				<div className="flex items-center gap-2">
-					<div className="flex items-center gap-1">
+				<div className="flex items-center gap-4">
+					<div className="flex items-center gap-2">
 						<button
 							onClick={() => navigateMonth(-1)}
-							className="p-1 hover:bg-gray-700 rounded"
+							className="p-2 hover:bg-gray-700 rounded"
 						>
-							<ChevronLeft size={14} className="text-gray-400" />
+							<ChevronLeft size={16} className="text-gray-400" />
 						</button>
-						<span className="text-white text-xs font-medium min-w-[80px] text-center">
-							{monthNames[currentMonth].slice(0, 3)} {currentYear}
+						<span className="text-white text-base font-medium min-w-[120px] text-center">
+							{monthNames[currentMonth]} {currentYear}
 						</span>
 						<button
 							onClick={() => navigateMonth(1)}
-							className="p-1 hover:bg-gray-700 rounded"
+							className="p-2 hover:bg-gray-700 rounded"
 						>
-							<ChevronRight size={14} className="text-gray-400" />
+							<ChevronRight size={16} className="text-gray-400" />
 						</button>
 					</div>
 
-					<div className="flex items-center gap-1">
-						<button className="px-2 py-1 text-xs text-gray-400 hover:text-white">
+					<div className="flex items-center gap-2">
+						<button 
+							className={`px-3 py-1 text-sm rounded ${
+								viewMode === 'Month' 
+									? 'bg-[#97e7aa] text-white' 
+									: 'text-gray-400 hover:text-white'
+							}`}
+							onClick={() => setViewMode('Month')}
+						>
 							Month
 						</button>
-						<button className="px-2 py-1 text-xs text-gray-400 hover:text-white">
+						<button 
+							className={`px-3 py-1 text-sm rounded ${
+								viewMode === 'Week' 
+									? 'bg-[#97e7aa] text-white' 
+									: 'text-gray-400 hover:text-white'
+							}`}
+							onClick={() => setViewMode('Week')}
+						>
 							Week
 						</button>
-						<button className="px-2 py-1 text-xs text-gray-400 hover:text-white">
+						<button 
+							className="px-3 py-1 text-sm text-gray-400 hover:text-white rounded"
+							onClick={goToToday}
+						>
 							Today
 						</button>
 						<button
 							onClick={handleAddTask}
-							className="flex items-center gap-1 px-2 py-1 bg-[#97e7aa] text-white rounded text-xs hover:bg-[#75b384]"
+							className="flex items-center gap-2 px-3 py-1 bg-[#97e7aa] text-white rounded text-sm hover:bg-[#75b384]"
 						>
-							<Plus size={12} />
+							<Plus size={14} />
 							New
 						</button>
 					</div>
 				</div>
 			</div>
 
-			{/* Calendar Grid */}
-			<div className="relative flex-1 overflow-hidden" ref={timelineRef}>
-				{/* Compact Days Header */}
-				<div className="flex border-b border-gray-700 h-6">
-					{Array.from({ length: daysInMonth }, (_, i) => (
-						<div
-							key={i + 1}
-							className="flex-1 flex items-center justify-center text-xs text-gray-400 border-r border-gray-700 last:border-r-0"
-						>
-							{i + 1}
+			{/* Calendar Grid with Horizontal Scroll */}
+			<div className="relative flex-1 overflow-hidden">
+				<div 
+					ref={scrollRef}
+					className="h-full overflow-x-auto overflow-y-hidden custom-scrollbar"
+				>
+					<div 
+						className="relative h-full"
+						style={{ minWidth: `${Math.max(100, daysInMonth * 40)}px` }}
+						ref={timelineRef}
+					>
+						{/* Days Header */}
+						<div className="flex border-b border-gray-700 h-8 bg-[#1a1a1a] sticky top-0 z-10">
+							{Array.from({ length: daysInMonth }, (_, i) => (
+								<div
+									key={i + 1}
+									className={`flex-1 flex items-center justify-center text-sm border-r border-gray-700 last:border-r-0 min-w-[40px] ${
+										isCurrentMonth && i + 1 === todayDate 
+											? 'bg-[#97e7aa] text-white font-bold' 
+											: 'text-gray-400'
+									}`}
+								>
+									{i + 1}
+								</div>
+							))}
 						</div>
-					))}
-				</div>
 
-				{/* Vertical Grid Lines */}
-				<div className="absolute inset-0 pointer-events-none top-6">
-					{Array.from({ length: daysInMonth - 1 }, (_, i) => (
-						<div
-							key={i}
-							className="absolute top-0 bottom-0 w-px bg-gray-700"
-							style={{ left: `${((i + 1) / daysInMonth) * 100}%` }}
-						/>
-					))}
-				</div>
+						{/* Today Marker Line */}
+						{isCurrentMonth && (
+							<div
+								className="absolute top-8 bottom-0 w-0.5 bg-[#97e7aa] z-20 pointer-events-none"
+								style={{ left: `${((todayDate - 0.5) / daysInMonth) * 100}%` }}
+							/>
+						)}
 
-				{/* Compact Tasks Area */}
-				<div className="relative h-full p-2 overflow-y-auto custom-scrollbar">
-					{currentMonthTasks.map((task, index) => (
-						<div
-							key={task.id}
-							className={`absolute h-6 rounded cursor-pointer transition-all duration-200 ${
-								selectedTask?.id === task.id ? 'ring-1 ring-[#97e7aa]' : ''
-							}`}
-							style={{
-								left: `${getDayPosition(task.start)}%`,
-								width: `${getTaskWidth(task)}%`,
-								top: `${index * 28 + 4}px`,
-								backgroundColor: '#97e7aa'
-							}}
-							onClick={() => handleTaskClick(task)}
-							onMouseDown={(e) => handleMouseDown(e, task)}
-						>
-							<div className="flex items-center h-full px-2 text-white text-xs">
-								<span className="truncate">
-									{task.title} • {task.status || 'Not started'}
-								</span>
-							</div>
+						{/* Vertical Grid Lines */}
+						<div className="absolute inset-0 pointer-events-none top-8">
+							{Array.from({ length: daysInMonth - 1 }, (_, i) => (
+								<div
+									key={i}
+									className="absolute top-0 bottom-0 w-px bg-gray-700"
+									style={{ left: `${((i + 1) / daysInMonth) * 100}%` }}
+								/>
+							))}
 						</div>
-					))}
 
-					{/* Compact Delete Button */}
-					{selectedTask && (
-						<div className="absolute top-1 left-1">
-							<button
-								onClick={handleDeleteTask}
-								className="flex items-center gap-1 px-2 py-1 bg-red-600 text-white rounded text-xs hover:bg-red-700"
-							>
-								<span className="text-xs">🗑</span>
-								Delete
-							</button>
+						{/* Tasks Area */}
+						<div className="relative h-full pt-4 pb-4 overflow-y-auto custom-scrollbar">
+							{currentMonthTasks.map((task, index) => (
+								<div
+									key={task.id}
+									className={`absolute h-8 rounded cursor-pointer transition-all duration-200 ${
+										selectedTask?.id === task.id ? 'ring-2 ring-[#97e7aa]' : ''
+									}`}
+									style={{
+										left: `${getDayPosition(task.start)}%`,
+										width: `${getTaskWidth(task)}%`,
+										top: `${index * 36 + 8}px`,
+										backgroundColor: '#97e7aa'
+									}}
+									onClick={() => handleTaskClick(task)}
+									onMouseDown={(e) => handleMouseDown(e, task)}
+								>
+									<div className="flex items-center h-full px-3 text-white text-sm">
+										<span className="truncate">
+											{task.title} • {task.status || 'Not started'}
+										</span>
+									</div>
+								</div>
+							))}
+
+							{/* Delete Button */}
+							{selectedTask && (
+								<div className="absolute top-2 left-2 z-30">
+									<button
+										onClick={handleDeleteTask}
+										className="flex items-center gap-2 px-3 py-1 bg-red-600 text-white rounded text-sm hover:bg-red-700"
+									>
+										<span>🗑</span>
+										Delete
+									</button>
+								</div>
+							)}
 						</div>
-					)}
+					</div>
 				</div>
 			</div>
 		</div>
