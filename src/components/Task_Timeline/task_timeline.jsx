@@ -206,20 +206,17 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
 						ref={timelineRef}
 					>
 						{/* Days Header */}
-						<div className="flex border-b border-gray-700 h-8 bg-[#1a1a1a] sticky top-0 z-10">
-							{Array.from({ length: daysInMonth }, (_, i) => (
-								<div
-									key={i + 1}
-									className={`flex-1 flex items-center justify-center text-sm border-r border-gray-700 last:border-r-0 min-w-[40px] ${
-										isCurrentMonth && i + 1 === todayDate 
-											? 'bg-[#97e7aa] text-white font-bold' 
-											: 'text-gray-400'
-									}`}
-								>
-									{i + 1}
-								</div>
-							))}
-						</div>
+<div className="flex border-b border-gray-700 h-8 bg-[#1a1a1a] sticky top-0 z-10">
+  {Array.from({ length: daysInMonth }, (_, i) => (
+    <div
+      key={i + 1}
+      className={`flex items-center justify-center text-sm border-r border-gray-700 last:border-r-0`}
+      style={{ width: `${100 / daysInMonth}%` }}
+    >
+      {i + 1}
+    </div>
+  ))}
+</div>
 
 						{/* Today Marker Line */}
 						{isCurrentMonth && (
