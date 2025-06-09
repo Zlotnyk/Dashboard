@@ -362,7 +362,7 @@ const BigCalendar = ({ events = [], onAddEvent, onDeleteEvent }) => {
             </DialogPanel>
           </div>
         </div>
-      </div>
+      </Dialog>
     </>
   )
 }
