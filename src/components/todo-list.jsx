@@ -72,7 +72,7 @@ export default function TodoList({
 
 	return (
 		<>
-			<div className='w-full min-h-[400px] rounded-lg p-5'>
+			<div className='w-full min-h-[400px] rounded-lg p-5 bg-transparent'>
 				<div className='flex items-center justify-between mb-4'>
 					<h2 className='text-lg font-[Libre_Baskerville] italic text-white'>
 						To-Do List

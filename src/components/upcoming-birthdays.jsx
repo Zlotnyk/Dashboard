@@ -7,6 +7,7 @@ const UpcomingBirthdays = ({ events = [] }) => {
   const [filteredBirthdays, setFilteredBirthdays] = useState([])
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [isSettingsOpen, setIsSettingsOpen] = useState(false)
+  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false)
   const [selectedBirthday, setSelectedBirthday] = useState(null)
   const [selectedFilter, setSelectedFilter] = useState(30) // Default to 30 days
   const [validationErrors, setValidationErrors] = useState({})
@@ -209,6 +210,7 @@ const UpcomingBirthdays = ({ events = [] }) => {
     localStorage.removeItem('manualBirthdays')
     setBirthdays(prev => prev.filter(birthday => birthday.source === 'calendar'))
     setIsSettingsOpen(false)
+    setIsDeleteConfirmOpen(false)
   }
 
   const formatDaysUntil = (days) => {
@@ -253,7 +255,7 @@ const UpcomingBirthdays = ({ events = [] }) => {
             <select
               value={selectedFilter}
               onChange={(e) => setSelectedFilter(Number(e.target.value))}
-              className="bg-[#2a2a2a] border border-gray-600 rounded px-3 py-1 text-sm text-white focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent appearance-none pr-8"
+              className="bg-transparent text-sm text-white focus:outline-none appearance-none pr-8"
             >
               {filterOptions.map(option => (
                 <option key={option.value} value={option.value} className="bg-[#2a2a2a]">
@@ -360,8 +362,8 @@ const UpcomingBirthdays = ({ events = [] }) => {
                       type="text"
                       value={birthdayForm.name}
                       onChange={(e) => handleFormChange('name', e.target.value)}
-                      className={`w-full px-3 py-2 bg-[#2a2a2a] border border-gray-600 rounded-lg placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent ${
-                        validationErrors.name ? 'text-red-400 border-red-400' : 'text-white'
+                      className={`w-full px-3 py-2 bg-transparent border-none outline-none placeholder-gray-400 focus:outline-none ${
+                        validationErrors.name ? 'text-red-400' : 'text-white'
                       }`}
                       placeholder="Enter person's name"
                     />
@@ -379,8 +381,8 @@ const UpcomingBirthdays = ({ events = [] }) => {
                       type="date"
                       value={birthdayForm.birthDate}
                       onChange={(e) => handleFormChange('birthDate', e.target.value)}
-                      className={`w-full px-3 py-2 bg-[#2a2a2a] border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent ${
-                        validationErrors.birthDate ? 'text-red-400 border-red-400' : 'text-white'
+                      className={`w-full px-3 py-2 bg-transparent border-none outline-none focus:outline-none ${
+                        validationErrors.birthDate ? 'text-red-400' : 'text-white'
                       }`}
                     />
                     {validationErrors.birthDate && (
@@ -503,7 +505,7 @@ const UpcomingBirthdays = ({ events = [] }) => {
                     <h4 className="text-white font-medium">Actions</h4>
                     
                     <button
-                      onClick={handleDeleteAllBirthdays}
+                      onClick={() => setIsDeleteConfirmOpen(true)}
                       className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
                     >
                       <Trash2 size={16} />
@@ -537,6 +539,69 @@ const UpcomingBirthdays = ({ events = [] }) => {
                     className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors text-sm"
                   >
                     Close
+                  </button>
+                </div>
+              </div>
+            </DialogPanel>
+          </div>
+        </div>
+      </Dialog>
+
+      {/* Delete Confirmation Modal */}
+      <Dialog open={isDeleteConfirmOpen} onClose={setIsDeleteConfirmOpen} className="relative z-50">
+        <DialogBackdrop 
+          transition
+          className="fixed inset-0 bg-black/50 transition-opacity data-closed:opacity-0 data-enter:duration-300 data-enter:ease-out data-leave:duration-200 data-leave:ease-in"
+        />
+        
+        <div className="fixed inset-0 z-10 w-screen overflow-y-auto">
+          <div className="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+            <DialogPanel 
+              transition
+              className="relative transform overflow-hidden rounded-lg bg-[#1a1a1a] text-left shadow-xl transition-all data-closed:translate-y-4 data-closed:opacity-0 data-enter:duration-300 data-enter:ease-out data-leave:duration-200 data-leave:ease-in sm:my-8 sm:w-full sm:max-w-md data-closed:sm:translate-y-0 data-closed:sm:scale-95"
+            >
+              <div className="bg-[#1a1a1a] px-6 pt-6 pb-4">
+                <div className="flex items-center justify-between mb-6">
+                  <DialogTitle className="text-xl font-semibold text-white">
+                    Confirm Delete
+                  </DialogTitle>
+                  <button
+                    onClick={() => setIsDeleteConfirmOpen(false)}
+                    className="text-gray-400 hover:text-white"
+                  >
+                    <X size={24} />
+                  </button>
+                </div>
+
+                <div className="space-y-4">
+                  <div className="bg-red-900/20 border border-red-700/30 rounded-lg p-4">
+                    <div className="flex items-center gap-3 mb-3">
+                      <AlertCircle size={20} className="text-red-400" />
+                      <span className="text-red-400 font-medium">Warning</span>
+                    </div>
+                    <p className="text-gray-300 text-sm">
+                      Are you sure you want to delete all manually added birthdays? This action cannot be undone.
+                    </p>
+                    <p className="text-gray-400 text-xs mt-2">
+                      This will only delete manually added birthdays. Calendar events will not be affected.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-[#1a1a1a] px-6 py-4 border-t border-gray-700">
+                <div className="flex justify-end gap-3">
+                  <button
+                    onClick={() => setIsDeleteConfirmOpen(false)}
+                    className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors text-sm"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleDeleteAllBirthdays}
+                    className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm"
+                  >
+                    Delete All
                   </button>
                 </div>
               </div>

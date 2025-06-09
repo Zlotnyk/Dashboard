@@ -1,16 +1,18 @@
 import React from 'react'
 import { BookOpen, FileText, PenTool, Target, Clock, Users, Calendar, Heart, MapPin, Utensils, Dumbbell, Brain, TrendingUp } from 'lucide-react'
+import { Link } from 'react-router-dom'
 
 const QuickLinks = () => {
   // Check current page
   const isLifestylePage = window.location.pathname === '/lifestyle'
   const isHealthFitnessPage = window.location.pathname === '/health-fitness'
+  const isTimetablePage = window.location.pathname === '/timetable'
   
   const mainLinks = [
     {
       title: 'Course',
       items: [
-        { name: 'Timetable', icon: Clock, href: '#timetable' },
+        { name: 'Timetable', icon: Clock, href: '/timetable' },
         { name: 'Course Materials', icon: BookOpen, href: '#materials' },
         { name: 'Study Checklist', icon: Target, href: '#checklist' }
       ]
@@ -108,11 +110,40 @@ const QuickLinks = () => {
     }
   ]
 
+  const timetableLinks = [
+    {
+      title: 'Schedule',
+      items: [
+        { name: 'Weekly View', icon: Calendar, href: '#weekly-view' },
+        { name: 'Daily View', icon: Clock, href: '#daily-view' },
+        { name: 'Monthly View', icon: Calendar, href: '#monthly-view' }
+      ]
+    },
+    {
+      title: 'Classes',
+      items: [
+        { name: 'Add Class', icon: BookOpen, href: '#add-class' },
+        { name: 'Class List', icon: FileText, href: '#class-list' },
+        { name: 'Attendance', icon: Target, href: '#attendance' }
+      ]
+    },
+    {
+      title: 'Planning',
+      items: [
+        { name: 'Study Blocks', icon: Clock, href: '#study-blocks' },
+        { name: 'Free Time', icon: Heart, href: '#free-time' },
+        { name: 'Reminders', icon: Target, href: '#reminders' }
+      ]
+    }
+  ]
+
   let links = mainLinks
   if (isLifestylePage) {
     links = lifestyleLinks
   } else if (isHealthFitnessPage) {
     links = healthFitnessLinks
+  } else if (isTimetablePage) {
+    links = timetableLinks
   }
 
   return (
@@ -128,6 +159,23 @@ const QuickLinks = () => {
             <div className="space-y-2">
               {section.items.map((item, itemIndex) => {
                 const IconComponent = item.icon
+                const isExternalLink = item.href.startsWith('/')
+                
+                if (isExternalLink) {
+                  return (
+                    <Link
+                      key={itemIndex}
+                      to={item.href}
+                      className="flex items-center gap-3 p-2 hover:bg-gray-800/50 rounded cursor-pointer transition-colors group"
+                    >
+                      <IconComponent size={16} className="text-gray-400 group-hover:text-accent" />
+                      <span className="text-gray-300 text-sm group-hover:text-white">
+                        {item.name}
+                      </span>
+                    </Link>
+                  )
+                }
+                
                 return (
                   <a
                     key={itemIndex}

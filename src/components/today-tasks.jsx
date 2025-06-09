@@ -85,7 +85,7 @@ const TodayTasks = ({ tasks = [], onAddTask, onUpdateTask, onDeleteTask }) => {
 
   return (
     <>
-      <div className='w-full h-full bg-[#1a1a1a] rounded-lg p-4'>
+      <div className='w-full h-full rounded-lg p-4 bg-transparent'>
         <div className='flex items-center justify-between mb-4'>
           <h2 className='text-lg font-[Libre_Baskerville] italic text-white'>
             Today's Tasks

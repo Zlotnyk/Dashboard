@@ -8,6 +8,7 @@ import HealthFitnessPage from './pages/health-fitness.jsx'
 import WellnessPage from './pages/wellness.jsx'
 import ProductivityPage from './pages/productivity.jsx'
 import FinancePage from './pages/finance.jsx'
+import TimetablePage from './pages/timetable.jsx'
 import NotFoundPage from './pages/not-found.jsx'
 
 createRoot(document.getElementById('root')).render(
@@ -20,6 +21,7 @@ createRoot(document.getElementById('root')).render(
 				<Route path='/wellness' element={<WellnessPage />} />
 				<Route path='/productivity' element={<ProductivityPage />} />
 				<Route path='/finance' element={<FinancePage />} />
+				<Route path='/timetable' element={<TimetablePage />} />
 				<Route path='*' element={<NotFoundPage />} />
 			</Routes>
 		</Router>

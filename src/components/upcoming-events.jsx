@@ -207,7 +207,7 @@ const UpcomingEvents = ({ events = [] }) => {
             <select
               value={selectedFilter}
               onChange={(e) => setSelectedFilter(Number(e.target.value))}
-              className="bg-[#2a2a2a] border border-gray-600 rounded px-3 py-1 text-sm text-white focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent appearance-none pr-8"
+              className="bg-transparent text-sm text-white focus:outline-none appearance-none pr-8"
             >
               {filterOptions.map(option => (
                 <option key={option.value} value={option.value} className="bg-[#2a2a2a]">

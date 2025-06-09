@@ -94,7 +94,7 @@ const TaskDrawer = ({ isOpen, task, onSave, onClose, onDelete }) => {
                         type="text"
                         value={formData.title}
                         onChange={(e) => handleChange('title', e.target.value)}
-                        className="w-full px-3 py-3 bg-transparent border-b-2 border-gray-600 text-white placeholder-gray-400 focus:outline-none focus:ring-0 focus:border-accent transition-colors"
+                        className="w-full px-3 py-3 bg-transparent border-none outline-none text-white placeholder-gray-400 focus:outline-none transition-colors"
                         placeholder="Enter task title..."
                         required
                       />
@@ -110,7 +110,7 @@ const TaskDrawer = ({ isOpen, task, onSave, onClose, onDelete }) => {
                         value={formData.description}
                         onChange={(e) => handleChange('description', e.target.value)}
                         rows={4}
-                        className="w-full px-3 py-3 bg-transparent border-b-2 border-gray-600 text-white placeholder-gray-400 focus:outline-none focus:ring-0 focus:border-accent transition-colors resize-none"
+                        className="w-full px-3 py-3 bg-transparent border-none outline-none text-white placeholder-gray-400 focus:outline-none transition-colors resize-none"
                         placeholder="Enter task description..."
                       />
                     </div>
@@ -126,7 +126,7 @@ const TaskDrawer = ({ isOpen, task, onSave, onClose, onDelete }) => {
                           type="date"
                           value={formData.start}
                           onChange={(e) => handleChange('start', e.target.value)}
-                          className="w-full px-3 py-3 bg-transparent border-b-2 border-gray-600 text-white focus:outline-none focus:ring-0 focus:border-accent transition-colors"
+                          className="w-full px-3 py-3 bg-transparent border-none outline-none text-white focus:outline-none transition-colors"
                           required
                         />
                       </div>
@@ -140,7 +140,7 @@ const TaskDrawer = ({ isOpen, task, onSave, onClose, onDelete }) => {
                           value={formData.end}
                           onChange={(e) => handleChange('end', e.target.value)}
                           min={formData.start}
-                          className="w-full px-3 py-3 bg-transparent border-b-2 border-gray-600 text-white focus:outline-none focus:ring-0 focus:border-accent transition-colors"
+                          className="w-full px-3 py-3 bg-transparent border-none outline-none text-white focus:outline-none transition-colors"
                           required
                         />
                       </div>
