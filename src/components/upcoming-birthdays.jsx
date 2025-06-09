@@ -48,7 +48,6 @@ const UpcomingBirthdays = ({ events = [] }) => {
   useEffect(() => {
     // Get birthday events from calendar (within 30 days)
     const today = new Date()
-    const thirtyDaysFromNow = new Date(today.getTime() + (30 * 24 * 60 * 60 * 1000))
     
     const calendarBirthdays = events
       .filter(event => event.category === 'birthday')
@@ -134,50 +133,57 @@ const UpcomingBirthdays = ({ events = [] }) => {
 
   return (
     <>
-      <div className="w-full h-full bg-transparent rounded-lg p-4">
-        {/* Header with golden text */}
-        <div className="mb-4">
-          <h3 className="text-lg font-[Libre_Baskerville] italic text-[#d4af37] mb-2">
+      <div className="w-full h-full bg-[#1a1a1a] rounded-lg p-4">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-[Libre_Baskerville] italic text-white">
             Upcoming Birthdays
           </h3>
-          <div className="flex items-center gap-2 text-gray-400 text-sm">
-            <Calendar size={16} />
-            <span>Next 30 Days</span>
-          </div>
+        </div>
+
+        {/* Horizontal line under header */}
+        <div className="w-full h-px bg-gray-700 mb-4"></div>
+
+        {/* Subtitle */}
+        <div className="flex items-center gap-2 text-gray-400 text-sm mb-4">
+          <Calendar size={16} />
+          <span>Next 30 Days</span>
         </div>
 
         {/* Birthday list */}
         <div className="space-y-2">
           {birthdays.length === 0 ? (
-            <div className="text-gray-500 text-sm py-4">
-              No upcoming birthdays in 30 days
+            <div className="text-gray-500 text-sm text-center py-4">
+              No upcoming birthdays
             </div>
           ) : (
             birthdays.map(birthday => (
               <div 
                 key={birthday.id}
-                className="flex items-center justify-between p-2 hover:bg-gray-800/30 rounded transition-colors group"
+                className="bg-gray-800/50 rounded-lg p-3 hover:bg-gray-700/50 transition-colors group"
               >
-                <div className="flex items-center gap-2">
-                  <Cake size={16} className="text-gray-400" />
-                  <div>
-                    <div className="text-gray-300 text-sm">
-                      {birthday.name}
-                    </div>
-                    <div className="text-gray-500 text-xs">
-                      Will be {birthday.nextAge} • {formatDaysUntil(birthday.daysUntil)}
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Cake size={16} className="text-gray-400" />
+                    <div>
+                      <div className="text-white text-sm font-medium">
+                        {birthday.name}
+                      </div>
+                      <div className="text-gray-400 text-xs">
+                        Will be {birthday.nextAge} • {formatDaysUntil(birthday.daysUntil)}
+                      </div>
                     </div>
                   </div>
+                  
+                  {birthday.source === 'manual' && (
+                    <button
+                      onClick={() => handleDeleteBirthday(birthday)}
+                      className="opacity-0 group-hover:opacity-100 p-1 hover:bg-red-600 rounded transition-all"
+                    >
+                      <X size={12} className="text-white" />
+                    </button>
+                  )}
                 </div>
-                
-                {birthday.source === 'manual' && (
-                  <button
-                    onClick={() => handleDeleteBirthday(birthday)}
-                    className="opacity-0 group-hover:opacity-100 p-1 hover:bg-red-600 rounded transition-all"
-                  >
-                    <X size={12} className="text-white" />
-                  </button>
-                )}
               </div>
             ))
           )}
@@ -185,7 +191,7 @@ const UpcomingBirthdays = ({ events = [] }) => {
           {/* New page button */}
           <button
             onClick={handleAddBirthday}
-            className="w-full flex items-center justify-center gap-2 py-3 px-4 border border-gray-600 rounded-lg text-gray-400 hover:text-white hover:border-gray-500 transition-colors"
+            className="w-full flex items-center justify-center gap-2 py-4 px-4 border border-gray-600 rounded-lg text-gray-400 hover:text-white hover:border-gray-500 transition-colors"
           >
             <Plus size={16} />
             <span className="text-sm">New page</span>
