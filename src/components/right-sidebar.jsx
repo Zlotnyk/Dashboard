@@ -10,7 +10,6 @@ const RightSidebar = () => {
       date: new Date('2025-06-10'),
       time: '',
       location: '',
-      targetGrade: '',
       notes: '',
       attended: false,
       isUrgent: true
@@ -21,12 +20,12 @@ const RightSidebar = () => {
   const [isExamModalOpen, setIsExamModalOpen] = useState(false)
   const [isAssignmentModalOpen, setIsAssignmentModalOpen] = useState(false)
   const [selectedExam, setSelectedExam] = useState(null)
+  const [selectedAssignment, setSelectedAssignment] = useState(null)
   const [examForm, setExamForm] = useState({
     title: '',
     date: '',
     time: '',
     location: '',
-    targetGrade: '',
     notes: '',
     attended: false
   })
@@ -46,7 +45,7 @@ const RightSidebar = () => {
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
     
     if (diffDays === 0) return 'Today'
-    if (diffDays === 1) return 'Tomorrow'
+    if (diffDays === 1) return 'Tomorrow.'
     if (diffDays < 0) return `${Math.abs(diffDays)} days ago`
     return `${diffDays} days`
   }
@@ -58,7 +57,6 @@ const RightSidebar = () => {
       date: '',
       time: '',
       location: '',
-      targetGrade: '',
       notes: '',
       attended: false
     })
@@ -72,7 +70,6 @@ const RightSidebar = () => {
       date: exam.date.toISOString().split('T')[0],
       time: exam.time,
       location: exam.location,
-      targetGrade: exam.targetGrade,
       notes: exam.notes,
       attended: exam.attended
     })
@@ -80,13 +77,27 @@ const RightSidebar = () => {
   }
 
   const addAssignmentReminder = () => {
+    setSelectedAssignment(null)
     setAssignmentForm({
-      title: '',
+      title: 'New page',
       dueDate: '',
       status: 'Not started',
       grade: '',
       notes: '',
       submitted: false
+    })
+    setIsAssignmentModalOpen(true)
+  }
+
+  const handleAssignmentClick = (assignment) => {
+    setSelectedAssignment(assignment)
+    setAssignmentForm({
+      title: assignment.title,
+      dueDate: assignment.dueDate.toISOString().split('T')[0],
+      status: assignment.status,
+      grade: assignment.grade,
+      notes: assignment.notes,
+      submitted: assignment.submitted
     })
     setIsAssignmentModalOpen(true)
   }
@@ -102,10 +113,9 @@ const RightSidebar = () => {
         date: new Date(examForm.date),
         time: examForm.time,
         location: examForm.location,
-        targetGrade: examForm.targetGrade,
         notes: examForm.notes,
         attended: examForm.attended,
-        isUrgent: calculateDaysUntil(examForm.date) === 'Tomorrow'
+        isUrgent: calculateDaysUntil(examForm.date) === 'Tomorrow.'
       }
       setExamReminders(prev => prev.map(exam => 
         exam.id === selectedExam.id ? updatedExam : exam
@@ -118,10 +128,9 @@ const RightSidebar = () => {
         date: new Date(examForm.date),
         time: examForm.time,
         location: examForm.location,
-        targetGrade: examForm.targetGrade,
         notes: examForm.notes,
         attended: examForm.attended,
-        isUrgent: calculateDaysUntil(examForm.date) === 'Tomorrow'
+        isUrgent: calculateDaysUntil(examForm.date) === 'Tomorrow.'
       }
       setExamReminders(prev => [...prev, newReminder])
     }
@@ -139,18 +148,44 @@ const RightSidebar = () => {
   const handleSaveAssignment = () => {
     if (!assignmentForm.title.trim() || !assignmentForm.dueDate) return
 
-    const newReminder = {
-      id: Date.now(),
-      title: assignmentForm.title,
-      dueDate: new Date(assignmentForm.dueDate),
-      status: assignmentForm.status,
-      grade: assignmentForm.grade,
-      notes: assignmentForm.notes,
-      submitted: assignmentForm.submitted,
-      isUrgent: calculateDaysUntil(assignmentForm.dueDate) === 'Tomorrow'
+    if (selectedAssignment) {
+      // Update existing assignment
+      const updatedAssignment = {
+        ...selectedAssignment,
+        title: assignmentForm.title,
+        dueDate: new Date(assignmentForm.dueDate),
+        status: assignmentForm.status,
+        grade: assignmentForm.grade,
+        notes: assignmentForm.notes,
+        submitted: assignmentForm.submitted,
+        isUrgent: calculateDaysUntil(assignmentForm.dueDate) === 'Tomorrow.'
+      }
+      setAssignmentReminders(prev => prev.map(assignment => 
+        assignment.id === selectedAssignment.id ? updatedAssignment : assignment
+      ))
+    } else {
+      // Create new assignment
+      const newReminder = {
+        id: Date.now(),
+        title: assignmentForm.title,
+        dueDate: new Date(assignmentForm.dueDate),
+        status: assignmentForm.status,
+        grade: assignmentForm.grade,
+        notes: assignmentForm.notes,
+        submitted: assignmentForm.submitted,
+        isUrgent: calculateDaysUntil(assignmentForm.dueDate) === 'Tomorrow.'
+      }
+      setAssignmentReminders(prev => [...prev, newReminder])
     }
-    setAssignmentReminders(prev => [...prev, newReminder])
     setIsAssignmentModalOpen(false)
+  }
+
+  const handleDeleteAssignment = () => {
+    if (selectedAssignment) {
+      setAssignmentReminders(prev => prev.filter(assignment => assignment.id !== selectedAssignment.id))
+      setIsAssignmentModalOpen(false)
+      setSelectedAssignment(null)
+    }
   }
 
   return (
@@ -188,7 +223,7 @@ const RightSidebar = () => {
                 </div>
                 {reminder.isUrgent && (
                   <div className="text-orange-500 text-xs font-medium">
-                    {calculateDaysUntil(reminder.date)}.
+                    {calculateDaysUntil(reminder.date)}
                   </div>
                 )}
               </div>
@@ -219,7 +254,11 @@ const RightSidebar = () => {
               </div>
             ) : (
               assignmentReminders.map(reminder => (
-                <div key={reminder.id} className="bg-gray-800/50 rounded-lg p-4">
+                <div 
+                  key={reminder.id} 
+                  className="bg-gray-800/50 rounded-lg p-4 cursor-pointer hover:bg-gray-700/50 transition-colors"
+                  onClick={() => handleAssignmentClick(reminder)}
+                >
                   <div className="flex items-center gap-2 mb-2">
                     {reminder.isUrgent && (
                       <span className="text-orange-500 text-sm">⚠️</span>
@@ -240,7 +279,7 @@ const RightSidebar = () => {
                   </div>
                   {reminder.isUrgent && (
                     <div className="text-orange-500 text-xs font-medium mt-1">
-                      {calculateDaysUntil(reminder.dueDate)}.
+                      {calculateDaysUntil(reminder.dueDate)}
                     </div>
                   )}
                 </div>
@@ -262,7 +301,7 @@ const RightSidebar = () => {
       <Dialog open={isExamModalOpen} onClose={setIsExamModalOpen} className="relative z-50">
         <DialogBackdrop 
           transition
-          className="fixed inset-0 bg-gray-500/75 transition-opacity data-closed:opacity-0 data-enter:duration-300 data-enter:ease-out data-leave:duration-200 data-leave:ease-in"
+          className="fixed inset-0 bg-black/50 transition-opacity data-closed:opacity-0 data-enter:duration-300 data-enter:ease-out data-leave:duration-200 data-leave:ease-in"
         />
         
         <div className="fixed inset-0 z-10 w-screen overflow-y-auto">
@@ -300,11 +339,6 @@ const RightSidebar = () => {
                         onChange={(e) => setExamForm(prev => ({ ...prev, date: e.target.value }))}
                         className="w-full bg-transparent text-white text-base border-none outline-none cursor-pointer"
                       />
-                      {examForm.date && (
-                        <div className="mt-1 text-xs text-orange-500 flex items-center gap-1">
-                          ⚠️ {calculateDaysUntil(examForm.date)}.
-                        </div>
-                      )}
                     </div>
                   </div>
 
@@ -338,21 +372,6 @@ const RightSidebar = () => {
                     </div>
                   </div>
 
-                  {/* Target Grade Field */}
-                  <div className="flex items-center gap-4">
-                    <Flag size={20} className="text-gray-400 flex-shrink-0" />
-                    <div className="flex-1">
-                      <div className="text-sm text-gray-400 mb-1">Target Grade</div>
-                      <input
-                        type="text"
-                        value={examForm.targetGrade}
-                        onChange={(e) => setExamForm(prev => ({ ...prev, targetGrade: e.target.value }))}
-                        placeholder="Empty"
-                        className="w-full bg-transparent text-white text-base border-none outline-none placeholder-gray-500"
-                      />
-                    </div>
-                  </div>
-
                   {/* Notes Field */}
                   <div className="flex items-center gap-4">
                     <FileText size={20} className="text-gray-400 flex-shrink-0" />
@@ -370,7 +389,7 @@ const RightSidebar = () => {
 
                   {/* When Exam Field */}
                   <div className="flex items-center gap-4">
-                    <span className="text-gray-400 text-base">⚠️</span>
+                    <span className="text-orange-500 text-base">⚠️</span>
                     <div className="flex-1">
                       <div className="text-sm text-gray-400 mb-1">When Exam</div>
                       <div className="text-orange-500 text-base">
@@ -386,7 +405,7 @@ const RightSidebar = () => {
                         type="checkbox"
                         checked={examForm.attended}
                         onChange={(e) => setExamForm(prev => ({ ...prev, attended: e.target.checked }))}
-                        className="w-4 h-4 text-[#97e7aa] bg-gray-800 border-gray-600 rounded focus:ring-[#97e7aa]"
+                        className="w-4 h-4 text-gray-500 bg-gray-800 border-gray-600 rounded focus:ring-gray-500"
                       />
                     </div>
                     <div className="flex-1">
@@ -429,117 +448,150 @@ const RightSidebar = () => {
 
       {/* Assignment Reminder Modal */}
       <Dialog open={isAssignmentModalOpen} onClose={setIsAssignmentModalOpen} className="relative z-50">
-        <DialogBackdrop className="fixed inset-0 bg-gray-500/75 transition-opacity" />
+        <DialogBackdrop 
+          transition
+          className="fixed inset-0 bg-black/50 transition-opacity data-closed:opacity-0 data-enter:duration-300 data-enter:ease-out data-leave:duration-200 data-leave:ease-in"
+        />
         
         <div className="fixed inset-0 z-10 w-screen overflow-y-auto">
           <div className="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
-            <DialogPanel className="relative transform overflow-hidden rounded-lg bg-[#1a1a1a] text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg">
+            <DialogPanel 
+              transition
+              className="relative transform overflow-hidden rounded-lg bg-[#1a1a1a] text-left shadow-xl transition-all data-closed:translate-y-4 data-closed:opacity-0 data-enter:duration-300 data-enter:ease-out data-leave:duration-200 data-leave:ease-in sm:my-8 sm:w-full sm:max-w-lg data-closed:sm:translate-y-0 data-closed:sm:scale-95"
+            >
               <div className="bg-[#1a1a1a] px-6 pt-6 pb-4">
-                <div className="flex items-center justify-between mb-6">
-                  <DialogTitle className="text-lg font-semibold text-white flex items-center gap-2">
-                    <FileText size={20} className="text-[#97e7aa]" />
-                    Assignment Reminder
-                  </DialogTitle>
+                <div className="flex items-center justify-between mb-8">
+                  <input
+                    type="text"
+                    value={assignmentForm.title}
+                    onChange={(e) => setAssignmentForm(prev => ({ ...prev, title: e.target.value }))}
+                    className="text-2xl font-medium text-white bg-transparent border-none outline-none flex-1"
+                    placeholder="New page"
+                  />
                   <button
                     onClick={() => setIsAssignmentModalOpen(false)}
-                    className="text-gray-400 hover:text-white"
+                    className="text-gray-400 hover:text-white ml-4"
                   >
-                    <X size={20} />
+                    <X size={24} />
                   </button>
                 </div>
 
-                <div className="space-y-4">
-                  <div>
-                    <label className="flex items-center gap-2 text-sm text-gray-300 mb-2">
-                      <Calendar size={16} />
-                      Due Date
-                    </label>
-                    <input
-                      type="date"
-                      value={assignmentForm.dueDate}
-                      onChange={(e) => setAssignmentForm(prev => ({ ...prev, dueDate: e.target.value }))}
-                      className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded text-white focus:outline-none focus:ring-2 focus:ring-[#97e7aa]"
-                    />
-                    {assignmentForm.dueDate && (
-                      <div className="mt-1 text-xs text-orange-500 flex items-center gap-1">
-                        ⚠️ {calculateDaysUntil(assignmentForm.dueDate)}.
+                <div className="space-y-6">
+                  {/* Due Date Field */}
+                  <div className="flex items-center gap-4">
+                    <Calendar size={20} className="text-gray-400 flex-shrink-0 cursor-pointer" />
+                    <div className="flex-1">
+                      <div className="text-sm text-gray-400 mb-1">Due Date</div>
+                      <input
+                        type="date"
+                        value={assignmentForm.dueDate}
+                        onChange={(e) => setAssignmentForm(prev => ({ ...prev, dueDate: e.target.value }))}
+                        className="w-full bg-transparent text-white text-base border-none outline-none cursor-pointer"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Status Field */}
+                  <div className="flex items-center gap-4">
+                    <Flag size={20} className="text-gray-400 flex-shrink-0" />
+                    <div className="flex-1">
+                      <div className="text-sm text-gray-400 mb-1">Status</div>
+                      <select
+                        value={assignmentForm.status}
+                        onChange={(e) => setAssignmentForm(prev => ({ ...prev, status: e.target.value }))}
+                        className="w-full bg-transparent text-white text-base border-none outline-none"
+                      >
+                        <option value="Not started" className="bg-[#1a1a1a]">Not started</option>
+                        <option value="In progress" className="bg-[#1a1a1a]">In progress</option>
+                        <option value="Completed" className="bg-[#1a1a1a]">Completed</option>
+                        <option value="Submitted" className="bg-[#1a1a1a]">Submitted</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  {/* Grade Field */}
+                  <div className="flex items-center gap-4">
+                    <Flag size={20} className="text-gray-400 flex-shrink-0" />
+                    <div className="flex-1">
+                      <div className="text-sm text-gray-400 mb-1">Grade</div>
+                      <input
+                        type="text"
+                        value={assignmentForm.grade}
+                        onChange={(e) => setAssignmentForm(prev => ({ ...prev, grade: e.target.value }))}
+                        placeholder="Empty"
+                        className="w-full bg-transparent text-white text-base border-none outline-none placeholder-gray-500"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Notes Field */}
+                  <div className="flex items-center gap-4">
+                    <FileText size={20} className="text-gray-400 flex-shrink-0" />
+                    <div className="flex-1">
+                      <div className="text-sm text-gray-400 mb-1">Notes</div>
+                      <textarea
+                        value={assignmentForm.notes}
+                        onChange={(e) => setAssignmentForm(prev => ({ ...prev, notes: e.target.value }))}
+                        placeholder="Empty"
+                        className="w-full bg-transparent text-white text-base border-none outline-none placeholder-gray-500 resize-none"
+                        rows={3}
+                      />
+                    </div>
+                  </div>
+
+                  {/* When Assignment Field */}
+                  <div className="flex items-center gap-4">
+                    <span className="text-orange-500 text-base">⚠️</span>
+                    <div className="flex-1">
+                      <div className="text-sm text-gray-400 mb-1">When Assignment</div>
+                      <div className="text-orange-500 text-base">
+                        {assignmentForm.dueDate ? calculateDaysUntil(assignmentForm.dueDate) : 'Tomorrow.'}
                       </div>
-                    )}
+                    </div>
                   </div>
 
-                  <div>
-                    <label className="flex items-center gap-2 text-sm text-gray-300 mb-2">
-                      <Flag size={16} />
-                      Status
-                    </label>
-                    <select
-                      value={assignmentForm.status}
-                      onChange={(e) => setAssignmentForm(prev => ({ ...prev, status: e.target.value }))}
-                      className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded text-white focus:outline-none focus:ring-2 focus:ring-[#97e7aa]"
-                    >
-                      <option value="Not started">Not started</option>
-                      <option value="In progress">In progress</option>
-                      <option value="Completed">Completed</option>
-                      <option value="Submitted">Submitted</option>
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="flex items-center gap-2 text-sm text-gray-300 mb-2">
-                      <Flag size={16} />
-                      Grade
-                    </label>
-                    <input
-                      type="text"
-                      value={assignmentForm.grade}
-                      onChange={(e) => setAssignmentForm(prev => ({ ...prev, grade: e.target.value }))}
-                      className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded text-white focus:outline-none focus:ring-2 focus:ring-[#97e7aa]"
-                      placeholder="Empty"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="flex items-center gap-2 text-sm text-gray-300 mb-2">
-                      <FileText size={16} />
-                      Notes
-                    </label>
-                    <textarea
-                      value={assignmentForm.notes}
-                      onChange={(e) => setAssignmentForm(prev => ({ ...prev, notes: e.target.value }))}
-                      className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded text-white focus:outline-none focus:ring-2 focus:ring-[#97e7aa] resize-none"
-                      rows={3}
-                      placeholder="Empty"
-                    />
-                  </div>
-
-                  <div className="flex items-center gap-2">
-                    <input
-                      type="checkbox"
-                      id="submitted"
-                      checked={assignmentForm.submitted}
-                      onChange={(e) => setAssignmentForm(prev => ({ ...prev, submitted: e.target.checked }))}
-                      className="w-4 h-4 text-[#97e7aa] bg-gray-800 border-gray-600 rounded focus:ring-[#97e7aa]"
-                    />
-                    <label htmlFor="submitted" className="text-sm text-gray-300">
-                      Submitted
-                    </label>
+                  {/* Submitted Checkbox */}
+                  <div className="flex items-center gap-4">
+                    <div className="w-5 h-5 flex items-center justify-center">
+                      <input
+                        type="checkbox"
+                        checked={assignmentForm.submitted}
+                        onChange={(e) => setAssignmentForm(prev => ({ ...prev, submitted: e.target.checked }))}
+                        className="w-4 h-4 text-gray-500 bg-gray-800 border-gray-600 rounded focus:ring-gray-500"
+                      />
+                    </div>
+                    <div className="flex-1">
+                      <div className="text-sm text-gray-400">Submitted</div>
+                    </div>
                   </div>
                 </div>
               </div>
 
-              <div className="px-6 py-3 flex flex-row-reverse gap-3">
-                <button
-                  onClick={handleSaveAssignment}
-                  className="px-4 py-2 bg-[#97e7aa] text-white rounded hover:bg-[#75b384] transition-colors"
-                >
-                  Save
-                </button>
-                <button
-                  onClick={() => setIsAssignmentModalOpen(false)}
-                  className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700 transition-colors"
-                >
-                  Cancel
-                </button>
+              {/* Footer with action buttons */}
+              <div className="bg-[#1a1a1a] px-6 py-4 border-t border-gray-700">
+                <div className="flex gap-3">
+                  {selectedAssignment && (
+                    <button
+                      onClick={handleDeleteAssignment}
+                      className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm"
+                    >
+                      Delete
+                    </button>
+                  )}
+                  <div className="flex-1"></div>
+                  <button
+                    onClick={() => setIsAssignmentModalOpen(false)}
+                    className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors text-sm"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleSaveAssignment}
+                    className="px-4 py-2 bg-[#97e7aa] text-white rounded-lg hover:bg-[#75b384] transition-colors text-sm"
+                  >
+                    Save
+                  </button>
+                </div>
               </div>
             </DialogPanel>
           </div>

@@ -9,7 +9,8 @@ const MiniCalendar = () => {
     'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
   ]
   
-  const dayNames = ['S', 'M', 'T', 'W', 'T', 'F', 'S']
+  // Changed to start with Monday
+  const dayNames = ['M', 'T', 'W', 'T', 'F', 'S', 'S']
   
   const currentMonth = currentDate.getMonth()
   const currentYear = currentDate.getFullYear()
@@ -19,7 +20,10 @@ const MiniCalendar = () => {
   const firstDayOfMonth = new Date(currentYear, currentMonth, 1)
   const lastDayOfMonth = new Date(currentYear, currentMonth + 1, 0)
   const daysInMonth = lastDayOfMonth.getDate()
-  const startingDayOfWeek = firstDayOfMonth.getDay()
+  
+  // Adjust starting day to make Monday = 0
+  let startingDayOfWeek = firstDayOfMonth.getDay()
+  startingDayOfWeek = startingDayOfWeek === 0 ? 6 : startingDayOfWeek - 1
   
   // Get days from previous month to fill the grid
   const daysInPrevMonth = new Date(currentYear, currentMonth, 0).getDate()
