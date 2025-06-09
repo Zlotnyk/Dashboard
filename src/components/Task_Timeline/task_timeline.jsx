@@ -11,6 +11,7 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
   const [viewMode, setViewMode] = useState('Month')
   const [isDrawerOpen, setIsDrawerOpen] = useState(false)
   const [drawerTask, setDrawerTask] = useState(null)
+  const [isDragging, setIsDragging] = useState(false)
   const timelineRef = useRef(null)
   const scrollRef = useRef(null)
 
@@ -61,8 +62,11 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
 
   const handleTaskClick = (task, e) => {
     e.stopPropagation()
-    setDrawerTask(task)
-    setIsDrawerOpen(true)
+    // Only open drawer if we're not dragging
+    if (!isDragging) {
+      setDrawerTask(task)
+      setIsDrawerOpen(true)
+    }
   }
 
   const handleDeleteTask = () => {
@@ -105,6 +109,7 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
     }
     
     setDraggedTask(task)
+    setIsDragging(true)
     const timelineRect = timelineRef.current.getBoundingClientRect()
     setDragOffset({
       x: e.clientX - timelineRect.left,
@@ -113,7 +118,7 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
   }
 
   const handleTimelineClick = (e) => {
-    if (e.target === timelineRef.current || e.target.closest('.timeline-background')) {
+    if (!isDragging && (e.target === timelineRef.current || e.target.closest('.timeline-background'))) {
       const rect = timelineRef.current.getBoundingClientRect()
       const clickX = e.clientX - rect.left
       const clickDay = Math.max(1, Math.min(daysInMonth, Math.floor(clickX / dayWidth) + 1))
@@ -170,6 +175,10 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
     const handleMouseUp = () => {
       setDraggedTask(null)
       setDragMode(null)
+      // Add a small delay before allowing clicks again
+      setTimeout(() => {
+        setIsDragging(false)
+      }, 100)
     }
 
     if (draggedTask) {
@@ -285,7 +294,7 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
                 {Array.from({ length: daysInMonth }, (_, i) => (
                   <div
                     key={i + 1}
-                    className={`flex items-center justify-center text-sm ${
+                    className={`flex items-center justify-center text-sm border-r border-gray-800 ${
                       isCurrentMonth && (i + 1) === todayDate 
                         ? 'bg-[#97e7aa] text-white font-semibold' 
                         : 'text-gray-300'
@@ -304,17 +313,6 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
                   style={{ left: `${(todayDate - 0.5) * dayWidth}px` }}
                 />
               )}
-
-              {/* Vertical Grid Lines */}
-              <div className="absolute inset-0 pointer-events-none top-8">
-                {Array.from({ length: daysInMonth - 1 }, (_, i) => (
-                  <div
-                    key={i}
-                    className="absolute top-0 bottom-0 w-px bg-gray-800"
-                    style={{ left: `${(i + 1) * dayWidth}px` }}
-                  />
-                ))}
-              </div>
 
               {/* Tasks Area */}
               <div className="relative h-full pt-4 pb-4 overflow-y-auto custom-scrollbar">
