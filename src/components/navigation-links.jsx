@@ -3,7 +3,7 @@ import { Heart, Activity, Brain, Target, DollarSign } from 'lucide-react'
 
 const NavigationLinks = () => {
   const navigationLinks = [
-    { name: 'Lifestyle', icon: Heart, href: '/lifestyle' },
+    { name: 'Lifestyle', icon: Heart, href: '/lifestyle.html' },
     { name: 'Health & Fitness', icon: Activity, href: '/health-fitness' },
     { name: 'Wellness', icon: Brain, href: '/wellness' },
     { name: 'Productivity', icon: Target, href: '/productivity' },
@@ -11,9 +11,8 @@ const NavigationLinks = () => {
   ]
 
   const handleNavigation = (href) => {
-    if (href === '/lifestyle') {
-      // For now, we'll just show an alert. In a real app, this would use React Router
-      window.location.href = '/lifestyle.html'
+    if (href === '/lifestyle.html') {
+      window.location.href = href
     } else {
       alert(`Navigation to ${href} - Coming soon!`)
     }
@@ -30,9 +29,9 @@ const NavigationLinks = () => {
               <button 
                 key={index} 
                 onClick={() => handleNavigation(link.href)}
-                className="flex items-center gap-2 hover:text-[#97e7aa] transition-colors text-base group"
+                className="flex items-center gap-2 hover:text-[var(--accent-color,#97e7aa)] transition-colors text-base group"
               >
-                <IconComponent size={18} className="text-[#97e7aa] group-hover:text-[#97e7aa]" />
+                <IconComponent size={18} className="text-[var(--accent-color,#97e7aa)] group-hover:text-[var(--accent-color,#97e7aa)]" />
                 {link.name}
               </button>
             )

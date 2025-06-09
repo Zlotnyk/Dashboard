@@ -158,7 +158,7 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
       status: 'Not started',
       priority: 'normal',
       description: '',
-      color: '#97e7aa'
+      color: 'var(--accent-color, #97e7aa)'
     }
     onAddTask(newTask)
     setDrawerTask(newTask)
@@ -211,7 +211,7 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
           status: 'Not started',
           priority: 'normal',
           description: '',
-          color: '#97e7aa'
+          color: 'var(--accent-color, #97e7aa)'
         }
         
         onAddTask(newTask)
@@ -369,9 +369,10 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
               <button 
                 className={`px-3 py-1 text-sm rounded ${
                   viewMode === 'Month' 
-                    ? 'bg-[#97e7aa] text-white' 
+                    ? 'text-white' 
                     : 'text-gray-400 hover:text-white'
                 }`}
+                style={viewMode === 'Month' ? { backgroundColor: 'var(--accent-color, #97e7aa)' } : {}}
                 onClick={() => setViewMode('Month')}
               >
                 Month
@@ -379,9 +380,10 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
               <button 
                 className={`px-3 py-1 text-sm rounded ${
                   viewMode === 'Week' 
-                    ? 'bg-[#97e7aa] text-white' 
+                    ? 'text-white' 
                     : 'text-gray-400 hover:text-white'
                 }`}
+                style={viewMode === 'Week' ? { backgroundColor: 'var(--accent-color, #97e7aa)' } : {}}
                 onClick={() => setViewMode('Week')}
               >
                 Week
@@ -394,7 +396,8 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
               </button>
               <button
                 onClick={handleAddTask}
-                className="flex items-center gap-2 px-3 py-1 bg-[#97e7aa] text-white rounded text-sm hover:bg-[#75b384]"
+                className="flex items-center gap-2 px-3 py-1 text-white rounded text-sm hover:opacity-80"
+                style={{ backgroundColor: 'var(--accent-color, #97e7aa)' }}
               >
                 <Plus size={14} />
                 New
@@ -432,10 +435,13 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
                       key={i}
                       className={`flex items-center justify-center text-sm relative ${
                         isToday
-                          ? 'bg-[#97e7aa] text-white font-semibold' 
+                          ? 'text-white font-semibold' 
                           : 'text-gray-300'
                       }`}
-                      style={{ width: `${dayWidth}px` }}
+                      style={{ 
+                        width: `${dayWidth}px`,
+                        backgroundColor: isToday ? 'var(--accent-color, #97e7aa)' : 'transparent'
+                      }}
                     >
                       {dayText}
                     </div>
@@ -461,8 +467,11 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
                 if (todayPosition >= 0) {
                   return (
                     <div
-                      className="absolute top-8 bottom-0 w-0.5 bg-[#97e7aa] z-20 pointer-events-none"
-                      style={{ left: `${todayPosition + dayWidth / 2}px` }}
+                      className="absolute top-8 bottom-0 w-0.5 z-20 pointer-events-none"
+                      style={{ 
+                        left: `${todayPosition + dayWidth / 2}px`,
+                        backgroundColor: 'var(--accent-color, #97e7aa)'
+                      }}
                     />
                   )
                 }
@@ -472,10 +481,11 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
               {/* Plus button on hover in timeline area */}
               {!isDragging && mousePosition.y > 32 && (
                 <div
-                  className="absolute w-6 h-6 bg-[#97e7aa] rounded-full flex items-center justify-center z-30 pointer-events-none opacity-60"
+                  className="absolute w-6 h-6 rounded-full flex items-center justify-center z-30 pointer-events-none opacity-60"
                   style={{
                     left: `${mousePosition.x - 12}px`,
-                    top: `${mousePosition.y - 12}px`
+                    top: `${mousePosition.y - 12}px`,
+                    backgroundColor: 'var(--accent-color, #97e7aa)'
                   }}
                 >
                   <Plus size={12} className="text-white" />
@@ -486,19 +496,20 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
               <div className="relative h-full pt-4 pb-4 overflow-y-auto custom-scrollbar z-10">
                 {visibleTasks.map((task, index) => {
                   const isUrgent = task.priority === 'urgent'
-                  const taskColor = isUrgent ? '#ff6b35' : '#97e7aa'
+                  const taskColor = isUrgent ? '#ff6b35' : 'var(--accent-color, #97e7aa)'
                   
                   return (
                     <div
                       key={task.id}
                       className={`absolute h-8 rounded cursor-pointer transition-all duration-200 group z-20 ${
-                        selectedTask?.id === task.id ? 'ring-2 ring-[#97e7aa]' : ''
+                        selectedTask?.id === task.id ? 'ring-2' : ''
                       } ${draggedTask?.id === task.id ? 'opacity-80 shadow-lg' : ''}`}
                       style={{
                         left: `${getDayPosition(task.start)}px`,
                         width: `${getTaskWidth(task)}px`,
                         top: `${index * 36 + 8}px`,
-                        backgroundColor: taskColor
+                        backgroundColor: taskColor,
+                        '--tw-ring-color': 'var(--accent-color, #97e7aa)'
                       }}
                       onClick={(e) => handleTaskClick(task, e)}
                       onMouseDown={(e) => handleMouseDown(e, task)}
