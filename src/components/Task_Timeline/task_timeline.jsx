@@ -22,6 +22,10 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
   const isCurrentMonth = today.getMonth() === currentMonth && today.getFullYear() === currentYear
   const todayDate = today.getDate()
 
+  // Fixed day width for consistent alignment
+  const dayWidth = 50 // pixels per day
+  const totalWidth = daysInMonth * dayWidth
+
   const navigateMonth = (direction) => {
     const newDate = new Date(currentDate)
     newDate.setMonth(currentMonth + direction)
@@ -32,7 +36,6 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
     setCurrentDate(new Date())
     setTimeout(() => {
       if (scrollRef.current && isCurrentMonth) {
-        const dayWidth = scrollRef.current.scrollWidth / daysInMonth
         const todayPosition = (todayDate - 1) * dayWidth
         const containerWidth = scrollRef.current.clientWidth
         const scrollPosition = Math.max(0, todayPosition - containerWidth / 2)
@@ -43,13 +46,13 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
 
   const getDayPosition = (date) => {
     const day = date.getDate()
-    return ((day - 1) / daysInMonth) * 100
+    return (day - 1) * dayWidth
   }
 
   const getTaskWidth = (task) => {
     const startDay = task.start.getDate()
     const endDay = task.end.getDate()
-    return ((endDay - startDay + 1) / daysInMonth) * 100
+    return (endDay - startDay + 1) * dayWidth
   }
 
   const handleTaskClick = (task) => {
@@ -92,7 +95,6 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
 
       const rect = timelineRef.current.getBoundingClientRect()
       const x = e.clientX - rect.left - dragOffset.x
-      const dayWidth = rect.width / daysInMonth
       const newStartDay = Math.max(1, Math.min(daysInMonth, Math.round(x / dayWidth) + 1))
       
       const taskDuration = draggedTask.end.getDate() - draggedTask.start.getDate()
@@ -120,20 +122,7 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
       document.removeEventListener('mousemove', handleMouseMove)
       document.removeEventListener('mouseup', handleMouseUp)
     }
-  }, [draggedTask, dragOffset, currentYear, currentMonth, daysInMonth, onUpdateTask])
-
-  useEffect(() => {
-    if (timelineRef.current) {
-      const dayElements = timelineRef.current.querySelectorAll('.day-header');
-      if (dayElements.length > 0) {
-        const dayWidth = dayElements[0].getBoundingClientRect().width;
-        const lines = timelineRef.current.querySelectorAll('.grid-line');
-        lines.forEach((line, i) => {
-          line.style.left = `${(i + 1) * dayWidth}px`;
-        });
-      }
-    }
-  }, [currentMonth, daysInMonth]);
+  }, [draggedTask, dragOffset, currentYear, currentMonth, daysInMonth, onUpdateTask, dayWidth])
 
   const currentMonthTasks = tasks.filter(task => 
     task.start.getMonth() === currentMonth && task.start.getFullYear() === currentYear
@@ -210,20 +199,26 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
         <div 
           ref={scrollRef}
           className="h-full overflow-x-auto overflow-y-hidden custom-scrollbar"
-          style={{ minWidth: '100%' }}
         >
           <div 
             ref={timelineRef}
             className="relative h-full"
-            style={{ minWidth: `${daysInMonth * 40}px`, whiteSpace: 'nowrap' }}
+            style={{ width: `${totalWidth}px` }}
           >
             {/* Days Header */}
-            <div className="flex border-b border-gray-700 h-8 bg-[#1a1a1a] sticky top-0 z-10">
+            <div 
+              className="flex border-b border-gray-700 h-8 bg-[#1a1a1a] sticky top-0 z-10"
+              style={{ width: `${totalWidth}px` }}
+            >
               {Array.from({ length: daysInMonth }, (_, i) => (
                 <div
                   key={i + 1}
-                  className="flex items-center justify-center text-sm border-r border-gray-700 last:border-r-0 day-header"
-                  style={{ width: `${40}px` }}
+                  className={`flex items-center justify-center text-sm border-r border-gray-700 last:border-r-0 ${
+                    isCurrentMonth && (i + 1) === todayDate 
+                      ? 'bg-[#97e7aa] text-white font-semibold' 
+                      : 'text-gray-300'
+                  }`}
+                  style={{ width: `${dayWidth}px` }}
                 >
                   {i + 1}
                 </div>
@@ -234,7 +229,7 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
             {isCurrentMonth && (
               <div
                 className="absolute top-8 bottom-0 w-0.5 bg-[#97e7aa] z-20 pointer-events-none"
-                style={{ left: `${((todayDate - 0.5) / daysInMonth) * 100}%` }}
+                style={{ left: `${(todayDate - 0.5) * dayWidth}px` }}
               />
             )}
 
@@ -243,8 +238,8 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
               {Array.from({ length: daysInMonth - 1 }, (_, i) => (
                 <div
                   key={i}
-                  className="absolute top-0 bottom-0 w-px bg-gray-700 grid-line"
-                  style={{ left: `${((i + 1) / daysInMonth) * 100}%` }}
+                  className="absolute top-0 bottom-0 w-px bg-gray-700"
+                  style={{ left: `${(i + 1) * dayWidth}px` }}
                 />
               ))}
             </div>
@@ -258,8 +253,8 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
                     selectedTask?.id === task.id ? 'ring-2 ring-[#97e7aa]' : ''
                   }`}
                   style={{
-                    left: `${getDayPosition(task.start)}%`,
-                    width: `${getTaskWidth(task)}%`,
+                    left: `${getDayPosition(task.start)}px`,
+                    width: `${getTaskWidth(task)}px`,
                     top: `${index * 36 + 8}px`,
                     backgroundColor: '#97e7aa'
                   }}
