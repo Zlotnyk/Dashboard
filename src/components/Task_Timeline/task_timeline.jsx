@@ -129,9 +129,9 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
   )
 
   return (
-    <div className="w-full bg-[#1a1a1a] rounded-lg border border-gray-700 h-[400px] flex flex-col">
+    <div className="w-full bg-[#1a1a1a] rounded-lg h-[400px] flex flex-col">
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-gray-700 flex-shrink-0">
+      <div className="flex items-center justify-between px-4 py-3 flex-shrink-0">
         <div className="flex items-center gap-3">
           <Calendar size={18} className="text-gray-400" />
           <span className="text-white text-lg font-medium">Task Timeline</span>
@@ -207,13 +207,13 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
           >
             {/* Days Header */}
             <div 
-              className="flex border-b border-gray-700 h-8 bg-[#1a1a1a] sticky top-0 z-10"
+              className="flex h-8 bg-[#1a1a1a] sticky top-0 z-10"
               style={{ width: `${totalWidth}px` }}
             >
               {Array.from({ length: daysInMonth }, (_, i) => (
                 <div
                   key={i + 1}
-                  className={`flex items-center justify-center text-sm border-r border-gray-700 last:border-r-0 ${
+                  className={`flex items-center justify-center text-sm ${
                     isCurrentMonth && (i + 1) === todayDate 
                       ? 'bg-[#97e7aa] text-white font-semibold' 
                       : 'text-gray-300'
@@ -233,12 +233,12 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
               />
             )}
 
-            {/* Vertical Grid Lines - Made thinner to match header borders */}
+            {/* Vertical Grid Lines - Subtle and minimal */}
             <div className="absolute inset-0 pointer-events-none top-8">
               {Array.from({ length: daysInMonth - 1 }, (_, i) => (
                 <div
                   key={i}
-                  className="absolute top-0 bottom-0 border-r border-gray-700"
+                  className="absolute top-0 bottom-0 w-px bg-gray-800"
                   style={{ left: `${(i + 1) * dayWidth}px` }}
                 />
               ))}
