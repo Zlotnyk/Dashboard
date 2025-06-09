@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react'
-import { Settings, Move, Check, X, RotateCcw } from 'lucide-react'
+import { Lock, Unlock, Check, X, RotateCcw } from 'lucide-react'
 import '../App.css'
 
 const GifContainer = () => {
@@ -136,25 +136,25 @@ const GifContainer = () => {
 			ref={containerRef}
 			className='gif-container relative overflow-hidden'
 		>
-			{/* Settings Button - Smaller */}
+			{/* Lock/Unlock Button */}
 			<button
 				onClick={handleSettingsClick}
 				className={`absolute top-3 right-3 z-20 p-1.5 rounded-md transition-all duration-200 ${
 					isSettingsMode 
-						? 'bg-accent text-white shadow-lg scale-110' 
+						? 'bg-red-500/80 text-white shadow-lg scale-110' 
 						: 'bg-black/40 text-white/60 hover:bg-black/60 hover:text-white hover:scale-105'
 				}`}
-				title="Adjust image position"
+				title={isSettingsMode ? "Lock position" : "Unlock to adjust position"}
 			>
-				<Settings size={14} />
+				{isSettingsMode ? <Unlock size={14} /> : <Lock size={14} />}
 			</button>
 
 			{/* Settings Controls */}
 			{isSettingsMode && (
 				<div className="absolute top-3 left-3 z-20 bg-black/90 backdrop-blur-sm rounded-lg p-2 flex items-center gap-2 shadow-lg">
 					<div className="flex items-center gap-1 text-white text-xs">
-						<Move size={12} />
-						<span>Drag image</span>
+						<span>🖱️</span>
+						<span>Drag to move</span>
 					</div>
 					<div className="w-px h-4 bg-gray-600"></div>
 					<button
@@ -174,17 +174,17 @@ const GifContainer = () => {
 					<button
 						onClick={handleSavePosition}
 						className="p-1 text-green-400 hover:text-green-300 transition-colors"
-						title="Save position"
+						title="Save & lock position"
 					>
 						<Check size={12} />
 					</button>
 				</div>
 			)}
 
-			{/* Settings Mode Overlay */}
+			{/* Settings Mode Overlay - No blur, just subtle border */}
 			{isSettingsMode && (
-				<div className="absolute inset-0 z-10 bg-black/10">
-					<div className="absolute inset-2 border-2 border-dashed border-accent/60 rounded-lg"></div>
+				<div className="absolute inset-0 z-10 pointer-events-none">
+					<div className="absolute inset-2 border-2 border-dashed border-red-400/60 rounded-lg"></div>
 					{/* Helper text */}
 					<div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-black/80 text-white text-sm px-3 py-1 rounded-full">
 						Drag the image to reposition
@@ -202,7 +202,7 @@ const GifContainer = () => {
 					onMouseDown={handleMouseDown}
 					className={`w-full h-full object-cover transition-all duration-200 select-none ${
 						isSettingsMode 
-							? 'filter brightness-95 cursor-move' 
+							? 'cursor-move' 
 							: 'cursor-default'
 					}`}
 					style={{ 
