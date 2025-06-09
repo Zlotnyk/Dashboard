@@ -22,42 +22,101 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
 
   const currentMonth = currentDate.getMonth()
   const currentYear = currentDate.getFullYear()
-  const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate()
+  
+  // Calculate days based on view mode
+  const getDaysToShow = () => {
+    if (viewMode === 'Week') {
+      // Get current week
+      const startOfWeek = new Date(currentDate)
+      const day = startOfWeek.getDay()
+      startOfWeek.setDate(startOfWeek.getDate() - day)
+      
+      const days = []
+      for (let i = 0; i < 7; i++) {
+        const date = new Date(startOfWeek)
+        date.setDate(startOfWeek.getDate() + i)
+        days.push(date)
+      }
+      return days
+    } else {
+      // Month view
+      const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate()
+      const days = []
+      for (let i = 1; i <= daysInMonth; i++) {
+        days.push(new Date(currentYear, currentMonth, i))
+      }
+      return days
+    }
+  }
+
+  const daysToShow = getDaysToShow()
   const today = new Date()
-  const isCurrentMonth = today.getMonth() === currentMonth && today.getFullYear() === currentYear
-  const todayDate = today.getDate()
-
+  
   // Fixed day width for consistent alignment
-  const dayWidth = 50 // pixels per day
-  const totalWidth = daysInMonth * dayWidth
+  const dayWidth = viewMode === 'Week' ? 120 : 50
+  const totalWidth = daysToShow.length * dayWidth
 
-  const navigateMonth = (direction) => {
+  const navigateTime = (direction) => {
     const newDate = new Date(currentDate)
-    newDate.setMonth(currentMonth + direction)
+    if (viewMode === 'Week') {
+      newDate.setDate(currentDate.getDate() + (direction * 7))
+    } else {
+      newDate.setMonth(currentMonth + direction)
+    }
     setCurrentDate(newDate)
   }
 
   const goToToday = () => {
     setCurrentDate(new Date())
     setTimeout(() => {
-      if (scrollRef.current && isCurrentMonth) {
-        const todayPosition = (todayDate - 1) * dayWidth
-        const containerWidth = scrollRef.current.clientWidth
-        const scrollPosition = Math.max(0, todayPosition - containerWidth / 2)
-        scrollRef.current.scrollLeft = scrollPosition
+      if (scrollRef.current) {
+        const todayPosition = getTodayPosition()
+        if (todayPosition >= 0) {
+          const containerWidth = scrollRef.current.clientWidth
+          const scrollPosition = Math.max(0, todayPosition - containerWidth / 2)
+          scrollRef.current.scrollLeft = scrollPosition
+        }
       }
     }, 100)
   }
 
+  const getTodayPosition = () => {
+    if (viewMode === 'Week') {
+      const todayIndex = daysToShow.findIndex(date => 
+        date.toDateString() === today.toDateString()
+      )
+      return todayIndex >= 0 ? todayIndex * dayWidth : -1
+    } else {
+      const isCurrentMonth = today.getMonth() === currentMonth && today.getFullYear() === currentYear
+      if (isCurrentMonth) {
+        return (today.getDate() - 1) * dayWidth
+      }
+      return -1
+    }
+  }
+
   const getDayPosition = (date) => {
-    const day = date.getDate()
-    return (day - 1) * dayWidth
+    if (viewMode === 'Week') {
+      const dayIndex = daysToShow.findIndex(d => d.toDateString() === date.toDateString())
+      return dayIndex >= 0 ? dayIndex * dayWidth : 0
+    } else {
+      return (date.getDate() - 1) * dayWidth
+    }
   }
 
   const getTaskWidth = (task) => {
-    const startDay = task.start.getDate()
-    const endDay = task.end.getDate()
-    return (endDay - startDay + 1) * dayWidth
+    if (viewMode === 'Week') {
+      const startIndex = daysToShow.findIndex(d => d.toDateString() === task.start.toDateString())
+      const endIndex = daysToShow.findIndex(d => d.toDateString() === task.end.toDateString())
+      if (startIndex >= 0 && endIndex >= 0) {
+        return (endIndex - startIndex + 1) * dayWidth
+      }
+      return dayWidth
+    } else {
+      const startDay = task.start.getDate()
+      const endDay = task.end.getDate()
+      return (endDay - startDay + 1) * dayWidth
+    }
   }
 
   const handleTaskClick = (task, e) => {
@@ -80,8 +139,8 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
     const newTask = {
       id: crypto.randomUUID(),
       title: 'New page',
-      start: new Date(currentYear, currentMonth, 1),
-      end: new Date(currentYear, currentMonth, 3),
+      start: viewMode === 'Week' ? daysToShow[0] : new Date(currentYear, currentMonth, 1),
+      end: viewMode === 'Week' ? daysToShow[2] : new Date(currentYear, currentMonth, 3),
       progress: 0,
       status: 'Not started',
       priority: 'normal',
@@ -121,23 +180,29 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
     if (!isDragging && (e.target === timelineRef.current || e.target.closest('.timeline-background'))) {
       const rect = timelineRef.current.getBoundingClientRect()
       const clickX = e.clientX - rect.left
-      const clickDay = Math.max(1, Math.min(daysInMonth, Math.floor(clickX / dayWidth) + 1))
+      const dayIndex = Math.floor(clickX / dayWidth)
       
-      const newTask = {
-        id: crypto.randomUUID(),
-        title: 'New Task',
-        start: new Date(currentYear, currentMonth, clickDay),
-        end: new Date(currentYear, currentMonth, clickDay + 2),
-        progress: 0,
-        status: 'Not started',
-        priority: 'normal',
-        description: '',
-        color: '#97e7aa'
+      if (dayIndex >= 0 && dayIndex < daysToShow.length) {
+        const clickDay = daysToShow[dayIndex]
+        const endDay = new Date(clickDay)
+        endDay.setDate(clickDay.getDate() + 2)
+        
+        const newTask = {
+          id: crypto.randomUUID(),
+          title: 'New Task',
+          start: new Date(clickDay),
+          end: endDay,
+          progress: 0,
+          status: 'Not started',
+          priority: 'normal',
+          description: '',
+          color: '#97e7aa'
+        }
+        
+        onAddTask(newTask)
+        setDrawerTask(newTask)
+        setIsDrawerOpen(true)
       }
-      
-      onAddTask(newTask)
-      setDrawerTask(newTask)
-      setIsDrawerOpen(true)
     }
   }
 
@@ -147,25 +212,27 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
 
       const rect = timelineRef.current.getBoundingClientRect()
       const x = e.clientX - rect.left
-      const newDay = Math.max(1, Math.min(daysInMonth, Math.floor(x / dayWidth) + 1))
+      const dayIndex = Math.max(0, Math.min(daysToShow.length - 1, Math.floor(x / dayWidth)))
       
       let updatedTask = { ...draggedTask }
 
       if (dragMode === 'move') {
-        const taskDuration = draggedTask.end.getDate() - draggedTask.start.getDate()
-        const newEndDay = Math.min(daysInMonth, newDay + taskDuration)
+        const taskDuration = Math.ceil((draggedTask.end - draggedTask.start) / (1000 * 60 * 60 * 24))
+        const newStartDay = daysToShow[dayIndex]
+        const newEndDay = new Date(newStartDay)
+        newEndDay.setDate(newStartDay.getDate() + taskDuration - 1)
         
-        updatedTask.start = new Date(currentYear, currentMonth, newDay)
-        updatedTask.end = new Date(currentYear, currentMonth, newEndDay)
+        updatedTask.start = new Date(newStartDay)
+        updatedTask.end = newEndDay
       } else if (dragMode === 'resize-start') {
-        const endDay = draggedTask.end.getDate()
-        if (newDay < endDay) {
-          updatedTask.start = new Date(currentYear, currentMonth, newDay)
+        const newStartDay = daysToShow[dayIndex]
+        if (newStartDay < draggedTask.end) {
+          updatedTask.start = new Date(newStartDay)
         }
       } else if (dragMode === 'resize-end') {
-        const startDay = draggedTask.start.getDate()
-        if (newDay > startDay) {
-          updatedTask.end = new Date(currentYear, currentMonth, newDay)
+        const newEndDay = daysToShow[dayIndex]
+        if (newEndDay > draggedTask.start) {
+          updatedTask.end = new Date(newEndDay)
         }
       }
 
@@ -190,11 +257,26 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
       document.removeEventListener('mousemove', handleMouseMove)
       document.removeEventListener('mouseup', handleMouseUp)
     }
-  }, [draggedTask, dragMode, currentYear, currentMonth, daysInMonth, onUpdateTask, dayWidth])
+  }, [draggedTask, dragMode, daysToShow, onUpdateTask, dayWidth])
 
-  const currentMonthTasks = tasks.filter(task => 
-    task.start.getMonth() === currentMonth && task.start.getFullYear() === currentYear
-  )
+  const getVisibleTasks = () => {
+    if (viewMode === 'Week') {
+      return tasks.filter(task => {
+        const taskStart = new Date(task.start)
+        const taskEnd = new Date(task.end)
+        const weekStart = daysToShow[0]
+        const weekEnd = daysToShow[6]
+        
+        return (taskStart <= weekEnd && taskEnd >= weekStart)
+      })
+    } else {
+      return tasks.filter(task => 
+        task.start.getMonth() === currentMonth && task.start.getFullYear() === currentYear
+      )
+    }
+  }
+
+  const visibleTasks = getVisibleTasks()
 
   const handleDrawerSave = (updatedTask) => {
     onUpdateTask(updatedTask)
@@ -205,6 +287,20 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
   const handleDrawerClose = () => {
     setIsDrawerOpen(false)
     setDrawerTask(null)
+  }
+
+  const getHeaderText = () => {
+    if (viewMode === 'Week') {
+      const startDate = daysToShow[0]
+      const endDate = daysToShow[6]
+      if (startDate.getMonth() === endDate.getMonth()) {
+        return `${monthNames[startDate.getMonth()]} ${startDate.getDate()}-${endDate.getDate()}, ${startDate.getFullYear()}`
+      } else {
+        return `${monthNames[startDate.getMonth()]} ${startDate.getDate()} - ${monthNames[endDate.getMonth()]} ${endDate.getDate()}, ${startDate.getFullYear()}`
+      }
+    } else {
+      return `${monthNames[currentMonth]} ${currentYear}`
+    }
   }
 
   return (
@@ -220,16 +316,16 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2">
               <button
-                onClick={() => navigateMonth(-1)}
+                onClick={() => navigateTime(-1)}
                 className="p-2 hover:bg-gray-700 rounded"
               >
                 <ChevronLeft size={16} className="text-gray-400" />
               </button>
-              <span className="text-white text-base font-medium min-w-[120px] text-center">
-                {monthNames[currentMonth]} {currentYear}
+              <span className="text-white text-base font-medium min-w-[200px] text-center">
+                {getHeaderText()}
               </span>
               <button
-                onClick={() => navigateMonth(1)}
+                onClick={() => navigateTime(1)}
                 className="p-2 hover:bg-gray-700 rounded"
               >
                 <ChevronRight size={16} className="text-gray-400" />
@@ -291,32 +387,48 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
                 className="flex h-8 bg-[#1a1a1a] sticky top-0 z-10 border-b border-gray-700"
                 style={{ width: `${totalWidth}px` }}
               >
-                {Array.from({ length: daysInMonth }, (_, i) => (
-                  <div
-                    key={i + 1}
-                    className={`flex items-center justify-center text-sm border-r border-gray-800 ${
-                      isCurrentMonth && (i + 1) === todayDate 
-                        ? 'bg-[#97e7aa] text-white font-semibold' 
-                        : 'text-gray-300'
-                    }`}
-                    style={{ width: `${dayWidth}px` }}
-                  >
-                    {i + 1}
-                  </div>
-                ))}
+                {daysToShow.map((date, i) => {
+                  const isToday = date.toDateString() === today.toDateString()
+                  const dayText = viewMode === 'Week' 
+                    ? `${date.toLocaleDateString('en-US', { weekday: 'short' })} ${date.getDate()}`
+                    : date.getDate().toString()
+                  
+                  return (
+                    <div
+                      key={i}
+                      className={`flex items-center justify-center text-sm border-r border-gray-800 ${
+                        isToday
+                          ? 'bg-[#97e7aa] text-white font-semibold' 
+                          : 'text-gray-300'
+                      }`}
+                      style={{ width: `${dayWidth}px` }}
+                    >
+                      {dayText}
+                    </div>
+                  )
+                })}
               </div>
 
+              {/* Horizontal line under dates */}
+              <div className="absolute top-8 left-0 right-0 h-px bg-gray-700 z-10" />
+
               {/* Today Marker Line */}
-              {isCurrentMonth && (
-                <div
-                  className="absolute top-8 bottom-0 w-0.5 bg-[#97e7aa] z-20 pointer-events-none"
-                  style={{ left: `${(todayDate - 0.5) * dayWidth}px` }}
-                />
-              )}
+              {(() => {
+                const todayPosition = getTodayPosition()
+                if (todayPosition >= 0) {
+                  return (
+                    <div
+                      className="absolute top-8 bottom-0 w-0.5 bg-[#97e7aa] z-20 pointer-events-none"
+                      style={{ left: `${todayPosition + dayWidth / 2}px` }}
+                    />
+                  )
+                }
+                return null
+              })()}
 
               {/* Tasks Area */}
               <div className="relative h-full pt-4 pb-4 overflow-y-auto custom-scrollbar">
-                {currentMonthTasks.map((task, index) => {
+                {visibleTasks.map((task, index) => {
                   const isUrgent = task.priority === 'urgent'
                   const taskColor = isUrgent ? '#ff6b35' : '#97e7aa'
                   
