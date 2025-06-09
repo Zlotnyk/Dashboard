@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react'
 import { Plus, Calendar, MapPin, Clock, X, Edit, Trash2, Plane } from 'lucide-react'
 import { Dialog, DialogBackdrop, DialogPanel, DialogTitle } from '@headlessui/react'
+import Notification from './notification'
 
 const TripPlanner = () => {
   const [trips, setTrips] = useState([])
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [selectedTrip, setSelectedTrip] = useState(null)
+  const [notification, setNotification] = useState(null)
   const [tripForm, setTripForm] = useState({
     title: '',
     destination: '',
@@ -42,6 +44,10 @@ const TripPlanner = () => {
     }
   }, [trips])
 
+  const showNotification = (type, title, message) => {
+    setNotification({ type, title, message, id: Date.now() })
+  }
+
   const calculateDuration = (startDate, endDate) => {
     if (!startDate || !endDate) return 0
     const start = new Date(startDate)
@@ -61,6 +67,35 @@ const TripPlanner = () => {
     if (diffDays === 1) return 'Tomorrow'
     if (diffDays < 0) return `${Math.abs(diffDays)} days ago`
     return `${diffDays} days`
+  }
+
+  const validateForm = () => {
+    const missingFields = []
+    
+    if (!tripForm.title.trim()) missingFields.push('Title')
+    if (!tripForm.startDate) missingFields.push('Start date')
+    if (!tripForm.endDate) missingFields.push('End date')
+    
+    if (missingFields.length > 0) {
+      showNotification(
+        'error',
+        'Missing required fields',
+        `Please fill in: ${missingFields.join(', ')}`
+      )
+      return false
+    }
+
+    // Validate date order
+    if (new Date(tripForm.startDate) > new Date(tripForm.endDate)) {
+      showNotification(
+        'error',
+        'Invalid dates',
+        'End date cannot be before start date'
+      )
+      return false
+    }
+
+    return true
   }
 
   const handleAddTrip = () => {
@@ -92,7 +127,7 @@ const TripPlanner = () => {
   }
 
   const handleSaveTrip = () => {
-    if (!tripForm.title.trim() || !tripForm.startDate || !tripForm.endDate) return
+    if (!validateForm()) return
 
     const tripData = {
       title: tripForm.title,
@@ -111,6 +146,7 @@ const TripPlanner = () => {
           ? { ...trip, ...tripData }
           : trip
       ))
+      showNotification('success', 'Trip updated', 'Your trip has been successfully updated')
     } else {
       // Add new trip
       const newTrip = {
@@ -118,6 +154,7 @@ const TripPlanner = () => {
         ...tripData
       }
       setTrips(prev => [...prev, newTrip])
+      showNotification('success', 'Trip created', 'Your new trip has been successfully created')
     }
 
     setIsModalOpen(false)
@@ -138,6 +175,7 @@ const TripPlanner = () => {
       setTrips(prev => prev.filter(trip => trip.id !== selectedTrip.id))
       setIsModalOpen(false)
       setSelectedTrip(null)
+      showNotification('success', 'Trip deleted', 'Your trip has been successfully deleted')
     }
   }
 
@@ -259,10 +297,10 @@ const TripPlanner = () => {
             )
           })}
 
-          {/* Add New Trip Card */}
+          {/* Add New Trip Card - Updated with solid border */}
           <button
             onClick={handleAddTrip}
-            className="bg-gray-800/30 border-2 border-dashed border-gray-600 rounded-lg p-4 hover:border-gray-500 hover:bg-gray-700/30 transition-colors flex flex-col items-center justify-center min-h-[200px] group"
+            className="bg-gray-800/30 border-2 border-solid border-gray-600 rounded-lg p-4 hover:border-gray-500 hover:bg-gray-700/30 transition-colors flex flex-col items-center justify-center min-h-[200px] group"
           >
             <Plus size={24} className="text-gray-400 group-hover:text-white mb-2" />
             <span className="text-gray-400 group-hover:text-white text-sm">
@@ -444,6 +482,17 @@ const TripPlanner = () => {
           </div>
         </div>
       </Dialog>
+
+      {/* Notification */}
+      {notification && (
+        <Notification
+          type={notification.type}
+          title={notification.title}
+          message={notification.message}
+          isVisible={!!notification}
+          onClose={() => setNotification(null)}
+        />
+      )}
     </>
   )
 }
