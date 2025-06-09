@@ -1,8 +1,11 @@
 import React from 'react'
-import { BookOpen, FileText, PenTool, Target, Clock, Users } from 'lucide-react'
+import { BookOpen, FileText, PenTool, Target, Clock, Users, Calendar, Heart, MapPin, Utensils, Dumbbell, Brain, TrendingUp } from 'lucide-react'
 
 const QuickLinks = () => {
-  const links = [
+  // Check if we're on the lifestyle page
+  const isLifestylePage = window.location.pathname === '/lifestyle'
+  
+  const mainLinks = [
     {
       title: 'Course',
       items: [
@@ -40,6 +43,34 @@ const QuickLinks = () => {
       ]
     }
   ]
+
+  const lifestyleLinks = [
+    {
+      title: 'Planner',
+      items: [
+        { name: 'Day', icon: Calendar, href: '#day' },
+        { name: 'Week', icon: Calendar, href: '#week' },
+        { name: 'Month', icon: Calendar, href: '#month' },
+        { name: 'Year', icon: Calendar, href: '#year' }
+      ]
+    },
+    {
+      title: 'Lifestyle',
+      items: [
+        { name: 'Birthdays', icon: Heart, href: '#birthdays' },
+        { name: 'Contacts', icon: Users, href: '#contacts' },
+        { name: 'Trip Planner', icon: MapPin, href: '#trip-planner' },
+        { name: 'Outfit Planner', icon: Target, href: '#outfit-planner' },
+        { name: 'Event Planner', icon: Calendar, href: '#event-planner' },
+        { name: 'Cleaning', icon: Target, href: '#cleaning' },
+        { name: 'Habit Tracker', icon: TrendingUp, href: '#habit-tracker' },
+        { name: 'Dream Tracker', icon: Brain, href: '#dream-tracker' },
+        { name: 'Bucket List', icon: Target, href: '#bucket-list' }
+      ]
+    }
+  ]
+
+  const links = isLifestylePage ? lifestyleLinks : mainLinks
 
   return (
     <div className="w-full bg-[#1a1a1a] rounded-lg p-4 pl-6">

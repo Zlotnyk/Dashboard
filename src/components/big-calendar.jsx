@@ -161,7 +161,7 @@ const BigCalendar = ({ events = [], onAddEvent, onDeleteEvent }) => {
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
             <span className="text-xl font-[Libre_Baskerville] italic text-white">
-              Upcoming Meetings
+              Calendar
             </span>
           </div>
           
