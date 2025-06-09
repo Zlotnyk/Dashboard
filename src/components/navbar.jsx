@@ -7,7 +7,6 @@ const Navbar = () => {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false)
   const [isSignInOpen, setIsSignInOpen] = useState(false)
   const [isGetStartedOpen, setIsGetStartedOpen] = useState(false)
-  const [theme, setTheme] = useState('dark')
   const [accentColor, setAccentColor] = useState('#97e7aa')
   const [language, setLanguage] = useState('English')
   const [notifications, setNotifications] = useState({
@@ -24,48 +23,73 @@ const Navbar = () => {
     { name: 'Pink', value: '#ec4899' }
   ]
 
-  // Apply theme changes to document
-  useEffect(() => {
-    if (theme === 'light') {
-      document.documentElement.style.setProperty('--bg-primary', '#ffffff')
-      document.documentElement.style.setProperty('--bg-secondary', '#f8fafc')
-      document.documentElement.style.setProperty('--text-primary', '#1f2937')
-      document.documentElement.style.setProperty('--text-secondary', '#6b7280')
-      document.documentElement.style.setProperty('--border-color', '#e5e7eb')
-      document.body.style.backgroundColor = '#ffffff'
-      document.body.style.color = '#1f2937'
-    } else {
-      document.documentElement.style.setProperty('--bg-primary', '#1a1a1a')
-      document.documentElement.style.setProperty('--bg-secondary', '#0a0a0a')
-      document.documentElement.style.setProperty('--text-primary', '#ffffff')
-      document.documentElement.style.setProperty('--text-secondary', '#e0e0e0')
-      document.documentElement.style.setProperty('--border-color', '#374151')
-      document.body.style.backgroundColor = 'hsl(0, 0%, 10%)'
-      document.body.style.color = '#ffffff'
-    }
-  }, [theme])
-
-  // Apply accent color changes
+  // Apply accent color changes globally to the entire site
   useEffect(() => {
     document.documentElement.style.setProperty('--accent-color', accentColor)
-    // Update CSS custom properties for accent color
+    
+    // Update all accent color elements across the site
     const style = document.createElement('style')
+    style.id = 'global-accent-style'
+    
+    // Remove existing style if it exists
+    const existingStyle = document.getElementById('global-accent-style')
+    if (existingStyle) {
+      document.head.removeChild(existingStyle)
+    }
+    
     style.textContent = `
-      .bg-accent { background-color: ${accentColor} !important; }
-      .text-accent { color: ${accentColor} !important; }
-      .border-accent { border-color: ${accentColor} !important; }
+      /* Global accent color application */
+      .bg-\\[\\#97e7aa\\] { background-color: ${accentColor} !important; }
+      .text-\\[\\#97e7aa\\] { color: ${accentColor} !important; }
+      .border-\\[\\#97e7aa\\] { border-color: ${accentColor} !important; }
+      .hover\\:bg-\\[\\#75b384\\]:hover { background-color: ${accentColor}dd !important; }
+      .hover\\:text-\\[\\#97e7aa\\]:hover { color: ${accentColor} !important; }
+      .focus\\:ring-\\[\\#97e7aa\\]:focus { --tw-ring-color: ${accentColor} !important; }
       .accent-color { accent-color: ${accentColor} !important; }
+      
+      /* Flip clock accent color */
+      .flip-unit-container { background-color: ${accentColor} !important; }
+      .static-card { background-color: ${accentColor} !important; }
+      .animated-card { background-color: ${accentColor} !important; }
+      
+      /* Wavy lines accent color */
+      svg path[stroke="hsl(134, 63%, 75%)"] { stroke: ${accentColor} !important; }
+      
+      /* Day of week accent color */
+      .day-of-week { color: #ffffff !important; }
+      
+      /* Today marker in calendars */
+      .bg-\\[\\#97e7aa\\] { background-color: ${accentColor} !important; }
+      
+      /* Buttons and interactive elements */
+      button[style*="background-color"] { background-color: ${accentColor} !important; }
+      
+      /* Custom scrollbar */
+      .custom-scrollbar::-webkit-scrollbar-thumb { background: ${accentColor} !important; }
+      .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: ${accentColor}cc !important; }
+      .custom-scrollbar { scrollbar-color: ${accentColor} transparent !important; }
+      
+      /* Quote border */
+      .w-0\\.5.h-8.bg-\\[\\#97e7aa\\] { background-color: ${accentColor} !important; }
+      
+      /* Navigation links */
+      .text-\\[\\#97e7aa\\] { color: ${accentColor} !important; }
+      
+      /* Task timeline elements */
+      .bg-\\[\\#97e7aa\\] { background-color: ${accentColor} !important; }
+      
+      /* All other accent elements */
+      [class*="97e7aa"] { 
+        background-color: ${accentColor} !important; 
+        color: ${accentColor} !important; 
+        border-color: ${accentColor} !important; 
+      }
     `
     document.head.appendChild(style)
-    
-    return () => {
-      document.head.removeChild(style)
-    }
   }, [accentColor])
 
   const handleSaveSettings = () => {
     // Save settings to localStorage
-    localStorage.setItem('theme', theme)
     localStorage.setItem('accentColor', accentColor)
     localStorage.setItem('language', language)
     localStorage.setItem('notifications', JSON.stringify(notifications))
@@ -74,12 +98,10 @@ const Navbar = () => {
 
   // Load settings from localStorage on component mount
   useEffect(() => {
-    const savedTheme = localStorage.getItem('theme')
     const savedAccentColor = localStorage.getItem('accentColor')
     const savedLanguage = localStorage.getItem('language')
     const savedNotifications = localStorage.getItem('notifications')
 
-    if (savedTheme) setTheme(savedTheme)
     if (savedAccentColor) setAccentColor(savedAccentColor)
     if (savedLanguage) setLanguage(savedLanguage)
     if (savedNotifications) setNotifications(JSON.parse(savedNotifications))
@@ -103,7 +125,7 @@ const Navbar = () => {
           </button>
           <button 
             onClick={() => setIsGetStartedOpen(true)}
-            className="px-4 py-2 bg-accent text-white rounded-lg hover:opacity-80 transition-colors text-sm font-medium"
+            className="px-4 py-2 text-white rounded-lg hover:opacity-80 transition-colors text-sm font-medium"
             style={{ backgroundColor: accentColor }}
           >
             Get started
@@ -153,8 +175,8 @@ const Navbar = () => {
                           type="radio" 
                           name="theme" 
                           value="dark" 
-                          checked={theme === 'dark'}
-                          onChange={(e) => setTheme(e.target.value)}
+                          checked={true}
+                          readOnly
                           className="accent-color"
                           style={{ accentColor }}
                         />
@@ -165,12 +187,11 @@ const Navbar = () => {
                           type="radio" 
                           name="theme" 
                           value="light" 
-                          checked={theme === 'light'}
-                          onChange={(e) => setTheme(e.target.value)}
-                          className="accent-color"
+                          disabled
+                          className="accent-color opacity-50"
                           style={{ accentColor }}
                         />
-                        <span className="text-gray-300">Light</span>
+                        <span className="text-gray-500">Light (in development)</span>
                       </label>
                     </div>
                   </div>
@@ -238,7 +259,7 @@ const Navbar = () => {
                     <select 
                       value={language}
                       onChange={(e) => setLanguage(e.target.value)}
-                      className="w-full bg-gray-800 border border-gray-600 rounded text-white p-2 focus:outline-none focus:ring-2 focus:ring-accent"
+                      className="w-full bg-gray-800 border border-gray-600 rounded text-white p-2 focus:outline-none focus:ring-2"
                       style={{ '--tw-ring-color': accentColor }}
                     >
                       <option value="English">English</option>
@@ -258,7 +279,7 @@ const Navbar = () => {
                   </button>
                   <button
                     onClick={handleSaveSettings}
-                    className="px-4 py-2 bg-accent text-white rounded-lg hover:opacity-80 transition-colors text-sm"
+                    className="px-4 py-2 text-white rounded-lg hover:opacity-80 transition-colors text-sm"
                     style={{ backgroundColor: accentColor }}
                   >
                     Save
@@ -301,7 +322,7 @@ const Navbar = () => {
                     <label className="block text-sm text-gray-300 mb-2">Email</label>
                     <input
                       type="email"
-                      className="w-full px-3 py-2 bg-transparent text-white focus:outline-none focus:ring-2 focus:ring-accent border-b border-gray-600"
+                      className="w-full px-3 py-2 bg-transparent text-white focus:outline-none focus:ring-2 border-b border-gray-600"
                       style={{ '--tw-ring-color': accentColor }}
                       placeholder="Enter your email"
                     />
@@ -311,14 +332,14 @@ const Navbar = () => {
                     <label className="block text-sm text-gray-300 mb-2">Password</label>
                     <input
                       type="password"
-                      className="w-full px-3 py-2 bg-transparent text-white focus:outline-none focus:ring-2 focus:ring-accent border-b border-gray-600"
+                      className="w-full px-3 py-2 bg-transparent text-white focus:outline-none focus:ring-2 border-b border-gray-600"
                       style={{ '--tw-ring-color': accentColor }}
                       placeholder="Enter your password"
                     />
                   </div>
 
                   <button 
-                    className="w-full py-2 bg-accent text-white rounded-lg hover:opacity-80 transition-colors font-medium"
+                    className="w-full py-2 text-white rounded-lg hover:opacity-80 transition-colors font-medium"
                     style={{ backgroundColor: accentColor }}
                   >
                     Sign In
@@ -349,7 +370,7 @@ const Navbar = () => {
                         setIsSignInOpen(false)
                         setIsGetStartedOpen(true)
                       }}
-                      className="text-accent hover:underline"
+                      className="hover:underline"
                       style={{ color: accentColor }}
                     >
                       Sign up
@@ -393,7 +414,7 @@ const Navbar = () => {
                     <label className="block text-sm text-gray-300 mb-2">Full Name</label>
                     <input
                       type="text"
-                      className="w-full px-3 py-2 bg-transparent text-white focus:outline-none focus:ring-2 focus:ring-accent border-b border-gray-600"
+                      className="w-full px-3 py-2 bg-transparent text-white focus:outline-none focus:ring-2 border-b border-gray-600"
                       style={{ '--tw-ring-color': accentColor }}
                       placeholder="Enter your full name"
                     />
@@ -403,7 +424,7 @@ const Navbar = () => {
                     <label className="block text-sm text-gray-300 mb-2">Email</label>
                     <input
                       type="email"
-                      className="w-full px-3 py-2 bg-transparent text-white focus:outline-none focus:ring-2 focus:ring-accent border-b border-gray-600"
+                      className="w-full px-3 py-2 bg-transparent text-white focus:outline-none focus:ring-2 border-b border-gray-600"
                       style={{ '--tw-ring-color': accentColor }}
                       placeholder="Enter your email"
                     />
@@ -413,7 +434,7 @@ const Navbar = () => {
                     <label className="block text-sm text-gray-300 mb-2">Password</label>
                     <input
                       type="password"
-                      className="w-full px-3 py-2 bg-transparent text-white focus:outline-none focus:ring-2 focus:ring-accent border-b border-gray-600"
+                      className="w-full px-3 py-2 bg-transparent text-white focus:outline-none focus:ring-2 border-b border-gray-600"
                       style={{ '--tw-ring-color': accentColor }}
                       placeholder="Create a password"
                     />
@@ -423,14 +444,14 @@ const Navbar = () => {
                     <label className="block text-sm text-gray-300 mb-2">Confirm Password</label>
                     <input
                       type="password"
-                      className="w-full px-3 py-2 bg-transparent text-white focus:outline-none focus:ring-2 focus:ring-accent border-b border-gray-600"
+                      className="w-full px-3 py-2 bg-transparent text-white focus:outline-none focus:ring-2 border-b border-gray-600"
                       style={{ '--tw-ring-color': accentColor }}
                       placeholder="Confirm your password"
                     />
                   </div>
 
                   <button 
-                    className="w-full py-2 bg-accent text-white rounded-lg hover:opacity-80 transition-colors font-medium"
+                    className="w-full py-2 text-white rounded-lg hover:opacity-80 transition-colors font-medium"
                     style={{ backgroundColor: accentColor }}
                   >
                     Create Account
@@ -461,7 +482,7 @@ const Navbar = () => {
                         setIsGetStartedOpen(false)
                         setIsSignInOpen(true)
                       }}
-                      className="text-accent hover:underline"
+                      className="hover:underline"
                       style={{ color: accentColor }}
                     >
                       Sign in

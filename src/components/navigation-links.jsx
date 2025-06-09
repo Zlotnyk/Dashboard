@@ -3,12 +3,21 @@ import { Heart, Activity, Brain, Target, DollarSign } from 'lucide-react'
 
 const NavigationLinks = () => {
   const navigationLinks = [
-    { name: 'Lifestyle', icon: Heart },
-    { name: 'Health & Fitness', icon: Activity },
-    { name: 'Wellness', icon: Brain },
-    { name: 'Productivity', icon: Target },
-    { name: 'Finance', icon: DollarSign }
+    { name: 'Lifestyle', icon: Heart, href: '/lifestyle' },
+    { name: 'Health & Fitness', icon: Activity, href: '/health-fitness' },
+    { name: 'Wellness', icon: Brain, href: '/wellness' },
+    { name: 'Productivity', icon: Target, href: '/productivity' },
+    { name: 'Finance', icon: DollarSign, href: '/finance' }
   ]
+
+  const handleNavigation = (href) => {
+    if (href === '/lifestyle') {
+      // For now, we'll just show an alert. In a real app, this would use React Router
+      window.location.href = '/lifestyle.html'
+    } else {
+      alert(`Navigation to ${href} - Coming soon!`)
+    }
+  }
 
   return (
     <div className="bg-[#1a1a1a] py-4">
@@ -18,10 +27,14 @@ const NavigationLinks = () => {
           {navigationLinks.map((link, index) => {
             const IconComponent = link.icon
             return (
-              <a key={index} href="#" className="flex items-center gap-2 hover:text-[#97e7aa] transition-colors text-base">
+              <button 
+                key={index} 
+                onClick={() => handleNavigation(link.href)}
+                className="flex items-center gap-2 hover:text-[#97e7aa] transition-colors text-base"
+              >
                 <IconComponent size={18} className="text-[#97e7aa]" />
                 {link.name}
-              </a>
+              </button>
             )
           })}
         </div>
