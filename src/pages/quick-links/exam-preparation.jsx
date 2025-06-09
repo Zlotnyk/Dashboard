@@ -1,11 +1,11 @@
 import React, { useState } from 'react'
-import Navbar from '../components/navbar'
-import GifContainer from '../components/gif_container'
-import HeaderContent from '../components/header-content'
-import NavigationLinks from '../components/navigation-links'
-import WavyLines from '../components/wavy-lines'
-import FlipClock from '../components/FlipClock/'
-import QuickLinks from '../components/quick-links'
+import Navbar from '../../components/navbar'
+import GifContainer from '../../components/gif_container'
+import HeaderContent from '../../components/header-content'
+import NavigationLinks from '../../components/navigation-links'
+import WavyLines from '../../components/wavy-lines'
+import FlipClock from '../../components/FlipClock/'
+import QuickLinks from '../../components/quick-links'
 import '../App.css'
 
 function ExamPreparationPage() {
