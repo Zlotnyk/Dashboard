@@ -113,7 +113,11 @@ const TripPlanner = () => {
     setIsModalOpen(true)
   }
 
-  const handleEditTrip = (trip) => {
+  const handleEditTrip = (trip, e) => {
+    if (e) {
+      e.preventDefault()
+      e.stopPropagation()
+    }
     setSelectedTrip(trip)
     setValidationErrors({})
     setTripForm({
@@ -261,7 +265,7 @@ const TripPlanner = () => {
               <div 
                 key={trip.id}
                 className="bg-[#2a2a2a] rounded-lg overflow-hidden hover:bg-[#333333] transition-colors cursor-pointer group"
-                onClick={() => handleEditTrip(trip)}
+                onClick={(e) => handleEditTrip(trip, e)}
               >
                 {/* Photo Section */}
                 {trip.photos && trip.photos.length > 0 ? (
@@ -291,10 +295,7 @@ const TripPlanner = () => {
                     </h4>
                     <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                       <button
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          handleEditTrip(trip)
-                        }}
+                        onClick={(e) => handleEditTrip(trip, e)}
                         className="p-1 hover:bg-blue-600 rounded transition-all"
                         title="Edit"
                       >
@@ -381,17 +382,20 @@ const TripPlanner = () => {
       </div>
 
       {/* Trip Modal */}
-      <Dialog open={isModalOpen} onClose={() => setIsModalOpen(false)} className="relative z-50">
+      <Dialog 
+        open={isModalOpen} 
+        onClose={() => setIsModalOpen(false)} 
+        className="relative z-50"
+        static
+      >
         <DialogBackdrop 
-          transition
-          className="fixed inset-0 bg-black/50 transition-opacity data-closed:opacity-0 data-enter:duration-300 data-enter:ease-out data-leave:duration-200 data-leave:ease-in"
+          className="fixed inset-0 bg-black/50"
         />
         
         <div className="fixed inset-0 z-10 w-screen overflow-y-auto">
-          <div className="flex min-h-full items-center justify-center p-4 text-center">
+          <div className="flex min-h-full items-center justify-center p-4">
             <DialogPanel 
-              transition
-              className="relative transform overflow-hidden rounded-lg bg-[#1a1a1a] text-left shadow-xl transition-all data-closed:translate-y-4 data-closed:opacity-0 data-enter:duration-300 data-enter:ease-out data-leave:duration-200 data-leave:ease-in w-full max-w-lg data-closed:scale-95"
+              className="relative transform overflow-hidden rounded-lg bg-[#1a1a1a] text-left shadow-xl w-full max-w-lg"
             >
               <div className="bg-[#1a1a1a] px-6 pt-6 pb-4">
                 <div className="flex items-center justify-between mb-8">

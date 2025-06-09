@@ -131,7 +131,11 @@ const BigCalendar = ({ events = [], onAddEvent, onDeleteEvent }) => {
     }
   }
 
-  const handlePlusClick = (day) => {
+  const handlePlusClick = (day, e) => {
+    if (e) {
+      e.preventDefault()
+      e.stopPropagation()
+    }
     const selectedDate = new Date(currentYear, currentMonth, day)
     setSelectedDay(day)
     setSelectedEvent(null)
@@ -147,7 +151,10 @@ const BigCalendar = ({ events = [], onAddEvent, onDeleteEvent }) => {
   }
 
   const handleEventClick = (event, e) => {
-    e.stopPropagation()
+    if (e) {
+      e.stopPropagation()
+      e.preventDefault()
+    }
     setSelectedEvent(event)
     setValidationErrors({})
     setEventForm({
@@ -397,7 +404,7 @@ const BigCalendar = ({ events = [], onAddEvent, onDeleteEvent }) => {
                   <Plus 
                     size={12} 
                     className="text-gray-500 opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer hover:text-accent" 
-                    onClick={() => handlePlusClick(day)}
+                    onClick={(e) => handlePlusClick(day, e)}
                   />
                 </div>
                 
@@ -443,17 +450,20 @@ const BigCalendar = ({ events = [], onAddEvent, onDeleteEvent }) => {
       </div>
 
       {/* Event Modal - Redesigned */}
-      <Dialog open={isModalOpen} onClose={() => setIsModalOpen(false)} className="relative z-50">
+      <Dialog 
+        open={isModalOpen} 
+        onClose={() => setIsModalOpen(false)} 
+        className="relative z-50"
+        static
+      >
         <DialogBackdrop 
-          transition
-          className="fixed inset-0 bg-black/50 transition-opacity data-closed:opacity-0 data-enter:duration-300 data-enter:ease-out data-leave:duration-200 data-leave:ease-in"
+          className="fixed inset-0 bg-black/50"
         />
         
         <div className="fixed inset-0 z-10 w-screen overflow-y-auto">
-          <div className="flex min-h-full items-center justify-center p-4 text-center">
+          <div className="flex min-h-full items-center justify-center p-4">
             <DialogPanel 
-              transition
-              className="relative transform overflow-hidden rounded-lg bg-[#1a1a1a] text-left shadow-xl transition-all data-closed:translate-y-4 data-closed:opacity-0 data-enter:duration-300 data-enter:ease-out data-leave:duration-200 data-leave:ease-in w-full max-w-lg data-closed:scale-95"
+              className="relative transform overflow-hidden rounded-lg bg-[#1a1a1a] text-left shadow-xl w-full max-w-lg"
             >
               <div className="bg-[#1a1a1a] px-6 pt-6 pb-4">
                 <div className="flex items-center justify-between mb-8">
