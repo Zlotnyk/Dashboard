@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { ChevronLeft, ChevronRight, Plus, X, Calendar, MapPin, Clock } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Plus, X, Calendar, MapPin, Clock, ChevronDown } from 'lucide-react'
 import { Dialog, DialogBackdrop, DialogPanel, DialogTitle } from '@headlessui/react'
 
 const BigCalendar = ({ events = [], onAddEvent, onDeleteEvent }) => {
@@ -7,6 +7,8 @@ const BigCalendar = ({ events = [], onAddEvent, onDeleteEvent }) => {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [selectedDay, setSelectedDay] = useState(null)
   const [selectedEvent, setSelectedEvent] = useState(null)
+  const [isYearPickerOpen, setIsYearPickerOpen] = useState(false)
+  const [isMonthPickerOpen, setIsMonthPickerOpen] = useState(false)
   const [eventForm, setEventForm] = useState({
     title: '',
     date: '',
@@ -62,6 +64,32 @@ const BigCalendar = ({ events = [], onAddEvent, onDeleteEvent }) => {
     newDate.setMonth(currentMonth + direction)
     setCurrentDate(newDate)
   }
+
+  const navigateYear = (direction) => {
+    const newDate = new Date(currentDate)
+    newDate.setFullYear(currentYear + direction)
+    setCurrentDate(newDate)
+  }
+
+  const selectYear = (year) => {
+    const newDate = new Date(currentDate)
+    newDate.setFullYear(year)
+    setCurrentDate(newDate)
+    setIsYearPickerOpen(false)
+  }
+
+  const selectMonth = (monthIndex) => {
+    const newDate = new Date(currentDate)
+    newDate.setMonth(monthIndex)
+    setCurrentDate(newDate)
+    setIsMonthPickerOpen(false)
+  }
+
+  // Generate year options (current year ± 10 years)
+  const yearOptions = []
+  for (let i = currentYear - 10; i <= currentYear + 10; i++) {
+    yearOptions.push(i)
+  }
   
   const isToday = (day, isCurrentMonth = true) => {
     if (!isCurrentMonth) return false
@@ -112,7 +140,11 @@ const BigCalendar = ({ events = [], onAddEvent, onDeleteEvent }) => {
         date: new Date(eventForm.date),
         time: eventForm.time,
         location: eventForm.location,
-        category: eventForm.category
+        category: eventForm.category,
+        // Keep birthday flag if it was a birthday
+        isBirthday: selectedEvent.isBirthday || eventForm.category === 'birthday',
+        // Keep original birth year for age calculation
+        originalBirthYear: selectedEvent.originalBirthYear || (eventForm.category === 'birthday' ? new Date(eventForm.date).getFullYear() : null)
       }
       onAddEvent(updatedEvent) // This should be onUpdateEvent, but using onAddEvent for now
     } else {
@@ -123,7 +155,11 @@ const BigCalendar = ({ events = [], onAddEvent, onDeleteEvent }) => {
         date: new Date(eventForm.date),
         time: eventForm.time,
         location: eventForm.location,
-        category: eventForm.category
+        category: eventForm.category,
+        // Mark as birthday if category is birthday
+        isBirthday: eventForm.category === 'birthday',
+        // Store original birth year for age calculation
+        originalBirthYear: eventForm.category === 'birthday' ? new Date(eventForm.date).getFullYear() : null
       }
       onAddEvent(newEvent)
     }
@@ -147,11 +183,44 @@ const BigCalendar = ({ events = [], onAddEvent, onDeleteEvent }) => {
     }
   }
 
+  // Enhanced function to get events for a day, including recurring birthdays
   const getEventsForDay = (day) => {
     const dayDate = new Date(currentYear, currentMonth, day)
-    return events.filter(event => 
-      event.date.toDateString() === dayDate.toDateString()
+    
+    // Get regular events for this exact date
+    const regularEvents = events.filter(event => 
+      !event.isBirthday && event.date.toDateString() === dayDate.toDateString()
     )
+    
+    // Get birthday events that should repeat yearly
+    const birthdayEvents = events
+      .filter(event => event.isBirthday || event.category === 'birthday')
+      .filter(event => {
+        const eventDate = new Date(event.date)
+        // Check if month and day match (yearly repeat)
+        return eventDate.getMonth() === dayDate.getMonth() && 
+               eventDate.getDate() === dayDate.getDate()
+      })
+      .map(event => {
+        // Calculate current age if it's a birthday
+        let ageText = ''
+        if (event.originalBirthYear) {
+          const currentAge = currentYear - event.originalBirthYear
+          ageText = ` (${currentAge})`
+        }
+        
+        return {
+          ...event,
+          // Update the display title to include age
+          displayTitle: `${event.title}${ageText}`,
+          // Keep the original date for reference but mark as current year occurrence
+          currentYearDate: dayDate,
+          // Create unique ID for this year's occurrence
+          yearlyId: `${event.id}-${currentYear}`
+        }
+      })
+    
+    return [...regularEvents, ...birthdayEvents]
   }
 
   return (
@@ -161,11 +230,53 @@ const BigCalendar = ({ events = [], onAddEvent, onDeleteEvent }) => {
         <div className="flex items-center justify-between mb-6">
           <div className="flex items-center gap-3">
             <span className="text-xl font-[Libre_Baskerville] italic text-white">
-              Upcoming Meetings
+              Calendar
             </span>
           </div>
           
           <div className="flex items-center gap-4">
+            {/* Year Navigation */}
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => navigateYear(-1)}
+                className="p-2 hover:bg-gray-700 rounded"
+              >
+                <ChevronLeft size={16} className="text-gray-400" />
+              </button>
+              <div className="relative">
+                <button
+                  onClick={() => setIsYearPickerOpen(!isYearPickerOpen)}
+                  className="flex items-center gap-1 px-3 py-1 hover:bg-gray-700 rounded text-white text-base font-medium min-w-[80px] justify-center"
+                >
+                  {currentYear}
+                  <ChevronDown size={14} className="text-gray-400" />
+                </button>
+                
+                {isYearPickerOpen && (
+                  <div className="absolute top-full left-0 mt-1 bg-[#1a1a1a] border border-gray-600 rounded-lg shadow-lg z-50 max-h-48 overflow-y-auto">
+                    {yearOptions.map(year => (
+                      <button
+                        key={year}
+                        onClick={() => selectYear(year)}
+                        className={`w-full px-4 py-2 text-left hover:bg-gray-700 ${
+                          year === currentYear ? 'bg-gray-700 text-white' : 'text-gray-300'
+                        }`}
+                      >
+                        {year}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+              <button
+                onClick={() => navigateYear(1)}
+                className="p-2 hover:bg-gray-700 rounded"
+              >
+                <ChevronRight size={16} className="text-gray-400" />
+              </button>
+            </div>
+
+            {/* Month Navigation */}
             <div className="flex items-center gap-2">
               <button
                 onClick={() => navigateMonth(-1)}
@@ -173,9 +284,31 @@ const BigCalendar = ({ events = [], onAddEvent, onDeleteEvent }) => {
               >
                 <ChevronLeft size={16} className="text-gray-400" />
               </button>
-              <span className="text-white text-base font-medium min-w-[120px] text-center">
-                {monthNames[currentMonth]} {currentYear}
-              </span>
+              <div className="relative">
+                <button
+                  onClick={() => setIsMonthPickerOpen(!isMonthPickerOpen)}
+                  className="flex items-center gap-1 px-3 py-1 hover:bg-gray-700 rounded text-white text-base font-medium min-w-[120px] justify-center"
+                >
+                  {monthNames[currentMonth]}
+                  <ChevronDown size={14} className="text-gray-400" />
+                </button>
+                
+                {isMonthPickerOpen && (
+                  <div className="absolute top-full left-0 mt-1 bg-[#1a1a1a] border border-gray-600 rounded-lg shadow-lg z-50 max-h-48 overflow-y-auto">
+                    {monthNames.map((month, index) => (
+                      <button
+                        key={month}
+                        onClick={() => selectMonth(index)}
+                        className={`w-full px-4 py-2 text-left hover:bg-gray-700 ${
+                          index === currentMonth ? 'bg-gray-700 text-white' : 'text-gray-300'
+                        }`}
+                      >
+                        {month}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
               <button
                 onClick={() => navigateMonth(1)}
                 className="p-2 hover:bg-gray-700 rounded"
@@ -236,16 +369,31 @@ const BigCalendar = ({ events = [], onAddEvent, onDeleteEvent }) => {
                 
                 {/* Events - increased height */}
                 <div className="mt-1 space-y-1">
-                  {dayEvents.map(event => (
-                    <div 
-                      key={event.id}
-                      className="w-full h-10 bg-gray-600 rounded text-xs text-white px-2 flex items-center truncate cursor-pointer hover:bg-gray-500"
-                      title={`${event.title} ${event.time ? `at ${event.time}` : ''}`}
-                      onClick={(e) => handleEventClick(event, e)}
-                    >
-                      {event.title}
-                    </div>
-                  ))}
+                  {dayEvents.map(event => {
+                    const isBirthday = event.isBirthday || event.category === 'birthday'
+                    const eventTitle = event.displayTitle || event.title
+                    
+                    return (
+                      <div 
+                        key={event.yearlyId || event.id}
+                        className={`w-full h-10 rounded text-xs text-white px-2 flex items-center truncate cursor-pointer transition-colors ${
+                          isBirthday 
+                            ? 'bg-pink-600 hover:bg-pink-500' 
+                            : 'bg-gray-600 hover:bg-gray-500'
+                        }`}
+                        title={`${eventTitle} ${event.time ? `at ${event.time}` : ''} ${isBirthday ? '🎂' : ''}`}
+                        onClick={(e) => handleEventClick(event, e)}
+                      >
+                        <div className="flex items-center gap-1 w-full">
+                          {isBirthday && <span className="text-xs">🎂</span>}
+                          <span className="truncate flex-1">{eventTitle}</span>
+                          {isBirthday && (
+                            <span className="text-xs opacity-75 ml-1">Birthday</span>
+                          )}
+                        </div>
+                      </div>
+                    )
+                  })}
                 </div>
               </div>
             )
@@ -352,6 +500,24 @@ const BigCalendar = ({ events = [], onAddEvent, onDeleteEvent }) => {
                       </select>
                     </div>
                   </div>
+
+                  {/* Birthday Info */}
+                  {eventForm.category === 'birthday' && (
+                    <div className="bg-pink-900/20 border border-pink-700/30 rounded-lg p-4">
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className="text-pink-400">🎂</span>
+                        <span className="text-pink-400 font-medium">Birthday Event</span>
+                      </div>
+                      <div className="text-sm text-gray-300">
+                        This event will repeat every year on the same date.
+                        {eventForm.date && (
+                          <div className="mt-1">
+                            Age in {currentYear}: {currentYear - new Date(eventForm.date).getFullYear()} years
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -385,6 +551,20 @@ const BigCalendar = ({ events = [], onAddEvent, onDeleteEvent }) => {
           </div>
         </div>
       </Dialog>
+
+      {/* Click outside handlers */}
+      {isYearPickerOpen && (
+        <div 
+          className="fixed inset-0 z-40" 
+          onClick={() => setIsYearPickerOpen(false)}
+        />
+      )}
+      {isMonthPickerOpen && (
+        <div 
+          className="fixed inset-0 z-40" 
+          onClick={() => setIsMonthPickerOpen(false)}
+        />
+      )}
     </>
   )
 }

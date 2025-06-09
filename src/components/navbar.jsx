@@ -8,6 +8,7 @@ const Navbar = () => {
   const [isSignInOpen, setIsSignInOpen] = useState(false)
   const [isGetStartedOpen, setIsGetStartedOpen] = useState(false)
   const [accentColor, setAccentColor] = useState('#97e7aa')
+  const [backgroundGif, setBackgroundGif] = useState('Green.gif')
   const [language, setLanguage] = useState('English')
   const [notifications, setNotifications] = useState({
     examReminders: true,
@@ -15,22 +16,35 @@ const Navbar = () => {
   })
 
   const colorOptions = [
-    { name: 'Green', value: '#97e7aa' },
-    { name: 'Purple', value: '#a855f7' },
-    { name: 'Blue', value: '#3b82f6' },
-    { name: 'Red', value: '#ef4444' },
-    { name: 'Orange', value: '#f97316' },
-    { name: 'Pink', value: '#ec4899' }
+    { name: 'Green', value: '#97e7aa', gif: 'Green.gif' },
+    { name: 'Purple', value: '#a855f7', gif: 'Purple.gif' },
+    { name: 'Blue', value: '#3b82f6', gif: 'Blue.gif' },
+    { name: 'Red', value: '#ef4444', gif: 'Red.gif' },
+    { name: 'Orange', value: '#f97316', gif: 'Orange.gif' },
+    { name: 'Pink', value: '#ec4899', gif: 'Pink.gif' }
   ]
 
-  // Only set the CSS variable, no dynamic style injection
+  // Set CSS variable and notify other components about theme change
   useEffect(() => {
     document.documentElement.style.setProperty('--accent-color', accentColor)
-  }, [accentColor])
+    // Dispatch custom event to notify GifContainer about the change
+    window.dispatchEvent(new CustomEvent('themeChange', { 
+      detail: { accentColor, backgroundGif } 
+    }))
+  }, [accentColor, backgroundGif])
+
+  const handleColorChange = (color) => {
+    const selectedOption = colorOptions.find(option => option.value === color)
+    if (selectedOption) {
+      setAccentColor(color)
+      setBackgroundGif(selectedOption.gif)
+    }
+  }
 
   const handleSaveSettings = () => {
     // Save settings to localStorage
     localStorage.setItem('accentColor', accentColor)
+    localStorage.setItem('backgroundGif', backgroundGif)
     localStorage.setItem('language', language)
     localStorage.setItem('notifications', JSON.stringify(notifications))
     setIsSettingsOpen(false)
@@ -39,10 +53,19 @@ const Navbar = () => {
   // Load settings from localStorage on component mount
   useEffect(() => {
     const savedAccentColor = localStorage.getItem('accentColor')
+    const savedBackgroundGif = localStorage.getItem('backgroundGif')
     const savedLanguage = localStorage.getItem('language')
     const savedNotifications = localStorage.getItem('notifications')
 
-    if (savedAccentColor) setAccentColor(savedAccentColor)
+    if (savedAccentColor) {
+      setAccentColor(savedAccentColor)
+      // Find corresponding GIF for saved color
+      const savedOption = colorOptions.find(option => option.value === savedAccentColor)
+      if (savedOption) {
+        setBackgroundGif(savedOption.gif)
+      }
+    }
+    if (savedBackgroundGif) setBackgroundGif(savedBackgroundGif)
     if (savedLanguage) setLanguage(savedLanguage)
     if (savedNotifications) setNotifications(JSON.parse(savedNotifications))
   }, [])
@@ -137,12 +160,12 @@ const Navbar = () => {
 
                   {/* Accent Color Section */}
                   <div className="border-b border-gray-700 pb-4">
-                    <h3 className="text-white font-medium mb-3">Accent Color</h3>
+                    <h3 className="text-white font-medium mb-3">Accent Color & Background</h3>
                     <div className="grid grid-cols-3 gap-2">
                       {colorOptions.map((color) => (
                         <button
                           key={color.value}
-                          onClick={() => setAccentColor(color.value)}
+                          onClick={() => handleColorChange(color.value)}
                           className={`flex items-center gap-2 p-2 rounded-lg border transition-colors ${
                             accentColor === color.value 
                               ? 'border-white bg-gray-800' 
@@ -156,6 +179,9 @@ const Navbar = () => {
                           <span className="text-gray-300 text-sm">{color.name}</span>
                         </button>
                       ))}
+                    </div>
+                    <div className="mt-3 text-sm text-gray-400">
+                      Current background: {backgroundGif}
                     </div>
                   </div>
 
