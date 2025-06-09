@@ -14,6 +14,7 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
   const [isDragging, setIsDragging] = useState(false)
   const [hoveredDay, setHoveredDay] = useState(null)
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 })
+  const [originalTaskData, setOriginalTaskData] = useState(null) // Store original task data
   const timelineRef = useRef(null)
   const scrollRef = useRef(null)
 
@@ -173,10 +174,18 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
     const clickX = e.clientX - rect.left
     const taskWidth = rect.width
     
-    // Determine drag mode based on click position
-    if (clickX < 8) {
+    // Store original task data
+    setOriginalTaskData({
+      start: new Date(task.start),
+      end: new Date(task.end)
+    })
+    
+    // Determine drag mode based on click position with larger resize zones
+    const resizeZoneWidth = Math.min(12, taskWidth * 0.15) // 15% of task width or 12px max
+    
+    if (clickX < resizeZoneWidth) {
       setDragMode('resize-start')
-    } else if (clickX > taskWidth - 8) {
+    } else if (clickX > taskWidth - resizeZoneWidth) {
       setDragMode('resize-end')
     } else {
       setDragMode('move')
@@ -241,7 +250,7 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
 
   useEffect(() => {
     const handleMouseMoveGlobal = (e) => {
-      if (!draggedTask || !timelineRef.current) return
+      if (!draggedTask || !timelineRef.current || !originalTaskData) return
 
       const rect = timelineRef.current.getBoundingClientRect()
       const x = e.clientX - rect.left
@@ -250,21 +259,30 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
       let updatedTask = { ...draggedTask }
 
       if (dragMode === 'move') {
-        const taskDuration = Math.ceil((draggedTask.end - draggedTask.start) / (1000 * 60 * 60 * 24))
+        // Calculate original task duration in days
+        const originalDuration = Math.ceil((originalTaskData.end - originalTaskData.start) / (1000 * 60 * 60 * 24))
+        
+        // Set new start day based on mouse position
         const newStartDay = daysToShow[dayIndex]
         const newEndDay = new Date(newStartDay)
-        newEndDay.setDate(newStartDay.getDate() + taskDuration - 1)
+        newEndDay.setDate(newStartDay.getDate() + originalDuration - 1)
         
         updatedTask.start = new Date(newStartDay)
         updatedTask.end = newEndDay
+        
       } else if (dragMode === 'resize-start') {
+        // Only change start date, keep end date fixed
         const newStartDay = daysToShow[dayIndex]
-        if (newStartDay < draggedTask.end) {
+        if (newStartDay < originalTaskData.end) {
           updatedTask.start = new Date(newStartDay)
+          updatedTask.end = new Date(originalTaskData.end) // Keep original end
         }
+        
       } else if (dragMode === 'resize-end') {
+        // Only change end date, keep start date fixed
         const newEndDay = daysToShow[dayIndex]
-        if (newEndDay > draggedTask.start) {
+        if (newEndDay > originalTaskData.start) {
+          updatedTask.start = new Date(originalTaskData.start) // Keep original start
           updatedTask.end = new Date(newEndDay)
         }
       }
@@ -275,6 +293,7 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
     const handleMouseUp = () => {
       setDraggedTask(null)
       setDragMode(null)
+      setOriginalTaskData(null)
       // Add a small delay before allowing clicks again
       setTimeout(() => {
         setIsDragging(false)
@@ -290,7 +309,7 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
       document.removeEventListener('mousemove', handleMouseMoveGlobal)
       document.removeEventListener('mouseup', handleMouseUp)
     }
-  }, [draggedTask, dragMode, daysToShow, onUpdateTask, dayWidth])
+  }, [draggedTask, dragMode, daysToShow, onUpdateTask, dayWidth, originalTaskData])
 
   const getVisibleTasks = () => {
     if (viewMode === 'Week') {
@@ -497,6 +516,10 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
                 {visibleTasks.map((task, index) => {
                   const isUrgent = task.priority === 'urgent'
                   const taskColor = isUrgent ? '#ff6b35' : 'var(--accent-color, #97e7aa)'
+                  const taskWidth = getTaskWidth(task)
+                  
+                  // Calculate resize zone width
+                  const resizeZoneWidth = Math.min(12, taskWidth * 0.15)
                   
                   return (
                     <div
@@ -506,7 +529,7 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
                       } ${draggedTask?.id === task.id ? 'opacity-80 shadow-lg' : ''}`}
                       style={{
                         left: `${getDayPosition(task.start)}px`,
-                        width: `${getTaskWidth(task)}px`,
+                        width: `${taskWidth}px`,
                         top: `${index * 36 + 8}px`,
                         backgroundColor: taskColor,
                         '--tw-ring-color': 'var(--accent-color, #97e7aa)'
@@ -514,9 +537,15 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
                       onClick={(e) => handleTaskClick(task, e)}
                       onMouseDown={(e) => handleMouseDown(e, task)}
                     >
-                      {/* Resize handles */}
-                      <div className="absolute left-0 top-0 w-2 h-full cursor-ew-resize opacity-0 group-hover:opacity-100 bg-white bg-opacity-20 rounded-l" />
-                      <div className="absolute right-0 top-0 w-2 h-full cursor-ew-resize opacity-0 group-hover:opacity-100 bg-white bg-opacity-20 rounded-r" />
+                      {/* Resize handles with improved visibility */}
+                      <div 
+                        className="absolute left-0 top-0 h-full cursor-ew-resize opacity-0 group-hover:opacity-100 bg-white bg-opacity-30 rounded-l transition-opacity"
+                        style={{ width: `${resizeZoneWidth}px` }}
+                      />
+                      <div 
+                        className="absolute right-0 top-0 h-full cursor-ew-resize opacity-0 group-hover:opacity-100 bg-white bg-opacity-30 rounded-r transition-opacity"
+                        style={{ width: `${resizeZoneWidth}px` }}
+                      />
                       
                       <div className="flex items-center h-full px-3 text-white text-sm">
                         {isUrgent && <span className="mr-1">🔥</span>}
