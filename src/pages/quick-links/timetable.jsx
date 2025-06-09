@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import Navbar from '../../components/navbar'
 import GifContainer from '../../components/gif_container'
 import HeaderContent from '../../components/header-content'
@@ -6,9 +6,150 @@ import NavigationLinks from '../../components/navigation-links'
 import WavyLines from '../../components/wavy-lines'
 import FlipClock from '../../components/FlipClock/'
 import QuickLinks from '../../components/quick-links'
+import { Plus, X, Clock, User, MapPin, Calendar, AlertCircle } from 'lucide-react'
+import { Dialog, DialogBackdrop, DialogPanel, DialogTitle, TransitionChild } from '@headlessui/react'
 import '../../App.css'
 
 function TimetablePage() {
+  const [schedule, setSchedule] = useState({
+    Monday: [],
+    Tuesday: [],
+    Wednesday: [],
+    Thursday: [],
+    Friday: [],
+    Saturday: [],
+    Sunday: []
+  })
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false)
+  const [selectedDay, setSelectedDay] = useState('')
+  const [validationErrors, setValidationErrors] = useState({})
+  const [classForm, setClassForm] = useState({
+    title: '',
+    weekDay: '',
+    classroom: '',
+    professor: '',
+    startTime: '',
+    endTime: '',
+    comments: ''
+  })
+
+  const weekDays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+
+  // Load schedule from localStorage
+  useEffect(() => {
+    const savedSchedule = localStorage.getItem('timetableSchedule')
+    if (savedSchedule) {
+      setSchedule(JSON.parse(savedSchedule))
+    }
+  }, [])
+
+  // Save schedule to localStorage
+  useEffect(() => {
+    localStorage.setItem('timetableSchedule', JSON.stringify(schedule))
+  }, [schedule])
+
+  const validateForm = () => {
+    const errors = {}
+    
+    if (!classForm.title.trim()) {
+      errors.title = 'Title is required'
+    }
+    
+    if (!classForm.weekDay) {
+      errors.weekDay = 'Week day is required'
+    }
+    
+    if (!classForm.startTime) {
+      errors.startTime = 'Start time is required'
+    }
+    
+    if (!classForm.endTime) {
+      errors.endTime = 'End time is required'
+    }
+    
+    if (classForm.startTime && classForm.endTime && classForm.startTime >= classForm.endTime) {
+      errors.endTime = 'End time must be after start time'
+    }
+    
+    setValidationErrors(errors)
+    return Object.keys(errors).length === 0
+  }
+
+  const handleFormChange = (field, value) => {
+    setClassForm(prev => ({ ...prev, [field]: value }))
+    
+    // Clear validation error for this field when user starts typing
+    if (validationErrors[field]) {
+      setValidationErrors(prev => {
+        const newErrors = { ...prev }
+        delete newErrors[field]
+        return newErrors
+      })
+    }
+  }
+
+  const handleAddClass = (day) => {
+    setSelectedDay(day)
+    setValidationErrors({})
+    setClassForm({
+      title: 'New page',
+      weekDay: day,
+      classroom: '',
+      professor: '',
+      startTime: '',
+      endTime: '',
+      comments: ''
+    })
+    setIsDrawerOpen(true)
+  }
+
+  const handleSaveClass = () => {
+    if (!validateForm()) {
+      return
+    }
+
+    const newClass = {
+      id: crypto.randomUUID(),
+      title: classForm.title,
+      weekDay: classForm.weekDay,
+      classroom: classForm.classroom,
+      professor: classForm.professor,
+      startTime: classForm.startTime,
+      endTime: classForm.endTime,
+      comments: classForm.comments
+    }
+
+    setSchedule(prev => ({
+      ...prev,
+      [classForm.weekDay]: [...prev[classForm.weekDay], newClass].sort((a, b) => a.startTime.localeCompare(b.startTime))
+    }))
+
+    setIsDrawerOpen(false)
+    setValidationErrors({})
+    setClassForm({
+      title: '',
+      weekDay: '',
+      classroom: '',
+      professor: '',
+      startTime: '',
+      endTime: '',
+      comments: ''
+    })
+  }
+
+  const handleDeleteClass = (day, classId) => {
+    setSchedule(prev => ({
+      ...prev,
+      [day]: prev[day].filter(cls => cls.id !== classId)
+    }))
+  }
+
+  const formatTime = (time) => {
+    if (!time) return ''
+    const [hours, minutes] = time.split(':')
+    return `${hours}:${minutes}`
+  }
+
   return (
     <div>
       <div>
@@ -45,20 +186,282 @@ function TimetablePage() {
               {/* Horizontal line under header */}
               <div className="w-full h-px bg-gray-700 mb-6"></div>
 
-              {/* Timetable Grid */}
-              <div className='bg-[#2a2a2a] rounded-lg p-4'>
-                <div className='text-center text-gray-300 py-20'>
-                  <div className='text-6xl mb-4'>📅</div>
-                  <h3 className='text-xl font-medium mb-2'>Timetable Coming Soon</h3>
-                  <p className='text-gray-400'>
-                    We're building a comprehensive timetable system to help you organize your schedule.
-                  </p>
+              {/* Instructions */}
+              <div className="mb-6 p-4 bg-[#2a2a2a] rounded-lg border border-gray-700">
+                <div className="flex items-start gap-3">
+                  <div className="text-accent text-lg">💡</div>
+                  <div>
+                    <p className="text-white text-sm mb-2">
+                      <strong>Timetable.</strong> To add a new board, press{' '}
+                      <span className="inline-flex items-center gap-1 px-2 py-1 bg-accent text-white rounded text-xs">
+                        <Plus size={12} />
+                        New
+                      </span>{' '}
+                      under a weekday. Fill in all the properties.
+                    </p>
+                    <p className="text-gray-400 text-sm italic">
+                      You can delete this after reading.
+                    </p>
+                  </div>
                 </div>
+              </div>
+
+              {/* Timetable Grid */}
+              <div className='grid grid-cols-7 gap-4'>
+                {weekDays.map(day => (
+                  <div key={day} className='bg-[#2a2a2a] rounded-lg p-4 min-h-[400px]'>
+                    {/* Day Header */}
+                    <div className='mb-4'>
+                      <h3 className='text-white font-medium text-lg mb-2'>{day}</h3>
+                      <div className="w-full h-px bg-gray-600"></div>
+                    </div>
+
+                    {/* Classes */}
+                    <div className='space-y-3 mb-4'>
+                      {schedule[day].map(cls => (
+                        <div 
+                          key={cls.id}
+                          className='bg-[#3a3a3a] rounded-lg p-3 hover:bg-[#4a4a4a] transition-colors group'
+                        >
+                          <div className='flex items-center justify-between mb-2'>
+                            <h4 className='text-white text-sm font-medium truncate flex-1'>
+                              {cls.title}
+                            </h4>
+                            <button
+                              onClick={() => handleDeleteClass(day, cls.id)}
+                              className='opacity-0 group-hover:opacity-100 text-red-400 hover:text-red-300 transition-all'
+                            >
+                              <X size={14} />
+                            </button>
+                          </div>
+                          
+                          {cls.startTime && cls.endTime && (
+                            <div className='flex items-center gap-1 mb-1'>
+                              <Clock size={12} className='text-gray-400' />
+                              <span className='text-gray-300 text-xs'>
+                                {formatTime(cls.startTime)} - {formatTime(cls.endTime)}
+                              </span>
+                            </div>
+                          )}
+                          
+                          {cls.classroom && (
+                            <div className='flex items-center gap-1 mb-1'>
+                              <MapPin size={12} className='text-gray-400' />
+                              <span className='text-gray-300 text-xs'>{cls.classroom}</span>
+                            </div>
+                          )}
+                          
+                          {cls.professor && (
+                            <div className='flex items-center gap-1'>
+                              <User size={12} className='text-gray-400' />
+                              <span className='text-gray-300 text-xs'>{cls.professor}</span>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Add New Class Button */}
+                    <button
+                      onClick={() => handleAddClass(day)}
+                      className='w-full flex items-center justify-center gap-2 py-3 px-3 border-2 border-dashed border-gray-600 rounded-lg text-gray-400 hover:text-white hover:border-gray-500 transition-colors'
+                    >
+                      <Plus size={16} />
+                      <span className='text-sm'>New page</span>
+                    </button>
+                  </div>
+                ))}
               </div>
             </div>
           </section>
         </main>
       </div>
+
+      {/* Class Drawer */}
+      <Dialog open={isDrawerOpen} onClose={() => setIsDrawerOpen(false)} className="relative z-50">
+        <DialogBackdrop
+          transition
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm transition-opacity duration-300 ease-in-out data-[closed]:opacity-0"
+        />
+
+        <div className="fixed inset-0 overflow-hidden">
+          <div className="absolute inset-0 overflow-hidden">
+            <div className="pointer-events-none fixed inset-y-0 right-0 flex max-w-full pl-10 sm:pl-16">
+              <DialogPanel
+                transition
+                className="pointer-events-auto relative w-screen max-w-md transform transition duration-300 ease-in-out data-[closed]:translate-x-full"
+              >
+                <TransitionChild>
+                  <div className="absolute top-0 left-0 -ml-8 flex pt-4 pr-2 duration-300 ease-in-out data-[closed]:opacity-0 sm:-ml-10 sm:pr-4">
+                    <button
+                      type="button"
+                      onClick={() => setIsDrawerOpen(false)}
+                      className="relative rounded-md text-gray-300 hover:text-white focus:outline-none focus:ring-2 focus:ring-white"
+                    >
+                      <span className="absolute -inset-2.5" />
+                      <span className="sr-only">Close panel</span>
+                      <X className="h-6 w-6" />
+                    </button>
+                  </div>
+                </TransitionChild>
+
+                <div className="flex h-full flex-col overflow-y-scroll bg-[#1a1a1a] border-l border-gray-700 shadow-2xl">
+                  <div className="px-4 sm:px-6 py-6 border-b border-gray-700">
+                    <DialogTitle className="text-lg font-semibold text-white">New page</DialogTitle>
+                  </div>
+
+                  <div className="flex-1 px-4 sm:px-6 space-y-6 overflow-y-auto py-6">
+                    {/* Week Day */}
+                    <div>
+                      <label className="flex items-center gap-2 text-sm font-medium text-gray-300 mb-2">
+                        <Calendar size={16} />
+                        Week Day
+                      </label>
+                      <div className="relative">
+                        <select
+                          value={classForm.weekDay}
+                          onChange={(e) => handleFormChange('weekDay', e.target.value)}
+                          className={`w-full px-3 py-3 bg-[#2a2a2a] border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent appearance-none ${
+                            validationErrors.weekDay ? 'border-red-400' : ''
+                          }`}
+                        >
+                          <option value="" className="bg-[#2a2a2a]">Select an option or create one</option>
+                          {weekDays.map(day => (
+                            <option key={day} value={day} className="bg-[#2a2a2a]">{day}</option>
+                          ))}
+                        </select>
+                        <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                          <X size={16} className="text-gray-400" />
+                        </div>
+                      </div>
+                      {validationErrors.weekDay && (
+                        <div className="flex items-center gap-2 mt-1">
+                          <AlertCircle size={14} className="text-red-400" />
+                          <span className="text-red-400 text-sm">{validationErrors.weekDay}</span>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Classroom */}
+                    <div>
+                      <label className="flex items-center gap-2 text-sm font-medium text-gray-300 mb-2">
+                        <MapPin size={16} />
+                        Classroom
+                      </label>
+                      <input
+                        type="text"
+                        value={classForm.classroom}
+                        onChange={(e) => handleFormChange('classroom', e.target.value)}
+                        className="w-full px-3 py-3 bg-transparent border-none outline-none text-white placeholder-gray-400 focus:outline-none transition-colors"
+                        placeholder=""
+                      />
+                    </div>
+
+                    {/* Professor */}
+                    <div>
+                      <label className="flex items-center gap-2 text-sm font-medium text-gray-300 mb-2">
+                        <User size={16} />
+                        Professor
+                      </label>
+                      <input
+                        type="text"
+                        value={classForm.professor}
+                        onChange={(e) => handleFormChange('professor', e.target.value)}
+                        className="w-full px-3 py-3 bg-transparent border-none outline-none text-white placeholder-gray-400 focus:outline-none transition-colors"
+                        placeholder=""
+                      />
+                    </div>
+
+                    {/* Start Time */}
+                    <div>
+                      <label className="flex items-center gap-2 text-sm font-medium text-gray-300 mb-2">
+                        <Clock size={16} />
+                        Start Time
+                      </label>
+                      <input
+                        type="time"
+                        value={classForm.startTime}
+                        onChange={(e) => handleFormChange('startTime', e.target.value)}
+                        className={`w-full px-3 py-3 bg-transparent border-none outline-none text-white focus:outline-none transition-colors ${
+                          validationErrors.startTime ? 'text-red-400' : ''
+                        }`}
+                      />
+                      {validationErrors.startTime && (
+                        <div className="flex items-center gap-2 mt-1">
+                          <AlertCircle size={14} className="text-red-400" />
+                          <span className="text-red-400 text-sm">{validationErrors.startTime}</span>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* End Time */}
+                    <div>
+                      <label className="flex items-center gap-2 text-sm font-medium text-gray-300 mb-2">
+                        <Clock size={16} />
+                        End Time
+                      </label>
+                      <input
+                        type="time"
+                        value={classForm.endTime}
+                        onChange={(e) => handleFormChange('endTime', e.target.value)}
+                        className={`w-full px-3 py-3 bg-transparent border-none outline-none text-white focus:outline-none transition-colors ${
+                          validationErrors.endTime ? 'text-red-400' : ''
+                        }`}
+                      />
+                      {validationErrors.endTime && (
+                        <div className="flex items-center gap-2 mt-1">
+                          <AlertCircle size={14} className="text-red-400" />
+                          <span className="text-red-400 text-sm">{validationErrors.endTime}</span>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Add a property button */}
+                    <button className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors">
+                      <Plus size={16} />
+                      <span className="text-sm">Add a property</span>
+                    </button>
+
+                    {/* Comments */}
+                    <div>
+                      <h4 className="text-white font-medium mb-3">Comments</h4>
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-full bg-gray-600 flex items-center justify-center">
+                          <User size={16} className="text-gray-300" />
+                        </div>
+                        <input
+                          type="text"
+                          value={classForm.comments}
+                          onChange={(e) => handleFormChange('comments', e.target.value)}
+                          placeholder="Add a comment..."
+                          className="flex-1 bg-transparent text-white placeholder-gray-400 outline-none"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Footer */}
+                  <div className="px-4 sm:px-6 py-4 border-t border-gray-700 flex gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setIsDrawerOpen(false)}
+                      className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={handleSaveClass}
+                      className="flex-1 px-4 py-2 bg-accent text-white rounded-lg hover:bg-accent-80 transition-colors"
+                    >
+                      Save
+                    </button>
+                  </div>
+                </div>
+              </DialogPanel>
+            </div>
+          </div>
+        </div>
+      </Dialog>
     </div>
   )
 }
