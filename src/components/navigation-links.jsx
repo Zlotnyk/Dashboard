@@ -3,7 +3,7 @@ import { Heart, Activity, Brain, Target, DollarSign } from 'lucide-react'
 
 const NavigationLinks = () => {
   const navigationLinks = [
-    { name: 'Lifestyle', icon: Heart, href: '/lifestyle.html' },
+    { name: 'Lifestyle', icon: Heart, href: './lifestyle.html' },
     { name: 'Health & Fitness', icon: Activity, href: '/health-fitness' },
     { name: 'Wellness', icon: Brain, href: '/wellness' },
     { name: 'Productivity', icon: Target, href: '/productivity' },
@@ -11,7 +11,7 @@ const NavigationLinks = () => {
   ]
 
   const handleNavigation = (href) => {
-    if (href === '/lifestyle.html') {
+    if (href === './lifestyle.html') {
       window.location.href = href
     } else {
       alert(`Navigation to ${href} - Coming soon!`)

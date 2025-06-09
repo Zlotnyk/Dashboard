@@ -1,6 +1,7 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
+import { resolve } from 'path'
 
 // https://vite.dev/config/
 export default defineConfig({
@@ -11,8 +12,8 @@ export default defineConfig({
 	build: {
 		rollupOptions: {
 			input: {
-				main: 'index.html',
-				lifestyle: 'public/lifestyle.html'
+				main: resolve(__dirname, 'index.html'),
+				lifestyle: resolve(__dirname, 'public/lifestyle.html')
 			}
 		}
 	}
