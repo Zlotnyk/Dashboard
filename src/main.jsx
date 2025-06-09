@@ -24,6 +24,14 @@ import LifestyleWeekPage from './pages/quick-links/lifestyle-week.jsx'
 import LifestyleMonthPage from './pages/quick-links/lifestyle-month.jsx'
 import LifestyleYearPage from './pages/quick-links/lifestyle-year.jsx'
 import LifestyleContactsPage from './pages/quick-links/lifestyle-contacts.jsx'
+import LifestyleBirthdaysPage from './pages/quick-links/lifestyle-birthdays.jsx'
+import LifestyleTripPlannerPage from './pages/quick-links/lifestyle-trip-planner.jsx'
+import LifestyleOutfitPlannerPage from './pages/quick-links/lifestyle-outfit-planner.jsx'
+import LifestyleEventPlannerPage from './pages/quick-links/lifestyle-event-planner.jsx'
+import LifestyleCleaningPage from './pages/quick-links/lifestyle-cleaning.jsx'
+import LifestyleHabitTrackerPage from './pages/quick-links/lifestyle-habit-tracker.jsx'
+import LifestyleDreamTrackerPage from './pages/quick-links/lifestyle-dream-tracker.jsx'
+import LifestyleBucketListPage from './pages/quick-links/lifestyle-bucket-list.jsx'
 import NotFoundPage from './pages/not-found.jsx'
 
 createRoot(document.getElementById('root')).render(
@@ -52,6 +60,14 @@ createRoot(document.getElementById('root')).render(
 				<Route path='/lifestyle-month' element={<LifestyleMonthPage />} />
 				<Route path='/lifestyle-year' element={<LifestyleYearPage />} />
 				<Route path='/lifestyle-contacts' element={<LifestyleContactsPage />} />
+				<Route path='/lifestyle-birthdays' element={<LifestyleBirthdaysPage />} />
+				<Route path='/lifestyle-trip-planner' element={<LifestyleTripPlannerPage />} />
+				<Route path='/lifestyle-outfit-planner' element={<LifestyleOutfitPlannerPage />} />
+				<Route path='/lifestyle-event-planner' element={<LifestyleEventPlannerPage />} />
+				<Route path='/lifestyle-cleaning' element={<LifestyleCleaningPage />} />
+				<Route path='/lifestyle-habit-tracker' element={<LifestyleHabitTrackerPage />} />
+				<Route path='/lifestyle-dream-tracker' element={<LifestyleDreamTrackerPage />} />
+				<Route path='/lifestyle-bucket-list' element={<LifestyleBucketListPage />} />
 				<Route path='*' element={<NotFoundPage />} />
 			</Routes>
 		</Router>

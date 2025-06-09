@@ -22,6 +22,14 @@ const QuickLinks = () => {
   const isLifestyleMonthPage = window.location.pathname === '/lifestyle-month'
   const isLifestyleYearPage = window.location.pathname === '/lifestyle-year'
   const isLifestyleContactsPage = window.location.pathname === '/lifestyle-contacts'
+  const isLifestyleBirthdaysPage = window.location.pathname === '/lifestyle-birthdays'
+  const isLifestyleTripPlannerPage = window.location.pathname === '/lifestyle-trip-planner'
+  const isLifestyleOutfitPlannerPage = window.location.pathname === '/lifestyle-outfit-planner'
+  const isLifestyleEventPlannerPage = window.location.pathname === '/lifestyle-event-planner'
+  const isLifestyleCleaningPage = window.location.pathname === '/lifestyle-cleaning'
+  const isLifestyleHabitTrackerPage = window.location.pathname === '/lifestyle-habit-tracker'
+  const isLifestyleDreamTrackerPage = window.location.pathname === '/lifestyle-dream-tracker'
+  const isLifestyleBucketListPage = window.location.pathname === '/lifestyle-bucket-list'
   
   const mainLinks = [
     {
@@ -75,15 +83,15 @@ const QuickLinks = () => {
     {
       title: 'Lifestyle',
       items: [
-        { name: 'Birthdays', icon: Heart, href: '#birthdays' },
+        { name: 'Birthdays', icon: Heart, href: '/lifestyle-birthdays' },
         { name: 'Contacts', icon: Users, href: '/lifestyle-contacts' },
-        { name: 'Trip Planner', icon: MapPin, href: '#trip-planner' },
-        { name: 'Outfit Planner', icon: Target, href: '#outfit-planner' },
-        { name: 'Event Planner', icon: Calendar, href: '#event-planner' },
-        { name: 'Cleaning', icon: Target, href: '#cleaning' },
-        { name: 'Habit Tracker', icon: TrendingUp, href: '#habit-tracker' },
-        { name: 'Dream Tracker', icon: Brain, href: '#dream-tracker' },
-        { name: 'Bucket List', icon: Target, href: '#bucket-list' }
+        { name: 'Trip Planner', icon: MapPin, href: '/lifestyle-trip-planner' },
+        { name: 'Outfit Planner', icon: Target, href: '/lifestyle-outfit-planner' },
+        { name: 'Event Planner', icon: Calendar, href: '/lifestyle-event-planner' },
+        { name: 'Cleaning', icon: Target, href: '/lifestyle-cleaning' },
+        { name: 'Habit Tracker', icon: TrendingUp, href: '/lifestyle-habit-tracker' },
+        { name: 'Dream Tracker', icon: Brain, href: '/lifestyle-dream-tracker' },
+        { name: 'Bucket List', icon: Target, href: '/lifestyle-bucket-list' }
       ]
     }
   ]
@@ -126,7 +134,7 @@ const QuickLinks = () => {
   ]
 
   let links = mainLinks
-  if (isLifestylePage || isLifestyleDayPage || isLifestyleWeekPage || isLifestyleMonthPage || isLifestyleYearPage || isLifestyleContactsPage) {
+  if (isLifestylePage || isLifestyleDayPage || isLifestyleWeekPage || isLifestyleMonthPage || isLifestyleYearPage || isLifestyleContactsPage || isLifestyleBirthdaysPage || isLifestyleTripPlannerPage || isLifestyleOutfitPlannerPage || isLifestyleEventPlannerPage || isLifestyleCleaningPage || isLifestyleHabitTrackerPage || isLifestyleDreamTrackerPage || isLifestyleBucketListPage) {
     links = lifestyleLinks
   } else if (isHealthFitnessPage) {
     links = healthFitnessLinks
