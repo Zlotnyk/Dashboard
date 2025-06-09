@@ -161,23 +161,27 @@ const TodayTasks = ({ tasks = [], onAddTask, onUpdateTask, onDeleteTask }) => {
                           </div>
                         </div>
                       )}
+                    </div>
+
+                    {/* Edit button and checkbox with proper spacing */}
+                    <div className='flex items-center gap-[10px]'>
                       {editingId !== task.id && (
                         <button
                           onClick={() => openTaskDrawer(task)}
-                          className='opacity-0 group-hover:opacity-100 border border-gray-500 rounded p-1 hover:bg-gray-600 transition-all'
+                          className='opacity-0 group-hover:opacity-100 border border-gray-500 rounded p-1 hover:bg-gray-600 transition-all w-6 h-6 flex items-center justify-center'
                           title='Edit Task Details'
                         >
                           <Pencil size={12} className='text-gray-400' />
                         </button>
                       )}
-                    </div>
 
-                    <input
-                      type='checkbox'
-                      onChange={() => onDeleteTask(task.id)}
-                      className='w-4 h-4 cursor-pointer bg-transparent appearance-none border border-gray-400 rounded checked:bg-blue-500 checked:border-transparent ml-2'
-                      title='Complete Task'
-                    />
+                      <input
+                        type='checkbox'
+                        onChange={() => onDeleteTask(task.id)}
+                        className='w-6 h-6 cursor-pointer bg-transparent appearance-none border border-gray-400 rounded checked:bg-blue-500 checked:border-transparent'
+                        title='Complete Task'
+                      />
+                    </div>
                   </div>
                 </div>
               )
