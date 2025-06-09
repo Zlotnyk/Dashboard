@@ -230,12 +230,12 @@ const BigCalendar = ({ events = [], onAddEvent, onDeleteEvent }) => {
                   />
                 </div>
                 
-                {/* Events */}
+                {/* Events - increased height */}
                 <div className="mt-1 space-y-1">
                   {dayEvents.map(event => (
                     <div 
                       key={event.id}
-                      className="w-full h-5 bg-gray-600 rounded text-xs text-white px-2 flex items-center truncate cursor-pointer hover:bg-gray-500"
+                      className="w-full h-7 bg-gray-600 rounded text-xs text-white px-2 flex items-center truncate cursor-pointer hover:bg-gray-500"
                       title={`${event.title} ${event.time ? `at ${event.time}` : ''}`}
                       onClick={(e) => handleEventClick(event, e)}
                     >
@@ -344,7 +344,7 @@ const BigCalendar = ({ events = [], onAddEvent, onDeleteEvent }) => {
               </div>
             </div>
 
-            <div className="px-6 py-4 bg-gray-800/50 rounded-b-lg flex gap-3">
+            <div className="px-6 py-4 flex gap-3">
               {selectedEvent && (
                 <button
                   onClick={handleDeleteEvent}

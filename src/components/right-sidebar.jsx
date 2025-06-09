@@ -115,7 +115,6 @@ const RightSidebar = () => {
             <h3 className="text-lg font-[Libre_Baskerville] italic text-white">
               Exam Reminder
             </h3>
-            <div className="w-3 h-3 bg-red-500 rounded-full"></div>
           </div>
 
           <div className="space-y-3">
@@ -146,7 +145,7 @@ const RightSidebar = () => {
 
             <button
               onClick={addExamReminder}
-              className="w-full flex items-center justify-center gap-2 p-4 border border-gray-600 rounded-lg text-gray-400 hover:text-white hover:border-gray-500 transition-colors"
+              className="w-full flex items-center justify-center gap-2 py-4 px-4 border border-gray-600 rounded-lg text-gray-400 hover:text-white hover:border-gray-500 transition-colors"
             >
               <Plus size={16} />
               <span className="text-sm">New page</span>
@@ -160,7 +159,6 @@ const RightSidebar = () => {
             <h3 className="text-lg font-[Libre_Baskerville] italic text-white">
               Assignment Reminder
             </h3>
-            <div className="w-3 h-3 bg-red-500 rounded-full"></div>
           </div>
 
           <div className="space-y-3">
@@ -200,7 +198,7 @@ const RightSidebar = () => {
 
             <button
               onClick={addAssignmentReminder}
-              className="w-full flex items-center justify-center gap-2 p-4 border border-gray-600 rounded-lg text-gray-400 hover:text-white hover:border-gray-500 transition-colors"
+              className="w-full flex items-center justify-center gap-2 py-4 px-4 border border-gray-600 rounded-lg text-gray-400 hover:text-white hover:border-gray-500 transition-colors"
             >
               <Plus size={16} />
               <span className="text-sm">New page</span>
@@ -306,7 +304,7 @@ const RightSidebar = () => {
                 </div>
               </div>
 
-              <div className="bg-gray-800/50 px-6 py-3 flex flex-row-reverse gap-3">
+              <div className="px-6 py-3 flex flex-row-reverse gap-3">
                 <button
                   onClick={handleSaveExam}
                   className="px-4 py-2 bg-[#97e7aa] text-white rounded hover:bg-[#75b384] transition-colors"
@@ -425,7 +423,7 @@ const RightSidebar = () => {
                 </div>
               </div>
 
-              <div className="bg-gray-800/50 px-6 py-3 flex flex-row-reverse gap-3">
+              <div className="px-6 py-3 flex flex-row-reverse gap-3">
                 <button
                   onClick={handleSaveAssignment}
                   className="px-4 py-2 bg-[#97e7aa] text-white rounded hover:bg-[#75b384] transition-colors"
