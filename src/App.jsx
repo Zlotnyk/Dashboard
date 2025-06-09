@@ -19,6 +19,11 @@ function App() {
 	const [selectedDate, setSelectedDate] = useState(new Date())
 	const [tasks, setTasks] = useState(generateMockTasks())
 	const [events, setEvents] = useState([])
+	const [widths, setWidths] = useState({
+		left: 20,
+		center: 65,
+		right: 15,
+	})
 
 	const handleTaskAdd = task => {
 		setTasks(prevTasks => [...prevTasks, task])
@@ -42,30 +47,17 @@ function App() {
 		setEvents(prevEvents => prevEvents.filter(event => event.id !== eventId))
 	}
 
-	const [widths, setWidths] = useState({
-		left: 20,
-		center: 65,
-		right: 15,
-	})
-
 	return (
 		<div>
 			<div>
-				{/* Navbar at the very top */}
 				<Navbar />
-
-				<header className="relative">
+				<header className='relative'>
 					<GifContainer />
 				</header>
-
-				{/* Header content between photo and wavy lines */}
 				<HeaderContent />
 				<NavigationLinks />
-
 				<WavyLines />
-
 				<main className='flex w-full h-screen select-none'>
-					{/* Ліва Секція */}
 					<section
 						className='flex flex-col p-4 gap-4'
 						style={{ width: `${widths.left}%` }}
@@ -73,8 +65,6 @@ function App() {
 						<FlipClock />
 						<QuickLinks />
 					</section>
-
-					{/* Центральна Секція */}
 					<section
 						className='flex flex-col p-4 gap-4'
 						style={{ width: `${widths.center}%` }}
@@ -99,16 +89,13 @@ function App() {
 								onUpdateTask={handleTaskUpdate}
 								onDeleteTask={handleTaskDelete}
 							/>
-
-							<BigCalendar 
+							<BigCalendar
 								events={events}
 								onAddEvent={handleEventAdd}
 								onDeleteEvent={handleEventDelete}
 							/>
 						</section>
 					</section>
-
-					{/* Права Секція */}
 					<section
 						className='flex flex-col p-4 gap-4'
 						style={{ width: `${widths.right}%` }}

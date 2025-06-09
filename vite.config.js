@@ -13,8 +13,7 @@ export default defineConfig({
 		rollupOptions: {
 			input: {
 				main: resolve(__dirname, 'index.html'),
-				lifestyle: resolve(__dirname, 'public/lifestyle.html')
-			}
-		}
-	}
+			},
+		},
+	},
 })
