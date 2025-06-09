@@ -29,8 +29,7 @@ function TimetablePage() {
     classroom: '',
     professor: '',
     startTime: '',
-    endTime: '',
-    comments: ''
+    endTime: ''
   })
 
   const weekDays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
@@ -97,8 +96,7 @@ function TimetablePage() {
       classroom: '',
       professor: '',
       startTime: '',
-      endTime: '',
-      comments: ''
+      endTime: ''
     })
     setIsDrawerOpen(true)
   }
@@ -115,8 +113,7 @@ function TimetablePage() {
       classroom: classForm.classroom,
       professor: classForm.professor,
       startTime: classForm.startTime,
-      endTime: classForm.endTime,
-      comments: classForm.comments
+      endTime: classForm.endTime
     }
 
     setSchedule(prev => ({
@@ -132,8 +129,7 @@ function TimetablePage() {
       classroom: '',
       professor: '',
       startTime: '',
-      endTime: '',
-      comments: ''
+      endTime: ''
     })
   }
 
@@ -185,26 +181,6 @@ function TimetablePage() {
 
               {/* Horizontal line under header */}
               <div className="w-full h-px bg-gray-700 mb-6"></div>
-
-              {/* Instructions */}
-              <div className="mb-6 p-4 bg-[#2a2a2a] rounded-lg border border-gray-700">
-                <div className="flex items-start gap-3">
-                  <div className="text-accent text-lg">💡</div>
-                  <div>
-                    <p className="text-white text-sm mb-2">
-                      <strong>Timetable.</strong> To add a new board, press{' '}
-                      <span className="inline-flex items-center gap-1 px-2 py-1 bg-accent text-white rounded text-xs">
-                        <Plus size={12} />
-                        New
-                      </span>{' '}
-                      under a weekday. Fill in all the properties.
-                    </p>
-                    <p className="text-gray-400 text-sm italic">
-                      You can delete this after reading.
-                    </p>
-                  </div>
-                </div>
-              </div>
 
               {/* Timetable Grid */}
               <div className='grid grid-cols-7 gap-4'>
@@ -264,7 +240,7 @@ function TimetablePage() {
                     {/* Add New Class Button */}
                     <button
                       onClick={() => handleAddClass(day)}
-                      className='w-full flex items-center justify-center gap-2 py-3 px-3 border-2 border-dashed border-gray-600 rounded-lg text-gray-400 hover:text-white hover:border-gray-500 transition-colors'
+                      className='w-full flex items-center justify-center gap-2 py-3 px-3 border-2 border-solid border-gray-600 rounded-lg text-gray-400 hover:text-white hover:border-gray-500 transition-colors'
                     >
                       <Plus size={16} />
                       <span className='text-sm'>New page</span>
@@ -321,11 +297,11 @@ function TimetablePage() {
                         <select
                           value={classForm.weekDay}
                           onChange={(e) => handleFormChange('weekDay', e.target.value)}
-                          className={`w-full px-3 py-3 bg-[#2a2a2a] border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent appearance-none ${
+                          className={`w-full px-3 py-3 bg-[#2a2a2a] border-2 border-solid border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent appearance-none ${
                             validationErrors.weekDay ? 'border-red-400' : ''
                           }`}
                         >
-                          <option value="" className="bg-[#2a2a2a]">Select an option or create one</option>
+                          <option value="" className="bg-[#2a2a2a]">Wednesday</option>
                           {weekDays.map(day => (
                             <option key={day} value={day} className="bg-[#2a2a2a]">{day}</option>
                           ))}
@@ -414,29 +390,6 @@ function TimetablePage() {
                           <span className="text-red-400 text-sm">{validationErrors.endTime}</span>
                         </div>
                       )}
-                    </div>
-
-                    {/* Add a property button */}
-                    <button className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors">
-                      <Plus size={16} />
-                      <span className="text-sm">Add a property</span>
-                    </button>
-
-                    {/* Comments */}
-                    <div>
-                      <h4 className="text-white font-medium mb-3">Comments</h4>
-                      <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-gray-600 flex items-center justify-center">
-                          <User size={16} className="text-gray-300" />
-                        </div>
-                        <input
-                          type="text"
-                          value={classForm.comments}
-                          onChange={(e) => handleFormChange('comments', e.target.value)}
-                          placeholder="Add a comment..."
-                          className="flex-1 bg-transparent text-white placeholder-gray-400 outline-none"
-                        />
-                      </div>
                     </div>
                   </div>
 
