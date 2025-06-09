@@ -12,7 +12,7 @@ const BigCalendar = ({ events = [], onAddEvent, onDeleteEvent }) => {
     date: '',
     time: '',
     location: '',
-    type: 'meeting'
+    category: 'meeting'
   })
   
   const monthNames = [
@@ -83,7 +83,7 @@ const BigCalendar = ({ events = [], onAddEvent, onDeleteEvent }) => {
       date: selectedDate.toISOString().split('T')[0],
       time: '',
       location: '',
-      type: 'meeting'
+      category: 'meeting'
     })
     setIsModalOpen(true)
   }
@@ -96,7 +96,7 @@ const BigCalendar = ({ events = [], onAddEvent, onDeleteEvent }) => {
       date: event.date.toISOString().split('T')[0],
       time: event.time,
       location: event.location,
-      type: event.type
+      category: event.category
     })
     setIsModalOpen(true)
   }
@@ -112,7 +112,7 @@ const BigCalendar = ({ events = [], onAddEvent, onDeleteEvent }) => {
         date: new Date(eventForm.date),
         time: eventForm.time,
         location: eventForm.location,
-        type: eventForm.type
+        category: eventForm.category
       }
       onAddEvent(updatedEvent) // This should be onUpdateEvent, but using onAddEvent for now
     } else {
@@ -123,7 +123,7 @@ const BigCalendar = ({ events = [], onAddEvent, onDeleteEvent }) => {
         date: new Date(eventForm.date),
         time: eventForm.time,
         location: eventForm.location,
-        type: eventForm.type
+        category: eventForm.category
       }
       onAddEvent(newEvent)
     }
@@ -134,7 +134,7 @@ const BigCalendar = ({ events = [], onAddEvent, onDeleteEvent }) => {
       date: '',
       time: '',
       location: '',
-      type: 'meeting'
+      category: 'meeting'
     })
     setSelectedEvent(null)
   }
@@ -332,6 +332,24 @@ const BigCalendar = ({ events = [], onAddEvent, onDeleteEvent }) => {
                         placeholder="Empty"
                         className="w-full bg-transparent text-white text-base border-none outline-none placeholder-gray-500 cursor-pointer"
                       />
+                    </div>
+                  </div>
+
+                  {/* Category Field */}
+                  <div className="flex items-center gap-4">
+                    <Calendar size={20} className="text-gray-400 flex-shrink-0" />
+                    <div className="flex-1">
+                      <div className="text-sm text-gray-400 mb-1">Category</div>
+                      <select
+                        value={eventForm.category}
+                        onChange={(e) => setEventForm(prev => ({ ...prev, category: e.target.value }))}
+                        className="w-full bg-transparent text-white text-base border-none outline-none"
+                      >
+                        <option value="meeting" className="bg-[#1a1a1a]">Meeting</option>
+                        <option value="birthday" className="bg-[#1a1a1a]">Birthday</option>
+                        <option value="event" className="bg-[#1a1a1a]">Event</option>
+                        <option value="other" className="bg-[#1a1a1a]">Other</option>
+                      </select>
                     </div>
                   </div>
                 </div>

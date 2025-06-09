@@ -33,7 +33,6 @@ const RightSidebar = () => {
     title: '',
     dueDate: '',
     status: 'Not started',
-    grade: '',
     notes: '',
     submitted: false
   })
@@ -82,7 +81,6 @@ const RightSidebar = () => {
       title: 'New page',
       dueDate: '',
       status: 'Not started',
-      grade: '',
       notes: '',
       submitted: false
     })
@@ -95,7 +93,6 @@ const RightSidebar = () => {
       title: assignment.title,
       dueDate: assignment.dueDate.toISOString().split('T')[0],
       status: assignment.status,
-      grade: assignment.grade,
       notes: assignment.notes,
       submitted: assignment.submitted
     })
@@ -155,7 +152,6 @@ const RightSidebar = () => {
         title: assignmentForm.title,
         dueDate: new Date(assignmentForm.dueDate),
         status: assignmentForm.status,
-        grade: assignmentForm.grade,
         notes: assignmentForm.notes,
         submitted: assignmentForm.submitted,
         isUrgent: calculateDaysUntil(assignmentForm.dueDate) === 'Tomorrow.'
@@ -170,7 +166,6 @@ const RightSidebar = () => {
         title: assignmentForm.title,
         dueDate: new Date(assignmentForm.dueDate),
         status: assignmentForm.status,
-        grade: assignmentForm.grade,
         notes: assignmentForm.notes,
         submitted: assignmentForm.submitted,
         isUrgent: calculateDaysUntil(assignmentForm.dueDate) === 'Tomorrow.'
@@ -395,11 +390,11 @@ const RightSidebar = () => {
 
                   {/* When Exam Field */}
                   <div className="flex items-center gap-4">
-                    <span className="text-orange-500 text-base">⚠️</span>
+                    <span className="text-gray-500 text-base">⚠️</span>
                     <div className="flex-1">
                       <div className="text-sm text-gray-400 mb-1">When Exam</div>
-                      <div className="text-orange-500 text-base">
-                        {examForm.date ? calculateDaysUntil(examForm.date) : 'Tomorrow.'}
+                      <div className="text-gray-500 text-base">
+                        {examForm.date ? calculateDaysUntil(examForm.date) : 'Невизначено'}
                       </div>
                     </div>
                   </div>
@@ -515,21 +510,6 @@ const RightSidebar = () => {
                     </div>
                   </div>
 
-                  {/* Grade Field */}
-                  <div className="flex items-center gap-4">
-                    <Flag size={20} className="text-gray-400 flex-shrink-0" />
-                    <div className="flex-1">
-                      <div className="text-sm text-gray-400 mb-1">Grade</div>
-                      <input
-                        type="text"
-                        value={assignmentForm.grade}
-                        onChange={(e) => setAssignmentForm(prev => ({ ...prev, grade: e.target.value }))}
-                        placeholder="Empty"
-                        className="w-full bg-transparent text-white text-base border-none outline-none placeholder-gray-500"
-                      />
-                    </div>
-                  </div>
-
                   {/* Notes Field */}
                   <div className="flex items-center gap-4">
                     <FileText size={20} className="text-gray-400 flex-shrink-0" />
@@ -547,11 +527,11 @@ const RightSidebar = () => {
 
                   {/* When Assignment Field */}
                   <div className="flex items-center gap-4">
-                    <span className="text-orange-500 text-base">⚠️</span>
+                    <span className="text-gray-500 text-base">⚠️</span>
                     <div className="flex-1">
                       <div className="text-sm text-gray-400 mb-1">When Assignment</div>
-                      <div className="text-orange-500 text-base">
-                        {assignmentForm.dueDate ? calculateDaysUntil(assignmentForm.dueDate) : 'Tomorrow.'}
+                      <div className="text-gray-500 text-base">
+                        {assignmentForm.dueDate ? calculateDaysUntil(assignmentForm.dueDate) : 'Невизначено'}
                       </div>
                     </div>
                   </div>

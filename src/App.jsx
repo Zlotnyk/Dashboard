@@ -10,6 +10,7 @@ import MiniCalendar from './components/mini-calendar'
 import RightSidebar from './components/right-sidebar'
 import HeaderContent from './components/header-content'
 import NavigationLinks from './components/navigation-links'
+import Navbar from './components/navbar'
 import './App.css'
 import TaskTimeline from './components/Task_Timeline/task_timeline'
 import { generateMockTasks } from './components/Task_Timeline/timeline_utils'
@@ -50,6 +51,9 @@ function App() {
 	return (
 		<div>
 			<div>
+				{/* Navbar at the very top */}
+				<Navbar />
+
 				<header className="relative">
 					<GifContainer />
 				</header>
