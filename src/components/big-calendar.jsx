@@ -374,8 +374,8 @@ const BigCalendar = ({ events = [], onAddEvent, onDeleteEvent }) => {
           
           {/* Previous Month Days */}
           {prevMonthDays.map(day => (
-            <div key={`prev-${day}`} className="h-32 border-b border-gray-800 p-2" style={{ backgroundColor: 'color-mix(in srgb, var(--accent-color) 5%, transparent)' }}>
-              <span className="text-sm" style={{ color: 'color-mix(in srgb, var(--accent-color) 40%, white)' }}>{day}</span>
+            <div key={`prev-${day}`} className="h-32 border-b border-gray-800 p-2" style={{ backgroundColor: 'color-mix(in srgb, var(--accent-color) 3%, transparent)' }}>
+              <span className="text-sm" style={{ color: 'color-mix(in srgb, var(--accent-color) 25%, white)' }}>{day}</span>
             </div>
           ))}
           
@@ -435,8 +435,8 @@ const BigCalendar = ({ events = [], onAddEvent, onDeleteEvent }) => {
           
           {/* Next Month Days */}
           {nextMonthDays.map(day => (
-            <div key={`next-${day}`} className="h-32 border-b border-gray-800 p-2" style={{ backgroundColor: 'color-mix(in srgb, var(--accent-color) 5%, transparent)' }}>
-              <span className="text-sm" style={{ color: 'color-mix(in srgb, var(--accent-color) 40%, white)' }}>{day}</span>
+            <div key={`next-${day}`} className="h-32 border-b border-gray-800 p-2" style={{ backgroundColor: 'color-mix(in srgb, var(--accent-color) 3%, transparent)' }}>
+              <span className="text-sm" style={{ color: 'color-mix(in srgb, var(--accent-color) 25%, white)' }}>{day}</span>
             </div>
           ))}
         </div>
