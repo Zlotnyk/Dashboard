@@ -2,10 +2,11 @@ import React, { useState } from 'react'
 import { ChevronLeft, ChevronRight, Plus, X } from 'lucide-react'
 import { Dialog, DialogBackdrop, DialogPanel, DialogTitle } from '@headlessui/react'
 
-const BigCalendar = ({ events = [], onAddEvent }) => {
+const BigCalendar = ({ events = [], onAddEvent, onDeleteEvent }) => {
   const [currentDate, setCurrentDate] = useState(new Date())
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [selectedDay, setSelectedDay] = useState(null)
+  const [selectedEvent, setSelectedEvent] = useState(null)
   const [eventForm, setEventForm] = useState({
     title: '',
     date: '',
@@ -72,6 +73,7 @@ const BigCalendar = ({ events = [], onAddEvent }) => {
   const handlePlusClick = (day) => {
     const selectedDate = new Date(currentYear, currentMonth, day)
     setSelectedDay(day)
+    setSelectedEvent(null)
     setEventForm({
       title: '',
       date: selectedDate.toISOString().split('T')[0],
@@ -82,19 +84,46 @@ const BigCalendar = ({ events = [], onAddEvent }) => {
     setIsModalOpen(true)
   }
 
+  const handleEventClick = (event, e) => {
+    e.stopPropagation()
+    setSelectedEvent(event)
+    setEventForm({
+      title: event.title,
+      date: event.date.toISOString().split('T')[0],
+      time: event.time,
+      location: event.location,
+      type: event.type
+    })
+    setIsModalOpen(true)
+  }
+
   const handleSaveEvent = () => {
     if (!eventForm.title.trim()) return
 
-    const newEvent = {
-      id: crypto.randomUUID(),
-      title: eventForm.title,
-      date: new Date(eventForm.date),
-      time: eventForm.time,
-      location: eventForm.location,
-      type: eventForm.type
+    if (selectedEvent) {
+      // Update existing event
+      const updatedEvent = {
+        ...selectedEvent,
+        title: eventForm.title,
+        date: new Date(eventForm.date),
+        time: eventForm.time,
+        location: eventForm.location,
+        type: eventForm.type
+      }
+      onAddEvent(updatedEvent) // This should be onUpdateEvent, but using onAddEvent for now
+    } else {
+      // Create new event
+      const newEvent = {
+        id: crypto.randomUUID(),
+        title: eventForm.title,
+        date: new Date(eventForm.date),
+        time: eventForm.time,
+        location: eventForm.location,
+        type: eventForm.type
+      }
+      onAddEvent(newEvent)
     }
-
-    onAddEvent(newEvent)
+    
     setIsModalOpen(false)
     setEventForm({
       title: '',
@@ -103,6 +132,15 @@ const BigCalendar = ({ events = [], onAddEvent }) => {
       location: '',
       type: 'meeting'
     })
+    setSelectedEvent(null)
+  }
+
+  const handleDeleteEvent = () => {
+    if (selectedEvent) {
+      onDeleteEvent(selectedEvent.id)
+      setIsModalOpen(false)
+      setSelectedEvent(null)
+    }
   }
 
   const getEventsForDay = (day) => {
@@ -165,7 +203,7 @@ const BigCalendar = ({ events = [], onAddEvent }) => {
           
           {/* Previous Month Days */}
           {prevMonthDays.map(day => (
-            <div key={`prev-${day}`} className="h-24 border-r border-b border-gray-800 bg-gray-900/30 p-2">
+            <div key={`prev-${day}`} className="h-32 border-r border-b border-gray-800 bg-gray-900/30 p-2">
               <span className="text-sm text-gray-600">{day}</span>
             </div>
           ))}
@@ -177,7 +215,7 @@ const BigCalendar = ({ events = [], onAddEvent }) => {
             return (
               <div 
                 key={day} 
-                className="h-24 border-r border-b border-gray-800 p-2 hover:bg-gray-800/30 cursor-pointer relative group bg-gray-900/10"
+                className="h-32 border-r border-b border-gray-800 p-2 hover:bg-gray-800/30 cursor-pointer relative group bg-gray-900/10"
               >
                 <div className="flex items-center justify-between">
                   <span className={`text-sm font-medium ${
@@ -197,8 +235,9 @@ const BigCalendar = ({ events = [], onAddEvent }) => {
                   {dayEvents.map(event => (
                     <div 
                       key={event.id}
-                      className="w-full h-4 bg-gray-600 rounded text-xs text-white px-1 flex items-center truncate"
+                      className="w-full h-5 bg-gray-600 rounded text-xs text-white px-2 flex items-center truncate cursor-pointer hover:bg-gray-500"
                       title={`${event.title} ${event.time ? `at ${event.time}` : ''}`}
+                      onClick={(e) => handleEventClick(event, e)}
                     >
                       {event.title}
                     </div>
@@ -210,7 +249,7 @@ const BigCalendar = ({ events = [], onAddEvent }) => {
           
           {/* Next Month Days */}
           {nextMonthDays.map(day => (
-            <div key={`next-${day}`} className="h-24 border-r border-b border-gray-800 bg-gray-900/30 p-2">
+            <div key={`next-${day}`} className="h-32 border-r border-b border-gray-800 bg-gray-900/30 p-2">
               <span className="text-sm text-gray-600">{day}</span>
             </div>
           ))}
@@ -219,102 +258,112 @@ const BigCalendar = ({ events = [], onAddEvent }) => {
 
       {/* Event Modal */}
       <Dialog open={isModalOpen} onClose={setIsModalOpen} className="relative z-50">
-        <DialogBackdrop className="fixed inset-0 bg-black/25" />
+        <DialogBackdrop className="fixed inset-0 bg-black/50" />
         
         <div className="fixed inset-0 flex items-center justify-center p-4">
-          <DialogPanel className="bg-[#1a1a1a] rounded-lg p-6 w-full max-w-md">
-            <div className="flex items-center justify-between mb-4">
-              <DialogTitle className="text-lg font-semibold text-white">
-                Create Event
-              </DialogTitle>
-              <button
-                onClick={() => setIsModalOpen(false)}
-                className="text-gray-400 hover:text-white"
-              >
-                <X size={20} />
-              </button>
-            </div>
-
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Event Title
-                </label>
-                <input
-                  type="text"
-                  value={eventForm.title}
-                  onChange={(e) => setEventForm(prev => ({ ...prev, title: e.target.value }))}
-                  className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#97e7aa]"
-                  placeholder="Enter event title..."
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Date
-                </label>
-                <input
-                  type="date"
-                  value={eventForm.date}
-                  onChange={(e) => setEventForm(prev => ({ ...prev, date: e.target.value }))}
-                  className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-[#97e7aa]"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Time
-                </label>
-                <input
-                  type="time"
-                  value={eventForm.time}
-                  onChange={(e) => setEventForm(prev => ({ ...prev, time: e.target.value }))}
-                  className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-[#97e7aa]"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Location
-                </label>
-                <input
-                  type="text"
-                  value={eventForm.location}
-                  onChange={(e) => setEventForm(prev => ({ ...prev, location: e.target.value }))}
-                  className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#97e7aa]"
-                  placeholder="Enter location..."
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Type
-                </label>
-                <select
-                  value={eventForm.type}
-                  onChange={(e) => setEventForm(prev => ({ ...prev, type: e.target.value }))}
-                  className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-[#97e7aa]"
+          <DialogPanel className="bg-[#1a1a1a] rounded-lg w-full max-w-lg">
+            <div className="px-6 pt-6 pb-4">
+              <div className="flex items-center justify-between mb-6">
+                <DialogTitle className="text-xl font-semibold text-white">
+                  {selectedEvent ? 'Edit Event' : 'Create Event'}
+                </DialogTitle>
+                <button
+                  onClick={() => setIsModalOpen(false)}
+                  className="text-gray-400 hover:text-white"
                 >
-                  <option value="meeting">Meeting</option>
-                  <option value="birthday">Birthday</option>
-                  <option value="appointment">Appointment</option>
-                  <option value="reminder">Reminder</option>
-                </select>
+                  <X size={24} />
+                </button>
+              </div>
+
+              <div className="space-y-6">
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-3">
+                    Event Title
+                  </label>
+                  <input
+                    type="text"
+                    value={eventForm.title}
+                    onChange={(e) => setEventForm(prev => ({ ...prev, title: e.target.value }))}
+                    className="w-full px-4 py-3 bg-gray-800 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#97e7aa]"
+                    placeholder="Enter event title..."
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-3">
+                    Date
+                  </label>
+                  <input
+                    type="date"
+                    value={eventForm.date}
+                    onChange={(e) => setEventForm(prev => ({ ...prev, date: e.target.value }))}
+                    className="w-full px-4 py-3 bg-gray-800 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-[#97e7aa]"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-3">
+                    Time
+                  </label>
+                  <input
+                    type="time"
+                    value={eventForm.time}
+                    onChange={(e) => setEventForm(prev => ({ ...prev, time: e.target.value }))}
+                    className="w-full px-4 py-3 bg-gray-800 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-[#97e7aa]"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-3">
+                    Location
+                  </label>
+                  <input
+                    type="text"
+                    value={eventForm.location}
+                    onChange={(e) => setEventForm(prev => ({ ...prev, location: e.target.value }))}
+                    className="w-full px-4 py-3 bg-gray-800 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#97e7aa]"
+                    placeholder="Enter location..."
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-3">
+                    Type
+                  </label>
+                  <select
+                    value={eventForm.type}
+                    onChange={(e) => setEventForm(prev => ({ ...prev, type: e.target.value }))}
+                    className="w-full px-4 py-3 bg-gray-800 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-[#97e7aa]"
+                  >
+                    <option value="meeting">Meeting</option>
+                    <option value="birthday">Birthday</option>
+                    <option value="appointment">Appointment</option>
+                    <option value="reminder">Reminder</option>
+                  </select>
+                </div>
               </div>
             </div>
 
-            <div className="flex gap-3 mt-6">
+            <div className="px-6 py-4 bg-gray-800/50 rounded-b-lg flex gap-3">
+              {selectedEvent && (
+                <button
+                  onClick={handleDeleteEvent}
+                  className="px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                >
+                  Delete
+                </button>
+              )}
               <button
                 onClick={() => setIsModalOpen(false)}
-                className="flex-1 px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
+                className="px-6 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
               >
                 Cancel
               </button>
               <button
                 onClick={handleSaveEvent}
-                className="flex-1 px-4 py-2 bg-[#97e7aa] text-white rounded-lg hover:bg-[#75b384] transition-colors"
+                className="flex-1 px-6 py-3 bg-[#97e7aa] text-white rounded-lg hover:bg-[#75b384] transition-colors"
               >
-                Save Event
+                {selectedEvent ? 'Update Event' : 'Save Event'}
               </button>
             </div>
           </DialogPanel>

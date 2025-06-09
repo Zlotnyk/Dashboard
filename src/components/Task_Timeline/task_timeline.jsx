@@ -13,6 +13,7 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
   const [drawerTask, setDrawerTask] = useState(null)
   const [isDragging, setIsDragging] = useState(false)
   const [hoveredDay, setHoveredDay] = useState(null)
+  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 })
   const timelineRef = useRef(null)
   const scrollRef = useRef(null)
 
@@ -160,6 +161,8 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
       color: '#97e7aa'
     }
     onAddTask(newTask)
+    setDrawerTask(newTask)
+    setIsDrawerOpen(true)
   }
 
   const handleMouseDown = (e, task) => {
@@ -218,6 +221,16 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
     }
   }
 
+  const handleMouseMove = (e) => {
+    if (timelineRef.current) {
+      const rect = timelineRef.current.getBoundingClientRect()
+      setMousePosition({
+        x: e.clientX - rect.left,
+        y: e.clientY - rect.top
+      })
+    }
+  }
+
   const handleDayHover = (dayIndex) => {
     setHoveredDay(dayIndex)
   }
@@ -227,7 +240,7 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
   }
 
   useEffect(() => {
-    const handleMouseMove = (e) => {
+    const handleMouseMoveGlobal = (e) => {
       if (!draggedTask || !timelineRef.current) return
 
       const rect = timelineRef.current.getBoundingClientRect()
@@ -269,12 +282,12 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
     }
 
     if (draggedTask) {
-      document.addEventListener('mousemove', handleMouseMove)
+      document.addEventListener('mousemove', handleMouseMoveGlobal)
       document.addEventListener('mouseup', handleMouseUp)
     }
 
     return () => {
-      document.removeEventListener('mousemove', handleMouseMove)
+      document.removeEventListener('mousemove', handleMouseMoveGlobal)
       document.removeEventListener('mouseup', handleMouseUp)
     }
   }, [draggedTask, dragMode, daysToShow, onUpdateTask, dayWidth])
@@ -401,6 +414,7 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
               className="relative h-full timeline-background cursor-pointer"
               style={{ width: `${totalWidth}px` }}
               onClick={handleTimelineClick}
+              onMouseMove={handleMouseMove}
             >
               {/* Days Header */}
               <div 
@@ -422,16 +436,8 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
                           : 'text-gray-300'
                       }`}
                       style={{ width: `${dayWidth}px` }}
-                      onMouseEnter={() => handleDayHover(i)}
-                      onMouseLeave={handleDayLeave}
                     >
                       {dayText}
-                      {/* Plus button on hover */}
-                      {hoveredDay === i && !isToday && (
-                        <div className="absolute inset-0 bg-gray-800/50 flex items-center justify-center">
-                          <Plus size={12} className="text-[#97e7aa]" />
-                        </div>
-                      )}
                     </div>
                   )
                 })}
@@ -462,6 +468,19 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
                 }
                 return null
               })()}
+
+              {/* Plus button on hover in timeline area */}
+              {!isDragging && mousePosition.y > 32 && (
+                <div
+                  className="absolute w-6 h-6 bg-[#97e7aa] rounded-full flex items-center justify-center z-30 pointer-events-none opacity-60"
+                  style={{
+                    left: `${mousePosition.x - 12}px`,
+                    top: `${mousePosition.y - 12}px`
+                  }}
+                >
+                  <Plus size={12} className="text-white" />
+                </div>
+              )}
 
               {/* Tasks Area */}
               <div className="relative h-full pt-4 pb-4 overflow-y-auto custom-scrollbar z-10">
