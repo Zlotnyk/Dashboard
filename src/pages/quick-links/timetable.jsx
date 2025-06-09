@@ -38,7 +38,7 @@ function TimetablePage() {
             <div className='bg-[#1a1a1a] rounded-lg p-6 min-h-[600px]'>
               <div className='flex items-center justify-between mb-6'>
                 <h2 className='text-2xl font-[Libre_Baskerville] italic text-white'>
-                  Weekly Timetable
+                  Timetable
                 </h2>
               </div>
 
