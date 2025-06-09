@@ -133,6 +133,9 @@ const BigCalendar = ({ events = [], onAddEvent, onDeleteEvent }) => {
 
   // Prevent scroll to top when opening modal
   const openModal = (day = null, event = null) => {
+    // Store current scroll position
+    const scrollY = window.scrollY
+    
     // Prevent default behavior and stop propagation
     if (day !== null) {
       const selectedDate = new Date(currentYear, currentMonth, day)
@@ -158,16 +161,26 @@ const BigCalendar = ({ events = [], onAddEvent, onDeleteEvent }) => {
       })
     }
     
-    // Store current scroll position
-    const scrollY = window.scrollY
-    
     // Open modal
     setIsModalOpen(true)
     
     // Restore scroll position after a small delay
-    setTimeout(() => {
+    requestAnimationFrame(() => {
       window.scrollTo(0, scrollY)
-    }, 0)
+    })
+  }
+
+  const closeModal = () => {
+    setIsModalOpen(false)
+    setValidationErrors({})
+    setEventForm({
+      title: '',
+      date: '',
+      time: '',
+      location: '',
+      category: 'meeting'
+    })
+    setSelectedEvent(null)
   }
 
   const handlePlusClick = (day, e) => {
@@ -223,23 +236,13 @@ const BigCalendar = ({ events = [], onAddEvent, onDeleteEvent }) => {
       onAddEvent(newEvent)
     }
     
-    setIsModalOpen(false)
-    setValidationErrors({})
-    setEventForm({
-      title: '',
-      date: '',
-      time: '',
-      location: '',
-      category: 'meeting'
-    })
-    setSelectedEvent(null)
+    closeModal()
   }
 
   const handleDeleteEvent = () => {
     if (selectedEvent) {
       onDeleteEvent(selectedEvent.id)
-      setIsModalOpen(false)
-      setSelectedEvent(null)
+      closeModal()
     }
   }
 
@@ -494,9 +497,8 @@ const BigCalendar = ({ events = [], onAddEvent, onDeleteEvent }) => {
       {/* Event Modal - Fixed positioning */}
       <Dialog 
         open={isModalOpen} 
-        onClose={() => setIsModalOpen(false)} 
+        onClose={closeModal} 
         className="relative z-50"
-        static
       >
         <DialogBackdrop 
           className="fixed inset-0 bg-black/50"
@@ -527,7 +529,7 @@ const BigCalendar = ({ events = [], onAddEvent, onDeleteEvent }) => {
                     )}
                   </div>
                   <button
-                    onClick={() => setIsModalOpen(false)}
+                    onClick={closeModal}
                     className="text-gray-400 hover:text-white ml-4"
                   >
                     <X size={24} />
@@ -638,7 +640,7 @@ const BigCalendar = ({ events = [], onAddEvent, onDeleteEvent }) => {
                   )}
                   <div className="flex-1"></div>
                   <button
-                    onClick={() => setIsModalOpen(false)}
+                    onClick={closeModal}
                     className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors text-sm"
                   >
                     Cancel
