@@ -53,7 +53,7 @@ const TaskDrawer = ({ isOpen, task, onSave, onClose, onDelete }) => {
     <Dialog open={isOpen} onClose={onClose} className="relative z-50">
       <DialogBackdrop
         transition
-        className="fixed inset-0 bg-black/25 transition-opacity duration-300 ease-in-out data-[closed]:opacity-0"
+        className="fixed inset-0 bg-black/60 backdrop-blur-sm transition-opacity duration-300 ease-in-out data-[closed]:opacity-0"
       />
 
       <div className="fixed inset-0 overflow-hidden">
@@ -77,13 +77,13 @@ const TaskDrawer = ({ isOpen, task, onSave, onClose, onDelete }) => {
                 </div>
               </TransitionChild>
 
-              <div className="flex h-full flex-col overflow-y-scroll bg-[#1a1a1a] shadow-xl">
-                <div className="px-4 sm:px-6 py-6">
+              <div className="flex h-full flex-col overflow-y-scroll bg-[#1a1a1a] border-l border-gray-700 shadow-2xl">
+                <div className="px-4 sm:px-6 py-6 border-b border-gray-700">
                   <DialogTitle className="text-lg font-semibold text-white">Task Details</DialogTitle>
                 </div>
 
                 <form onSubmit={handleSubmit} className="flex-1 flex flex-col">
-                  <div className="flex-1 px-4 sm:px-6 space-y-6 overflow-y-auto">
+                  <div className="flex-1 px-4 sm:px-6 space-y-6 overflow-y-auto py-6">
                     {/* Title */}
                     <div>
                       <label className="flex items-center gap-2 text-sm font-medium text-gray-300 mb-2">
@@ -94,7 +94,7 @@ const TaskDrawer = ({ isOpen, task, onSave, onClose, onDelete }) => {
                         type="text"
                         value={formData.title}
                         onChange={(e) => handleChange('title', e.target.value)}
-                        className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent"
+                        className="w-full px-3 py-3 bg-transparent border-b-2 border-gray-600 text-white placeholder-gray-400 focus:outline-none focus:ring-0 focus:border-accent transition-colors"
                         placeholder="Enter task title..."
                         required
                       />
@@ -110,7 +110,7 @@ const TaskDrawer = ({ isOpen, task, onSave, onClose, onDelete }) => {
                         value={formData.description}
                         onChange={(e) => handleChange('description', e.target.value)}
                         rows={4}
-                        className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent resize-none"
+                        className="w-full px-3 py-3 bg-transparent border-b-2 border-gray-600 text-white placeholder-gray-400 focus:outline-none focus:ring-0 focus:border-accent transition-colors resize-none"
                         placeholder="Enter task description..."
                       />
                     </div>
@@ -126,7 +126,7 @@ const TaskDrawer = ({ isOpen, task, onSave, onClose, onDelete }) => {
                           type="date"
                           value={formData.start}
                           onChange={(e) => handleChange('start', e.target.value)}
-                          className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent"
+                          className="w-full px-3 py-3 bg-transparent border-b-2 border-gray-600 text-white focus:outline-none focus:ring-0 focus:border-accent transition-colors"
                           required
                         />
                       </div>
@@ -140,7 +140,7 @@ const TaskDrawer = ({ isOpen, task, onSave, onClose, onDelete }) => {
                           value={formData.end}
                           onChange={(e) => handleChange('end', e.target.value)}
                           min={formData.start}
-                          className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent"
+                          className="w-full px-3 py-3 bg-transparent border-b-2 border-gray-600 text-white focus:outline-none focus:ring-0 focus:border-accent transition-colors"
                           required
                         />
                       </div>
@@ -155,7 +155,7 @@ const TaskDrawer = ({ isOpen, task, onSave, onClose, onDelete }) => {
                       <select
                         value={formData.status}
                         onChange={(e) => handleChange('status', e.target.value)}
-                        className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent"
+                        className="w-full px-3 py-3 bg-[#2a2a2a] border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent"
                       >
                         <option value="Not started">Not started</option>
                         <option value="In progress">In progress</option>
@@ -174,10 +174,10 @@ const TaskDrawer = ({ isOpen, task, onSave, onClose, onDelete }) => {
                         <button
                           type="button"
                           onClick={() => handleChange('priority', 'normal')}
-                          className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                          className={`px-3 py-3 rounded-lg text-sm font-medium transition-colors ${
                             formData.priority === 'normal'
                               ? 'bg-accent text-white'
-                              : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
+                              : 'bg-[#2a2a2a] text-gray-300 hover:bg-gray-700'
                           }`}
                         >
                           Normal
@@ -185,10 +185,10 @@ const TaskDrawer = ({ isOpen, task, onSave, onClose, onDelete }) => {
                         <button
                           type="button"
                           onClick={() => handleChange('priority', 'urgent')}
-                          className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-1 ${
+                          className={`px-3 py-3 rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-1 ${
                             formData.priority === 'urgent'
                               ? 'bg-[#ff6b35] text-white'
-                              : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
+                              : 'bg-[#2a2a2a] text-gray-300 hover:bg-gray-700'
                           }`}
                         >
                           🔥 Urgent
