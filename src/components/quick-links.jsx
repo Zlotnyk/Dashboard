@@ -6,62 +6,65 @@ const QuickLinks = () => {
     {
       title: 'Course',
       items: [
-        { name: 'Timetable', icon: Clock },
-        { name: 'Course Materials', icon: BookOpen },
-        { name: 'Study Checklist', icon: Target }
+        { name: 'Timetable', icon: Clock, href: '#timetable' },
+        { name: 'Course Materials', icon: BookOpen, href: '#materials' },
+        { name: 'Study Checklist', icon: Target, href: '#checklist' }
       ]
     },
     {
       title: 'Assignments',
       items: [
-        { name: 'Assignment Planner', icon: FileText },
-        { name: 'Study Notebook', icon: BookOpen },
-        { name: 'Important Concepts', icon: Target }
+        { name: 'Assignment Planner', icon: FileText, href: '#assignment-planner' },
+        { name: 'Study Notebook', icon: BookOpen, href: '#notebook' },
+        { name: 'Important Concepts', icon: Target, href: '#concepts' }
       ]
     },
     {
       title: 'Projects',
       items: [
-        { name: 'Project Planner', icon: Target },
-        { name: 'Group Projects', icon: Users }
+        { name: 'Project Planner', icon: Target, href: '#project-planner' },
+        { name: 'Group Projects', icon: Users, href: '#group-projects' }
       ]
     },
     {
       title: 'Writing',
       items: [
-        { name: 'Essay Planner', icon: PenTool }
+        { name: 'Essay Planner', icon: PenTool, href: '#essay-planner' }
       ]
     },
     {
       title: 'Exams',
       items: [
-        { name: 'Exam Preparation', icon: Target },
-        { name: 'Exam Reflection', icon: FileText }
+        { name: 'Exam Preparation', icon: Target, href: '#exam-prep' },
+        { name: 'Exam Reflection', icon: FileText, href: '#exam-reflection' }
       ]
     }
   ]
 
   return (
-    <div className="w-full bg-[#1a1a1a] rounded-lg p-4">
+    <div className="w-full bg-[#1a1a1a] rounded-lg p-4 pl-6">
       <div className="space-y-6">
         {links.map((section, sectionIndex) => (
           <div key={sectionIndex}>
-            <h3 className="text-[#d4af37] text-sm font-medium mb-3 font-[Libre_Baskerville] italic">
+            <h3 className="text-white text-lg font-medium mb-3 font-[Libre_Baskerville]">
               {section.title}
             </h3>
+            {/* Horizontal line after each title */}
+            <div className="w-full h-px bg-gray-700 mb-3"></div>
             <div className="space-y-2">
               {section.items.map((item, itemIndex) => {
                 const IconComponent = item.icon
                 return (
-                  <div 
+                  <a
                     key={itemIndex}
+                    href={item.href}
                     className="flex items-center gap-3 p-2 hover:bg-gray-800/50 rounded cursor-pointer transition-colors group"
                   >
                     <IconComponent size={16} className="text-gray-400 group-hover:text-[#97e7aa]" />
                     <span className="text-gray-300 text-sm group-hover:text-white">
                       {item.name}
                     </span>
-                  </div>
+                  </a>
                 )
               })}
             </div>
