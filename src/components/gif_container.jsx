@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react'
-import { Settings, Move, Check, X } from 'lucide-react'
+import { Settings, Move, Check, X, RotateCcw } from 'lucide-react'
 import '../App.css'
 
 const GifContainer = () => {
@@ -65,6 +65,9 @@ const GifContainer = () => {
 			x: e.clientX - rect.left - imagePosition.x,
 			y: e.clientY - rect.top - imagePosition.y
 		})
+		
+		// Prevent default to avoid image dragging
+		e.preventDefault()
 	}
 
 	const handleMouseMove = (e) => {
@@ -74,16 +77,8 @@ const GifContainer = () => {
 		const newX = e.clientX - rect.left - dragStart.x
 		const newY = e.clientY - rect.top - dragStart.y
 
-		// Constrain movement within container bounds
-		const containerWidth = rect.width
-		const containerHeight = rect.height
-		const imageWidth = imageRef.current?.offsetWidth || 0
-		const imageHeight = imageRef.current?.offsetHeight || 0
-
-		const constrainedX = Math.max(-imageWidth / 2, Math.min(containerWidth - imageWidth / 2, newX))
-		const constrainedY = Math.max(-imageHeight / 2, Math.min(containerHeight - imageHeight / 2, newY))
-
-		setImagePosition({ x: constrainedX, y: constrainedY })
+		// Allow movement beyond container bounds for better positioning
+		setImagePosition({ x: newX, y: newY })
 	}
 
 	const handleMouseUp = () => {
@@ -123,59 +118,77 @@ const GifContainer = () => {
 		}
 	}, [isDragging, dragStart, isSettingsMode])
 
+	// Change cursor when in settings mode
+	useEffect(() => {
+		if (isSettingsMode) {
+			document.body.style.cursor = 'move'
+		} else {
+			document.body.style.cursor = 'default'
+		}
+
+		return () => {
+			document.body.style.cursor = 'default'
+		}
+	}, [isSettingsMode])
+
 	return (
 		<div 
 			ref={containerRef}
 			className='gif-container relative overflow-hidden'
 		>
-			{/* Settings Button */}
+			{/* Settings Button - Smaller */}
 			<button
 				onClick={handleSettingsClick}
-				className={`absolute top-4 right-4 z-20 p-2 rounded-lg transition-all duration-200 ${
+				className={`absolute top-3 right-3 z-20 p-1.5 rounded-md transition-all duration-200 ${
 					isSettingsMode 
-						? 'bg-accent text-white shadow-lg' 
-						: 'bg-black/50 text-white/70 hover:bg-black/70 hover:text-white'
+						? 'bg-accent text-white shadow-lg scale-110' 
+						: 'bg-black/40 text-white/60 hover:bg-black/60 hover:text-white hover:scale-105'
 				}`}
 				title="Adjust image position"
 			>
-				<Settings size={20} />
+				<Settings size={14} />
 			</button>
 
 			{/* Settings Controls */}
 			{isSettingsMode && (
-				<div className="absolute top-4 left-4 z-20 bg-black/80 backdrop-blur-sm rounded-lg p-3 flex items-center gap-2">
-					<div className="flex items-center gap-1 text-white text-sm">
-						<Move size={16} />
-						<span>Drag to adjust</span>
+				<div className="absolute top-3 left-3 z-20 bg-black/90 backdrop-blur-sm rounded-lg p-2 flex items-center gap-2 shadow-lg">
+					<div className="flex items-center gap-1 text-white text-xs">
+						<Move size={12} />
+						<span>Drag image</span>
 					</div>
-					<div className="w-px h-6 bg-gray-600"></div>
+					<div className="w-px h-4 bg-gray-600"></div>
 					<button
 						onClick={handleResetPosition}
-						className="px-3 py-1 bg-gray-600 text-white rounded text-sm hover:bg-gray-500 transition-colors"
+						className="p-1 text-gray-400 hover:text-white transition-colors"
+						title="Reset position"
 					>
-						Reset
+						<RotateCcw size={12} />
 					</button>
 					<button
 						onClick={handleCancelSettings}
-						className="p-1 text-gray-400 hover:text-white transition-colors"
+						className="p-1 text-red-400 hover:text-red-300 transition-colors"
 						title="Cancel"
 					>
-						<X size={16} />
+						<X size={12} />
 					</button>
 					<button
 						onClick={handleSavePosition}
 						className="p-1 text-green-400 hover:text-green-300 transition-colors"
 						title="Save position"
 					>
-						<Check size={16} />
+						<Check size={12} />
 					</button>
 				</div>
 			)}
 
 			{/* Settings Mode Overlay */}
 			{isSettingsMode && (
-				<div className="absolute inset-0 z-10 bg-black/20 backdrop-blur-[1px]">
-					<div className="absolute inset-0 border-2 border-dashed border-accent/50"></div>
+				<div className="absolute inset-0 z-10 bg-black/10">
+					<div className="absolute inset-2 border-2 border-dashed border-accent/60 rounded-lg"></div>
+					{/* Helper text */}
+					<div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-black/80 text-white text-sm px-3 py-1 rounded-full">
+						Drag the image to reposition
+					</div>
 				</div>
 			)}
 
@@ -187,9 +200,9 @@ const GifContainer = () => {
 					onError={handleImageError}
 					onLoad={handleImageLoad}
 					onMouseDown={handleMouseDown}
-					className={`w-full h-full object-cover transition-all duration-200 ${
+					className={`w-full h-full object-cover transition-all duration-200 select-none ${
 						isSettingsMode 
-							? 'cursor-move filter brightness-90' 
+							? 'filter brightness-95 cursor-move' 
 							: 'cursor-default'
 					}`}
 					style={{ 
