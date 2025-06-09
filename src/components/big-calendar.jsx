@@ -186,7 +186,9 @@ const BigCalendar = ({ events = [], onAddEvent, onDeleteEvent }) => {
           // Update the display title to include age
           displayTitle: `${event.title}${ageText}`,
           // Keep the original date for reference but mark as current year occurrence
-          currentYearDate: dayDate
+          currentYearDate: dayDate,
+          // Create unique ID for this year's occurrence
+          yearlyId: `${event.id}-${currentYear}`
         }
       })
     
@@ -281,7 +283,7 @@ const BigCalendar = ({ events = [], onAddEvent, onDeleteEvent }) => {
                     
                     return (
                       <div 
-                        key={`${event.id}-${day}`}
+                        key={event.yearlyId || event.id}
                         className={`w-full h-10 rounded text-xs text-white px-2 flex items-center truncate cursor-pointer transition-colors ${
                           isBirthday 
                             ? 'bg-pink-600 hover:bg-pink-500' 

@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react'
-import { Plus, Calendar, Cake, X } from 'lucide-react'
+import { Plus, Calendar, Cake, X, Settings, Trash2, Edit } from 'lucide-react'
 import { Dialog, DialogBackdrop, DialogPanel, DialogTitle } from '@headlessui/react'
 
 const UpcomingBirthdays = ({ events = [] }) => {
   const [birthdays, setBirthdays] = useState([])
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false)
+  const [selectedBirthday, setSelectedBirthday] = useState(null)
   const [birthdayForm, setBirthdayForm] = useState({
     name: '',
     birthDate: ''
@@ -84,35 +86,68 @@ const UpcomingBirthdays = ({ events = [] }) => {
   }, [events])
 
   const handleAddBirthday = () => {
+    setSelectedBirthday(null)
     setBirthdayForm({ name: '', birthDate: '' })
+    setIsModalOpen(true)
+  }
+
+  const handleEditBirthday = (birthday) => {
+    setSelectedBirthday(birthday)
+    setBirthdayForm({
+      name: birthday.name,
+      birthDate: typeof birthday.birthDate === 'string' ? birthday.birthDate : birthday.birthDate.toISOString().split('T')[0]
+    })
     setIsModalOpen(true)
   }
 
   const handleSaveBirthday = () => {
     if (!birthdayForm.name.trim() || !birthdayForm.birthDate) return
 
-    const newBirthday = {
-      id: crypto.randomUUID(),
-      name: birthdayForm.name,
-      birthDate: birthdayForm.birthDate
-    }
-
-    // Save to localStorage
     const savedBirthdays = JSON.parse(localStorage.getItem('manualBirthdays') || '[]')
-    const updatedBirthdays = [...savedBirthdays, newBirthday]
-    localStorage.setItem('manualBirthdays', JSON.stringify(updatedBirthdays))
+
+    if (selectedBirthday) {
+      // Update existing birthday
+      const updatedBirthdays = savedBirthdays.map(birthday => 
+        birthday.id === selectedBirthday.id 
+          ? { ...birthday, name: birthdayForm.name, birthDate: birthdayForm.birthDate }
+          : birthday
+      )
+      localStorage.setItem('manualBirthdays', JSON.stringify(updatedBirthdays))
+    } else {
+      // Add new birthday
+      const newBirthday = {
+        id: crypto.randomUUID(),
+        name: birthdayForm.name,
+        birthDate: birthdayForm.birthDate
+      }
+      const updatedBirthdays = [...savedBirthdays, newBirthday]
+      localStorage.setItem('manualBirthdays', JSON.stringify(updatedBirthdays))
+    }
 
     setIsModalOpen(false)
     setBirthdayForm({ name: '', birthDate: '' })
+    setSelectedBirthday(null)
 
     // Trigger re-calculation
-    const birthdayInfo = calculateBirthdayInfo(newBirthday.birthDate)
+    const birthdayInfo = calculateBirthdayInfo(birthdayForm.birthDate)
     if (birthdayInfo.daysUntil <= 30) {
-      setBirthdays(prev => [...prev, {
-        ...newBirthday,
-        source: 'manual',
-        ...birthdayInfo
-      }].sort((a, b) => a.daysUntil - b.daysUntil))
+      if (selectedBirthday) {
+        // Update existing birthday in state
+        setBirthdays(prev => prev.map(birthday => 
+          birthday.id === selectedBirthday.id 
+            ? { ...birthday, name: birthdayForm.name, birthDate: birthdayForm.birthDate, ...birthdayInfo }
+            : birthday
+        ).sort((a, b) => a.daysUntil - b.daysUntil))
+      } else {
+        // Add new birthday to state
+        setBirthdays(prev => [...prev, {
+          id: crypto.randomUUID(),
+          name: birthdayForm.name,
+          birthDate: birthdayForm.birthDate,
+          source: 'manual',
+          ...birthdayInfo
+        }].sort((a, b) => a.daysUntil - b.daysUntil))
+      }
     }
   }
 
@@ -123,6 +158,12 @@ const UpcomingBirthdays = ({ events = [] }) => {
       localStorage.setItem('manualBirthdays', JSON.stringify(updatedBirthdays))
       setBirthdays(prev => prev.filter(b => b.id !== birthday.id))
     }
+  }
+
+  const handleDeleteAllBirthdays = () => {
+    localStorage.removeItem('manualBirthdays')
+    setBirthdays(prev => prev.filter(birthday => birthday.source === 'calendar'))
+    setIsSettingsOpen(false)
   }
 
   const formatDaysUntil = (days) => {
@@ -139,6 +180,13 @@ const UpcomingBirthdays = ({ events = [] }) => {
           <h3 className="text-lg font-[Libre_Baskerville] italic text-white">
             Upcoming Birthdays
           </h3>
+          <button
+            onClick={() => setIsSettingsOpen(true)}
+            className="p-2 text-gray-400 hover:text-white transition-colors"
+            title="Settings"
+          >
+            <Settings size={16} />
+          </button>
         </div>
 
         {/* Horizontal line under header */}
@@ -176,12 +224,22 @@ const UpcomingBirthdays = ({ events = [] }) => {
                   </div>
                   
                   {birthday.source === 'manual' && (
-                    <button
-                      onClick={() => handleDeleteBirthday(birthday)}
-                      className="opacity-0 group-hover:opacity-100 p-1 hover:bg-red-600 rounded transition-all"
-                    >
-                      <X size={12} className="text-white" />
-                    </button>
+                    <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <button
+                        onClick={() => handleEditBirthday(birthday)}
+                        className="p-1 hover:bg-blue-600 rounded transition-all"
+                        title="Edit"
+                      >
+                        <Edit size={12} className="text-white" />
+                      </button>
+                      <button
+                        onClick={() => handleDeleteBirthday(birthday)}
+                        className="p-1 hover:bg-red-600 rounded transition-all"
+                        title="Delete"
+                      >
+                        <X size={12} className="text-white" />
+                      </button>
+                    </div>
                   )}
                 </div>
               </div>
@@ -199,7 +257,7 @@ const UpcomingBirthdays = ({ events = [] }) => {
         </div>
       </div>
 
-      {/* Add Birthday Modal */}
+      {/* Add/Edit Birthday Modal */}
       <Dialog open={isModalOpen} onClose={setIsModalOpen} className="relative z-50">
         <DialogBackdrop 
           transition
@@ -215,7 +273,7 @@ const UpcomingBirthdays = ({ events = [] }) => {
               <div className="bg-[#1a1a1a] px-6 pt-6 pb-4">
                 <div className="flex items-center justify-between mb-6">
                   <DialogTitle className="text-xl font-semibold text-white">
-                    Add Birthday
+                    {selectedBirthday ? 'Edit Birthday' : 'Add Birthday'}
                   </DialogTitle>
                   <button
                     onClick={() => setIsModalOpen(false)}
@@ -278,7 +336,104 @@ const UpcomingBirthdays = ({ events = [] }) => {
                     onClick={handleSaveBirthday}
                     className="px-4 py-2 bg-accent text-white rounded-lg hover:bg-accent-80 transition-colors text-sm"
                   >
-                    Add Birthday
+                    {selectedBirthday ? 'Update' : 'Add'} Birthday
+                  </button>
+                </div>
+              </div>
+            </DialogPanel>
+          </div>
+        </div>
+      </Dialog>
+
+      {/* Settings Modal */}
+      <Dialog open={isSettingsOpen} onClose={setIsSettingsOpen} className="relative z-50">
+        <DialogBackdrop 
+          transition
+          className="fixed inset-0 bg-black/50 transition-opacity data-closed:opacity-0 data-enter:duration-300 data-enter:ease-out data-leave:duration-200 data-leave:ease-in"
+        />
+        
+        <div className="fixed inset-0 z-10 w-screen overflow-y-auto">
+          <div className="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+            <DialogPanel 
+              transition
+              className="relative transform overflow-hidden rounded-lg bg-[#1a1a1a] text-left shadow-xl transition-all data-closed:translate-y-4 data-closed:opacity-0 data-enter:duration-300 data-enter:ease-out data-leave:duration-200 data-leave:ease-in sm:my-8 sm:w-full sm:max-w-md data-closed:sm:translate-y-0 data-closed:sm:scale-95"
+            >
+              <div className="bg-[#1a1a1a] px-6 pt-6 pb-4">
+                <div className="flex items-center justify-between mb-6">
+                  <DialogTitle className="text-xl font-semibold text-white">
+                    Birthday Settings
+                  </DialogTitle>
+                  <button
+                    onClick={() => setIsSettingsOpen(false)}
+                    className="text-gray-400 hover:text-white"
+                  >
+                    <X size={24} />
+                  </button>
+                </div>
+
+                <div className="space-y-6">
+                  {/* Statistics */}
+                  <div className="bg-gray-800/50 rounded-lg p-4">
+                    <h4 className="text-white font-medium mb-3">Statistics</h4>
+                    <div className="space-y-2 text-sm text-gray-300">
+                      <div className="flex justify-between">
+                        <span>Total birthdays:</span>
+                        <span>{birthdays.length}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>From calendar:</span>
+                        <span>{birthdays.filter(b => b.source === 'calendar').length}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>Manual entries:</span>
+                        <span>{birthdays.filter(b => b.source === 'manual').length}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>This week:</span>
+                        <span>{birthdays.filter(b => b.daysUntil <= 7).length}</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Actions */}
+                  <div className="space-y-3">
+                    <h4 className="text-white font-medium">Actions</h4>
+                    
+                    <button
+                      onClick={handleDeleteAllBirthdays}
+                      className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                    >
+                      <Trash2 size={16} />
+                      Delete All Manual Birthdays
+                    </button>
+                    
+                    <div className="text-xs text-gray-400 text-center">
+                      This will only delete manually added birthdays, not calendar events
+                    </div>
+                  </div>
+
+                  {/* Info */}
+                  <div className="bg-blue-900/20 border border-blue-700/30 rounded-lg p-4">
+                    <div className="text-sm text-gray-300">
+                      <div className="font-medium text-blue-400 mb-2">How it works:</div>
+                      <ul className="space-y-1 text-xs">
+                        <li>• Birthdays from calendar events automatically appear here</li>
+                        <li>• Manual birthdays are stored locally on your device</li>
+                        <li>• Only birthdays within 30 days are shown</li>
+                        <li>• Calendar birthdays repeat yearly automatically</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-[#1a1a1a] px-6 py-4 border-t border-gray-700">
+                <div className="flex justify-end">
+                  <button
+                    onClick={() => setIsSettingsOpen(false)}
+                    className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors text-sm"
+                  >
+                    Close
                   </button>
                 </div>
               </div>
