@@ -78,7 +78,7 @@ export default function TodoList({
 						To-Do List
 					</h2>
 					<button
-						className='flex items-center gap-2 px-4 py-2 bg-[#97e7aa] text-white rounded-lg hover:bg-[#75b384] text-base'
+						className='flex items-center gap-2 px-4 py-2 bg-accent text-white rounded-lg hover:bg-accent-80 text-base'
 						onClick={addTodo}
 					>
 						<Plus size={20} />

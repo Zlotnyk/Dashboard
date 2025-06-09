@@ -23,57 +23,9 @@ const Navbar = () => {
     { name: 'Pink', value: '#ec4899' }
   ]
 
-  // Apply accent color changes more selectively
+  // Only set the CSS variable, no dynamic style injection
   useEffect(() => {
     document.documentElement.style.setProperty('--accent-color', accentColor)
-    
-    // Update specific accent color elements
-    const style = document.createElement('style')
-    style.id = 'global-accent-style'
-    
-    // Remove existing style if it exists
-    const existingStyle = document.getElementById('global-accent-style')
-    if (existingStyle) {
-      document.head.removeChild(existingStyle)
-    }
-    
-    style.textContent = `
-      /* Flip clock accent color */
-      .flip-unit-container { background-color: ${accentColor} !important; }
-      .static-card { background-color: ${accentColor} !important; }
-      .animated-card { background-color: ${accentColor} !important; }
-      
-      /* Wavy lines accent color */
-      svg path[stroke="hsl(134, 63%, 75%)"] { stroke: ${accentColor} !important; }
-      
-      /* Quote border */
-      .w-0\\.5.h-8.bg-\\[\\#97e7aa\\] { background-color: ${accentColor} !important; }
-      
-      /* Navigation links hover */
-      .hover\\:text-\\[\\#97e7aa\\]:hover { color: ${accentColor} !important; }
-      
-      /* Navigation icons */
-      .text-\\[\\#97e7aa\\] { color: ${accentColor} !important; }
-      
-      /* Today markers in calendars */
-      .bg-\\[\\#97e7aa\\] { background-color: ${accentColor} !important; }
-      
-      /* Primary buttons */
-      .bg-\\[\\#97e7aa\\] { background-color: ${accentColor} !important; }
-      .hover\\:bg-\\[\\#75b384\\]:hover { background-color: ${accentColor}dd !important; }
-      
-      /* Custom scrollbar */
-      .custom-scrollbar::-webkit-scrollbar-thumb { background: ${accentColor} !important; }
-      .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: ${accentColor}cc !important; }
-      .custom-scrollbar { scrollbar-color: ${accentColor} transparent !important; }
-      
-      /* Focus rings */
-      .focus\\:ring-\\[\\#97e7aa\\]:focus { --tw-ring-color: ${accentColor} !important; }
-      
-      /* Task timeline elements */
-      .ring-\\[\\#97e7aa\\] { --tw-ring-color: ${accentColor} !important; }
-    `
-    document.head.appendChild(style)
   }, [accentColor])
 
   const handleSaveSettings = () => {
@@ -114,7 +66,7 @@ const Navbar = () => {
           <button 
             onClick={() => setIsGetStartedOpen(true)}
             className="px-4 py-2 text-white rounded-lg hover:opacity-80 transition-colors text-sm font-medium"
-            style={{ backgroundColor: accentColor }}
+            style={{ backgroundColor: 'var(--accent-color)' }}
           >
             Get started
           </button>
@@ -165,7 +117,7 @@ const Navbar = () => {
                           value="dark" 
                           checked={true}
                           readOnly
-                          style={{ accentColor }}
+                          style={{ accentColor: 'var(--accent-color)' }}
                         />
                         <span className="text-gray-300">Dark</span>
                       </label>
@@ -176,7 +128,7 @@ const Navbar = () => {
                           value="light" 
                           disabled
                           className="opacity-50"
-                          style={{ accentColor }}
+                          style={{ accentColor: 'var(--accent-color)' }}
                         />
                         <span className="text-gray-500">Light (in development)</span>
                       </label>
@@ -220,7 +172,7 @@ const Navbar = () => {
                             ...prev,
                             examReminders: e.target.checked
                           }))}
-                          style={{ accentColor }}
+                          style={{ accentColor: 'var(--accent-color)' }}
                         />
                       </label>
                       <label className="flex items-center justify-between">
@@ -232,7 +184,7 @@ const Navbar = () => {
                             ...prev,
                             assignmentReminders: e.target.checked
                           }))}
-                          style={{ accentColor }}
+                          style={{ accentColor: 'var(--accent-color)' }}
                         />
                       </label>
                     </div>
@@ -244,8 +196,7 @@ const Navbar = () => {
                     <select 
                       value={language}
                       onChange={(e) => setLanguage(e.target.value)}
-                      className="w-full bg-gray-800 border border-gray-600 rounded text-white p-2 focus:outline-none focus:ring-2"
-                      style={{ '--tw-ring-color': accentColor }}
+                      className="w-full bg-gray-800 border border-gray-600 rounded text-white p-2 focus:outline-none focus:ring-2 focus:ring-[var(--accent-color)]"
                     >
                       <option value="English">English</option>
                       <option value="Ukrainian">Ukrainian (в розробці)</option>
@@ -265,7 +216,7 @@ const Navbar = () => {
                   <button
                     onClick={handleSaveSettings}
                     className="px-4 py-2 text-white rounded-lg hover:opacity-80 transition-colors text-sm"
-                    style={{ backgroundColor: accentColor }}
+                    style={{ backgroundColor: 'var(--accent-color)' }}
                   >
                     Save
                   </button>
@@ -307,8 +258,7 @@ const Navbar = () => {
                     <label className="block text-sm text-gray-300 mb-2">Email</label>
                     <input
                       type="email"
-                      className="w-full px-3 py-2 bg-transparent text-white focus:outline-none focus:ring-2 border-b border-gray-600"
-                      style={{ '--tw-ring-color': accentColor }}
+                      className="w-full px-3 py-2 bg-transparent text-white focus:outline-none focus:ring-2 focus:ring-[var(--accent-color)] border-b border-gray-600"
                       placeholder="Enter your email"
                     />
                   </div>
@@ -317,15 +267,14 @@ const Navbar = () => {
                     <label className="block text-sm text-gray-300 mb-2">Password</label>
                     <input
                       type="password"
-                      className="w-full px-3 py-2 bg-transparent text-white focus:outline-none focus:ring-2 border-b border-gray-600"
-                      style={{ '--tw-ring-color': accentColor }}
+                      className="w-full px-3 py-2 bg-transparent text-white focus:outline-none focus:ring-2 focus:ring-[var(--accent-color)] border-b border-gray-600"
                       placeholder="Enter your password"
                     />
                   </div>
 
                   <button 
                     className="w-full py-2 text-white rounded-lg hover:opacity-80 transition-colors font-medium"
-                    style={{ backgroundColor: accentColor }}
+                    style={{ backgroundColor: 'var(--accent-color)' }}
                   >
                     Sign In
                   </button>
@@ -356,7 +305,7 @@ const Navbar = () => {
                         setIsGetStartedOpen(true)
                       }}
                       className="hover:underline"
-                      style={{ color: accentColor }}
+                      style={{ color: 'var(--accent-color)' }}
                     >
                       Sign up
                     </button>
@@ -399,8 +348,7 @@ const Navbar = () => {
                     <label className="block text-sm text-gray-300 mb-2">Full Name</label>
                     <input
                       type="text"
-                      className="w-full px-3 py-2 bg-transparent text-white focus:outline-none focus:ring-2 border-b border-gray-600"
-                      style={{ '--tw-ring-color': accentColor }}
+                      className="w-full px-3 py-2 bg-transparent text-white focus:outline-none focus:ring-2 focus:ring-[var(--accent-color)] border-b border-gray-600"
                       placeholder="Enter your full name"
                     />
                   </div>
@@ -409,8 +357,7 @@ const Navbar = () => {
                     <label className="block text-sm text-gray-300 mb-2">Email</label>
                     <input
                       type="email"
-                      className="w-full px-3 py-2 bg-transparent text-white focus:outline-none focus:ring-2 border-b border-gray-600"
-                      style={{ '--tw-ring-color': accentColor }}
+                      className="w-full px-3 py-2 bg-transparent text-white focus:outline-none focus:ring-2 focus:ring-[var(--accent-color)] border-b border-gray-600"
                       placeholder="Enter your email"
                     />
                   </div>
@@ -419,8 +366,7 @@ const Navbar = () => {
                     <label className="block text-sm text-gray-300 mb-2">Password</label>
                     <input
                       type="password"
-                      className="w-full px-3 py-2 bg-transparent text-white focus:outline-none focus:ring-2 border-b border-gray-600"
-                      style={{ '--tw-ring-color': accentColor }}
+                      className="w-full px-3 py-2 bg-transparent text-white focus:outline-none focus:ring-2 focus:ring-[var(--accent-color)] border-b border-gray-600"
                       placeholder="Create a password"
                     />
                   </div>
@@ -429,15 +375,14 @@ const Navbar = () => {
                     <label className="block text-sm text-gray-300 mb-2">Confirm Password</label>
                     <input
                       type="password"
-                      className="w-full px-3 py-2 bg-transparent text-white focus:outline-none focus:ring-2 border-b border-gray-600"
-                      style={{ '--tw-ring-color': accentColor }}
+                      className="w-full px-3 py-2 bg-transparent text-white focus:outline-none focus:ring-2 focus:ring-[var(--accent-color)] border-b border-gray-600"
                       placeholder="Confirm your password"
                     />
                   </div>
 
                   <button 
                     className="w-full py-2 text-white rounded-lg hover:opacity-80 transition-colors font-medium"
-                    style={{ backgroundColor: accentColor }}
+                    style={{ backgroundColor: 'var(--accent-color)' }}
                   >
                     Create Account
                   </button>
@@ -468,7 +413,7 @@ const Navbar = () => {
                         setIsSignInOpen(true)
                       }}
                       className="hover:underline"
-                      style={{ color: accentColor }}
+                      style={{ color: 'var(--accent-color)' }}
                     >
                       Sign in
                     </button>
