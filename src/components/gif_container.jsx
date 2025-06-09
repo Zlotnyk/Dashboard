@@ -66,10 +66,9 @@ const GifContainer = () => {
 		if (isLocked) return
 		
 		setIsDragging(true)
-		const rect = containerRef.current.getBoundingClientRect()
 		setDragStart({
-			x: e.clientX - rect.left - imagePosition.x,
-			y: e.clientY - rect.top - imagePosition.y
+			x: e.clientX - imagePosition.x,
+			y: e.clientY - imagePosition.y
 		})
 		
 		// Prevent default to avoid image dragging
@@ -79,9 +78,8 @@ const GifContainer = () => {
 	const handleMouseMove = (e) => {
 		if (!isDragging || isLocked) return
 
-		const rect = containerRef.current.getBoundingClientRect()
-		const newX = e.clientX - rect.left - dragStart.x
-		const newY = e.clientY - rect.top - dragStart.y
+		const newX = e.clientX - dragStart.x
+		const newY = e.clientY - dragStart.y
 
 		setImagePosition({ x: newX, y: newY })
 	}
@@ -129,7 +127,7 @@ const GifContainer = () => {
 					onError={handleImageError}
 					onLoad={handleImageLoad}
 					onMouseDown={handleMouseDown}
-					className={`w-full h-full object-cover transition-all duration-200 select-none ${
+					className={`absolute top-0 left-0 min-w-full min-h-full object-cover transition-all duration-200 select-none ${
 						isLocked 
 							? 'cursor-default' 
 							: 'cursor-move'
