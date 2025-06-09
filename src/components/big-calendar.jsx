@@ -235,7 +235,7 @@ const BigCalendar = ({ events = [], onAddEvent, onDeleteEvent }) => {
                   {dayEvents.map(event => (
                     <div 
                       key={event.id}
-                      className="w-full h-7 bg-gray-600 rounded text-xs text-white px-2 flex items-center truncate cursor-pointer hover:bg-gray-500"
+                      className="w-full h-8 bg-gray-600 rounded text-xs text-white px-2 flex items-center truncate cursor-pointer hover:bg-gray-500"
                       title={`${event.title} ${event.time ? `at ${event.time}` : ''}`}
                       onClick={(e) => handleEventClick(event, e)}
                     >
@@ -260,7 +260,7 @@ const BigCalendar = ({ events = [], onAddEvent, onDeleteEvent }) => {
       <Dialog open={isModalOpen} onClose={setIsModalOpen} className="relative z-50">
         <DialogBackdrop 
           transition
-          className="fixed inset-0 bg-gray-500/75 transition-opacity data-closed:opacity-0 data-enter:duration-300 data-enter:ease-out data-leave:duration-200 data-leave:ease-in"
+          className="fixed inset-0 bg-transparent transition-opacity data-closed:opacity-0 data-enter:duration-300 data-enter:ease-out data-leave:duration-200 data-leave:ease-in"
         />
         
         <div className="fixed inset-0 z-10 w-screen overflow-y-auto">
@@ -271,12 +271,16 @@ const BigCalendar = ({ events = [], onAddEvent, onDeleteEvent }) => {
             >
               <div className="bg-[#1a1a1a] px-6 pt-6 pb-4">
                 <div className="flex items-center justify-between mb-8">
-                  <DialogTitle className="text-2xl font-medium text-white">
-                    {eventForm.title}
-                  </DialogTitle>
+                  <input
+                    type="text"
+                    value={eventForm.title}
+                    onChange={(e) => setEventForm(prev => ({ ...prev, title: e.target.value }))}
+                    className="text-2xl font-medium text-white bg-transparent border-none outline-none flex-1"
+                    placeholder="New page"
+                  />
                   <button
                     onClick={() => setIsModalOpen(false)}
-                    className="text-gray-400 hover:text-white"
+                    className="text-gray-400 hover:text-white ml-4"
                   >
                     <X size={24} />
                   </button>
@@ -285,14 +289,14 @@ const BigCalendar = ({ events = [], onAddEvent, onDeleteEvent }) => {
                 <div className="space-y-6">
                   {/* Date Field */}
                   <div className="flex items-center gap-4">
-                    <Calendar size={20} className="text-gray-400 flex-shrink-0" />
+                    <Calendar size={20} className="text-gray-400 flex-shrink-0 cursor-pointer" />
                     <div className="flex-1">
                       <div className="text-sm text-gray-400 mb-1">Date</div>
                       <input
                         type="date"
                         value={eventForm.date}
                         onChange={(e) => setEventForm(prev => ({ ...prev, date: e.target.value }))}
-                        className="w-full bg-transparent text-white text-base border-none outline-none"
+                        className="w-full bg-transparent text-white text-base border-none outline-none cursor-pointer"
                       />
                     </div>
                   </div>
@@ -314,7 +318,7 @@ const BigCalendar = ({ events = [], onAddEvent, onDeleteEvent }) => {
 
                   {/* Time Field */}
                   <div className="flex items-center gap-4">
-                    <Clock size={20} className="text-gray-400 flex-shrink-0" />
+                    <Clock size={20} className="text-gray-400 flex-shrink-0 cursor-pointer" />
                     <div className="flex-1">
                       <div className="text-sm text-gray-400 mb-1">Time</div>
                       <input
@@ -322,16 +326,10 @@ const BigCalendar = ({ events = [], onAddEvent, onDeleteEvent }) => {
                         value={eventForm.time}
                         onChange={(e) => setEventForm(prev => ({ ...prev, time: e.target.value }))}
                         placeholder="Empty"
-                        className="w-full bg-transparent text-white text-base border-none outline-none placeholder-gray-500"
+                        className="w-full bg-transparent text-white text-base border-none outline-none placeholder-gray-500 cursor-pointer"
                       />
                     </div>
                   </div>
-
-                  {/* Add a property button */}
-                  <button className="flex items-center gap-2 text-gray-400 hover:text-white text-sm">
-                    <Plus size={16} />
-                    Add a property
-                  </button>
                 </div>
               </div>
 
@@ -364,7 +362,7 @@ const BigCalendar = ({ events = [], onAddEvent, onDeleteEvent }) => {
             </DialogPanel>
           </div>
         </div>
-      </Dialog>
+      </div>
     </>
   )
 }
