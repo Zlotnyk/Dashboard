@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Plus, Calendar, MapPin, Clock, X, Edit, Trash2, Plane, AlertCircle } from 'lucide-react'
+import { Plus, Calendar, MapPin, Clock, X, Edit, Trash2, Plane, AlertCircle, Camera, Upload } from 'lucide-react'
 import { Dialog, DialogBackdrop, DialogPanel, DialogTitle } from '@headlessui/react'
 
 const TripPlanner = () => {
@@ -14,7 +14,8 @@ const TripPlanner = () => {
     endDate: '',
     status: 'Planning',
     budget: '',
-    notes: ''
+    notes: '',
+    photos: []
   })
 
   const statusOptions = [
@@ -31,7 +32,8 @@ const TripPlanner = () => {
     const tripsWithDates = savedTrips.map(trip => ({
       ...trip,
       startDate: new Date(trip.startDate),
-      endDate: new Date(trip.endDate)
+      endDate: new Date(trip.endDate),
+      photos: trip.photos || []
     }))
     setTrips(tripsWithDates)
   }, [])
@@ -105,7 +107,8 @@ const TripPlanner = () => {
       endDate: '',
       status: 'Planning',
       budget: '',
-      notes: ''
+      notes: '',
+      photos: []
     })
     setIsModalOpen(true)
   }
@@ -120,7 +123,8 @@ const TripPlanner = () => {
       endDate: trip.endDate.toISOString().split('T')[0],
       status: trip.status,
       budget: trip.budget || '',
-      notes: trip.notes || ''
+      notes: trip.notes || '',
+      photos: trip.photos || []
     })
     setIsModalOpen(true)
   }
@@ -137,7 +141,8 @@ const TripPlanner = () => {
       endDate: new Date(tripForm.endDate),
       status: tripForm.status,
       budget: tripForm.budget,
-      notes: tripForm.notes
+      notes: tripForm.notes,
+      photos: tripForm.photos
     }
 
     if (selectedTrip) {
@@ -165,7 +170,8 @@ const TripPlanner = () => {
       endDate: '',
       status: 'Planning',
       budget: '',
-      notes: ''
+      notes: '',
+      photos: []
     })
     setSelectedTrip(null)
   }
@@ -196,6 +202,36 @@ const TripPlanner = () => {
     }
   }
 
+  const handlePhotoUpload = (event) => {
+    const files = Array.from(event.target.files)
+    
+    files.forEach(file => {
+      if (file.type.startsWith('image/')) {
+        const reader = new FileReader()
+        reader.onload = (e) => {
+          const newPhoto = {
+            id: crypto.randomUUID(),
+            url: e.target.result,
+            name: file.name,
+            size: file.size
+          }
+          setTripForm(prev => ({
+            ...prev,
+            photos: [...prev.photos, newPhoto]
+          }))
+        }
+        reader.readAsDataURL(file)
+      }
+    })
+  }
+
+  const handleRemovePhoto = (photoId) => {
+    setTripForm(prev => ({
+      ...prev,
+      photos: prev.photos.filter(photo => photo.id !== photoId)
+    }))
+  }
+
   const sortedTrips = trips.sort((a, b) => new Date(a.startDate) - new Date(b.startDate))
 
   return (
@@ -224,87 +260,109 @@ const TripPlanner = () => {
             return (
               <div 
                 key={trip.id}
-                className="bg-gray-800/50 rounded-lg p-4 hover:bg-gray-700/50 transition-colors cursor-pointer group"
+                className="bg-gray-800/50 rounded-lg overflow-hidden hover:bg-gray-700/50 transition-colors cursor-pointer group"
                 onClick={() => handleEditTrip(trip)}
               >
-                {/* Trip Title */}
-                <div className="flex items-center justify-between mb-3">
-                  <h4 className="text-white font-medium text-base truncate flex-1">
-                    {trip.title}
-                  </h4>
-                  <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        handleEditTrip(trip)
-                      }}
-                      className="p-1 hover:bg-blue-600 rounded transition-all"
-                      title="Edit"
-                    >
-                      <Edit size={12} className="text-white" />
-                    </button>
-                  </div>
-                </div>
-
-                {/* Destination */}
-                {trip.destination && (
-                  <div className="flex items-center gap-2 mb-2">
-                    <MapPin size={14} className="text-gray-400" />
-                    <span className="text-gray-300 text-sm truncate">
-                      {trip.destination}
-                    </span>
-                  </div>
-                )}
-
-                {/* Dates */}
-                <div className="flex items-center gap-2 mb-2">
-                  <Calendar size={14} className="text-gray-400" />
-                  <span className="text-gray-300 text-sm">
-                    {trip.startDate.toLocaleDateString('en-US', { 
-                      month: 'short', 
-                      day: 'numeric' 
-                    })} - {trip.endDate.toLocaleDateString('en-US', { 
-                      month: 'short', 
-                      day: 'numeric',
-                      year: 'numeric'
-                    })}
-                  </span>
-                </div>
-
-                {/* Duration */}
-                <div className="flex items-center gap-2 mb-2">
-                  <Clock size={14} className="text-gray-400" />
-                  <span className="text-gray-300 text-sm">
-                    {duration} {duration === 1 ? 'day' : 'days'}
-                  </span>
-                </div>
-
-                {/* Status */}
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <div 
-                      className="w-2 h-2 rounded-full"
-                      style={{ backgroundColor: statusColor }}
+                {/* Photo Section */}
+                {trip.photos && trip.photos.length > 0 ? (
+                  <div className="h-32 overflow-hidden relative">
+                    <img 
+                      src={trip.photos[0].url} 
+                      alt={trip.title}
+                      className="w-full h-full object-cover"
                     />
-                    <span className="text-gray-300 text-sm">
-                      {trip.status}
-                    </span>
+                    {trip.photos.length > 1 && (
+                      <div className="absolute bottom-2 right-2 bg-black/60 text-white text-xs px-2 py-1 rounded">
+                        +{trip.photos.length - 1} more
+                      </div>
+                    )}
                   </div>
-                  
-                  {/* Days until */}
-                  <span className="text-gray-400 text-xs">
-                    {daysUntil}
-                  </span>
-                </div>
-
-                {/* Budget */}
-                {trip.budget && (
-                  <div className="mt-2 pt-2 border-t border-gray-700">
-                    <span className="text-gray-400 text-xs">
-                      Budget: ${trip.budget}
-                    </span>
+                ) : (
+                  <div className="h-32 bg-gray-700/50 flex items-center justify-center">
+                    <Camera size={24} className="text-gray-500" />
                   </div>
                 )}
+
+                <div className="p-4">
+                  {/* Trip Title */}
+                  <div className="flex items-center justify-between mb-3">
+                    <h4 className="text-white font-medium text-base truncate flex-1">
+                      {trip.title}
+                    </h4>
+                    <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          handleEditTrip(trip)
+                        }}
+                        className="p-1 hover:bg-blue-600 rounded transition-all"
+                        title="Edit"
+                      >
+                        <Edit size={12} className="text-white" />
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Destination */}
+                  {trip.destination && (
+                    <div className="flex items-center gap-2 mb-2">
+                      <MapPin size={14} className="text-gray-400" />
+                      <span className="text-gray-300 text-sm truncate">
+                        {trip.destination}
+                      </span>
+                    </div>
+                  )}
+
+                  {/* Dates */}
+                  <div className="flex items-center gap-2 mb-2">
+                    <Calendar size={14} className="text-gray-400" />
+                    <span className="text-gray-300 text-sm">
+                      {trip.startDate.toLocaleDateString('en-US', { 
+                        month: 'short', 
+                        day: 'numeric' 
+                      })} - {trip.endDate.toLocaleDateString('en-US', { 
+                        month: 'short', 
+                        day: 'numeric',
+                        year: 'numeric'
+                      })}
+                    </span>
+                  </div>
+
+                  {/* Duration */}
+                  <div className="flex items-center gap-2 mb-2">
+                    <Clock size={14} className="text-gray-400" />
+                    <span className="text-gray-300 text-sm">
+                      {duration} {duration === 1 ? 'day' : 'days'}
+                    </span>
+                  </div>
+
+                  {/* Status */}
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div 
+                        className="w-2 h-2 rounded-full"
+                        style={{ backgroundColor: statusColor }}
+                      />
+                      <span className="text-gray-300 text-sm">
+                        {trip.status}
+                      </span>
+                    </div>
+                    
+                    {/* Days until */}
+                    <span className="text-gray-400 text-xs">
+                      {daysUntil}
+                    </span>
+                  </div>
+
+                  {/* Budget */}
+                  {trip.budget && (
+                    <div className="mt-2 pt-2 border-t border-gray-700">
+                      <span className="text-gray-400 text-xs">
+                        Budget: ${trip.budget}
+                      </span>
+                    </div>
+                  )}
+                </div>
               </div>
             )
           })}
@@ -478,6 +536,50 @@ const TripPlanner = () => {
                         placeholder="Empty"
                         className="w-full bg-transparent text-white text-base border-none outline-none placeholder-gray-500"
                       />
+                    </div>
+                  </div>
+
+                  {/* Photos Section */}
+                  <div className="flex items-start gap-4">
+                    <Camera size={20} className="text-gray-400 flex-shrink-0 mt-1" />
+                    <div className="flex-1">
+                      <div className="text-sm text-gray-400 mb-2">Photos</div>
+                      
+                      {/* Photo Upload */}
+                      <div className="mb-3">
+                        <label className="flex items-center gap-2 px-3 py-2 bg-gray-800 border border-gray-600 rounded-lg cursor-pointer hover:bg-gray-700 transition-colors">
+                          <Upload size={16} className="text-gray-400" />
+                          <span className="text-gray-300 text-sm">Upload Photos</span>
+                          <input
+                            type="file"
+                            multiple
+                            accept="image/*"
+                            onChange={handlePhotoUpload}
+                            className="hidden"
+                          />
+                        </label>
+                      </div>
+
+                      {/* Photo Grid */}
+                      {tripForm.photos.length > 0 && (
+                        <div className="grid grid-cols-3 gap-2">
+                          {tripForm.photos.map(photo => (
+                            <div key={photo.id} className="relative group">
+                              <img 
+                                src={photo.url} 
+                                alt={photo.name}
+                                className="w-full h-16 object-cover rounded"
+                              />
+                              <button
+                                onClick={() => handleRemovePhoto(photo.id)}
+                                className="absolute -top-1 -right-1 w-5 h-5 bg-red-600 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                              >
+                                <X size={12} />
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   </div>
 

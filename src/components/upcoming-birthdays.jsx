@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Plus, Calendar, Cake, X, Settings, Trash2, Edit, Filter } from 'lucide-react'
+import { Plus, Calendar, Cake, X, Settings, Trash2, Edit, Filter, AlertCircle } from 'lucide-react'
 import { Dialog, DialogBackdrop, DialogPanel, DialogTitle } from '@headlessui/react'
 
 const UpcomingBirthdays = ({ events = [] }) => {
@@ -9,6 +9,7 @@ const UpcomingBirthdays = ({ events = [] }) => {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false)
   const [selectedBirthday, setSelectedBirthday] = useState(null)
   const [selectedFilter, setSelectedFilter] = useState(30) // Default to 30 days
+  const [validationErrors, setValidationErrors] = useState({})
   const [birthdayForm, setBirthdayForm] = useState({
     name: '',
     birthDate: ''
@@ -98,14 +99,44 @@ const UpcomingBirthdays = ({ events = [] }) => {
     setFilteredBirthdays(filtered)
   }, [birthdays, selectedFilter])
 
+  const validateForm = () => {
+    const errors = {}
+    
+    if (!birthdayForm.name.trim()) {
+      errors.name = 'Name is required'
+    }
+    
+    if (!birthdayForm.birthDate) {
+      errors.birthDate = 'Birth date is required'
+    }
+    
+    setValidationErrors(errors)
+    return Object.keys(errors).length === 0
+  }
+
+  const handleFormChange = (field, value) => {
+    setBirthdayForm(prev => ({ ...prev, [field]: value }))
+    
+    // Clear validation error for this field when user starts typing
+    if (validationErrors[field]) {
+      setValidationErrors(prev => {
+        const newErrors = { ...prev }
+        delete newErrors[field]
+        return newErrors
+      })
+    }
+  }
+
   const handleAddBirthday = () => {
     setSelectedBirthday(null)
+    setValidationErrors({})
     setBirthdayForm({ name: '', birthDate: '' })
     setIsModalOpen(true)
   }
 
   const handleEditBirthday = (birthday) => {
     setSelectedBirthday(birthday)
+    setValidationErrors({})
     setBirthdayForm({
       name: birthday.name,
       birthDate: typeof birthday.birthDate === 'string' ? birthday.birthDate : birthday.birthDate.toISOString().split('T')[0]
@@ -114,7 +145,9 @@ const UpcomingBirthdays = ({ events = [] }) => {
   }
 
   const handleSaveBirthday = () => {
-    if (!birthdayForm.name.trim() || !birthdayForm.birthDate) return
+    if (!validateForm()) {
+      return
+    }
 
     const savedBirthdays = JSON.parse(localStorage.getItem('manualBirthdays') || '[]')
 
@@ -138,6 +171,7 @@ const UpcomingBirthdays = ({ events = [] }) => {
     }
 
     setIsModalOpen(false)
+    setValidationErrors({})
     setBirthdayForm({ name: '', birthDate: '' })
     setSelectedBirthday(null)
 
@@ -282,10 +316,10 @@ const UpcomingBirthdays = ({ events = [] }) => {
             ))
           )}
 
-          {/* New page button */}
+          {/* New page button - Updated with solid border */}
           <button
             onClick={handleAddBirthday}
-            className="w-full flex items-center justify-center gap-2 py-4 px-4 border border-gray-600 rounded-lg text-gray-400 hover:text-white hover:border-gray-500 transition-colors"
+            className="w-full flex items-center justify-center gap-2 py-4 px-4 border-2 border-solid border-gray-600 rounded-lg text-gray-400 hover:text-white hover:border-gray-500 transition-colors"
           >
             <Plus size={16} />
             <span className="text-sm">New page</span>
@@ -325,10 +359,18 @@ const UpcomingBirthdays = ({ events = [] }) => {
                     <input
                       type="text"
                       value={birthdayForm.name}
-                      onChange={(e) => setBirthdayForm(prev => ({ ...prev, name: e.target.value }))}
-                      className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent"
+                      onChange={(e) => handleFormChange('name', e.target.value)}
+                      className={`w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-lg placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent ${
+                        validationErrors.name ? 'text-red-400 border-red-400' : 'text-white'
+                      }`}
                       placeholder="Enter person's name"
                     />
+                    {validationErrors.name && (
+                      <div className="flex items-center gap-2 mt-1">
+                        <AlertCircle size={14} className="text-red-400" />
+                        <span className="text-red-400 text-sm">{validationErrors.name}</span>
+                      </div>
+                    )}
                   </div>
 
                   <div>
@@ -336,12 +378,20 @@ const UpcomingBirthdays = ({ events = [] }) => {
                     <input
                       type="date"
                       value={birthdayForm.birthDate}
-                      onChange={(e) => setBirthdayForm(prev => ({ ...prev, birthDate: e.target.value }))}
-                      className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent"
+                      onChange={(e) => handleFormChange('birthDate', e.target.value)}
+                      className={`w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent ${
+                        validationErrors.birthDate ? 'text-red-400 border-red-400' : 'text-white'
+                      }`}
                     />
+                    {validationErrors.birthDate && (
+                      <div className="flex items-center gap-2 mt-1">
+                        <AlertCircle size={14} className="text-red-400" />
+                        <span className="text-red-400 text-sm">{validationErrors.birthDate}</span>
+                      </div>
+                    )}
                   </div>
 
-                  {birthdayForm.birthDate && (
+                  {birthdayForm.birthDate && !validationErrors.birthDate && (
                     <div className="bg-gray-800 p-3 rounded-lg">
                       <div className="text-sm text-gray-300">
                         {(() => {

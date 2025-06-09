@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { ChevronLeft, ChevronRight, Plus, X, Calendar, MapPin, Clock, ChevronDown } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Plus, X, Calendar, MapPin, Clock, ChevronDown, AlertCircle } from 'lucide-react'
 import { Dialog, DialogBackdrop, DialogPanel, DialogTitle } from '@headlessui/react'
 
 const BigCalendar = ({ events = [], onAddEvent, onDeleteEvent }) => {
@@ -9,6 +9,7 @@ const BigCalendar = ({ events = [], onAddEvent, onDeleteEvent }) => {
   const [selectedEvent, setSelectedEvent] = useState(null)
   const [isYearPickerOpen, setIsYearPickerOpen] = useState(false)
   const [isMonthPickerOpen, setIsMonthPickerOpen] = useState(false)
+  const [validationErrors, setValidationErrors] = useState({})
   const [eventForm, setEventForm] = useState({
     title: '',
     date: '',
@@ -102,10 +103,39 @@ const BigCalendar = ({ events = [], onAddEvent, onDeleteEvent }) => {
     setCurrentDate(new Date())
   }
 
+  const validateForm = () => {
+    const errors = {}
+    
+    if (!eventForm.title.trim()) {
+      errors.title = 'Title is required'
+    }
+    
+    if (!eventForm.date) {
+      errors.date = 'Date is required'
+    }
+    
+    setValidationErrors(errors)
+    return Object.keys(errors).length === 0
+  }
+
+  const handleFormChange = (field, value) => {
+    setEventForm(prev => ({ ...prev, [field]: value }))
+    
+    // Clear validation error for this field when user starts typing
+    if (validationErrors[field]) {
+      setValidationErrors(prev => {
+        const newErrors = { ...prev }
+        delete newErrors[field]
+        return newErrors
+      })
+    }
+  }
+
   const handlePlusClick = (day) => {
     const selectedDate = new Date(currentYear, currentMonth, day)
     setSelectedDay(day)
     setSelectedEvent(null)
+    setValidationErrors({})
     setEventForm({
       title: 'New page',
       date: selectedDate.toISOString().split('T')[0],
@@ -119,6 +149,7 @@ const BigCalendar = ({ events = [], onAddEvent, onDeleteEvent }) => {
   const handleEventClick = (event, e) => {
     e.stopPropagation()
     setSelectedEvent(event)
+    setValidationErrors({})
     setEventForm({
       title: event.title,
       date: event.date.toISOString().split('T')[0],
@@ -130,7 +161,9 @@ const BigCalendar = ({ events = [], onAddEvent, onDeleteEvent }) => {
   }
 
   const handleSaveEvent = () => {
-    if (!eventForm.title.trim()) return
+    if (!validateForm()) {
+      return
+    }
 
     if (selectedEvent) {
       // Update existing event
@@ -165,6 +198,7 @@ const BigCalendar = ({ events = [], onAddEvent, onDeleteEvent }) => {
     }
     
     setIsModalOpen(false)
+    setValidationErrors({})
     setEventForm({
       title: '',
       date: '',
@@ -423,13 +457,23 @@ const BigCalendar = ({ events = [], onAddEvent, onDeleteEvent }) => {
             >
               <div className="bg-[#1a1a1a] px-6 pt-6 pb-4">
                 <div className="flex items-center justify-between mb-8">
-                  <input
-                    type="text"
-                    value={eventForm.title}
-                    onChange={(e) => setEventForm(prev => ({ ...prev, title: e.target.value }))}
-                    className="text-2xl font-medium text-white bg-transparent border-none outline-none flex-1"
-                    placeholder="New page"
-                  />
+                  <div className="flex-1">
+                    <input
+                      type="text"
+                      value={eventForm.title}
+                      onChange={(e) => handleFormChange('title', e.target.value)}
+                      className={`text-2xl font-medium bg-transparent border-none outline-none flex-1 w-full ${
+                        validationErrors.title ? 'text-red-400' : 'text-white'
+                      }`}
+                      placeholder="New page"
+                    />
+                    {validationErrors.title && (
+                      <div className="flex items-center gap-2 mt-1">
+                        <AlertCircle size={14} className="text-red-400" />
+                        <span className="text-red-400 text-sm">{validationErrors.title}</span>
+                      </div>
+                    )}
+                  </div>
                   <button
                     onClick={() => setIsModalOpen(false)}
                     className="text-gray-400 hover:text-white ml-4"
@@ -440,16 +484,24 @@ const BigCalendar = ({ events = [], onAddEvent, onDeleteEvent }) => {
 
                 <div className="space-y-6">
                   {/* Date Field */}
-                  <div className="flex items-center gap-4">
-                    <Calendar size={20} className="text-gray-400 flex-shrink-0" />
+                  <div className="flex items-start gap-4">
+                    <Calendar size={20} className="text-gray-400 flex-shrink-0 mt-1" />
                     <div className="flex-1">
                       <div className="text-sm text-gray-400 mb-1">Date</div>
                       <input
                         type="date"
                         value={eventForm.date}
-                        onChange={(e) => setEventForm(prev => ({ ...prev, date: e.target.value }))}
-                        className="w-full bg-transparent text-white text-base border-none outline-none"
+                        onChange={(e) => handleFormChange('date', e.target.value)}
+                        className={`w-full bg-transparent text-base border-none outline-none ${
+                          validationErrors.date ? 'text-red-400' : 'text-white'
+                        }`}
                       />
+                      {validationErrors.date && (
+                        <div className="flex items-center gap-2 mt-1">
+                          <AlertCircle size={14} className="text-red-400" />
+                          <span className="text-red-400 text-sm">{validationErrors.date}</span>
+                        </div>
+                      )}
                     </div>
                   </div>
 
@@ -461,7 +513,7 @@ const BigCalendar = ({ events = [], onAddEvent, onDeleteEvent }) => {
                       <input
                         type="text"
                         value={eventForm.location}
-                        onChange={(e) => setEventForm(prev => ({ ...prev, location: e.target.value }))}
+                        onChange={(e) => handleFormChange('location', e.target.value)}
                         placeholder="Empty"
                         className="w-full bg-transparent text-white text-base border-none outline-none placeholder-gray-500"
                       />
@@ -476,7 +528,7 @@ const BigCalendar = ({ events = [], onAddEvent, onDeleteEvent }) => {
                       <input
                         type="time"
                         value={eventForm.time}
-                        onChange={(e) => setEventForm(prev => ({ ...prev, time: e.target.value }))}
+                        onChange={(e) => handleFormChange('time', e.target.value)}
                         placeholder="Empty"
                         className="w-full bg-transparent text-white text-base border-none outline-none placeholder-gray-500"
                       />
@@ -490,7 +542,7 @@ const BigCalendar = ({ events = [], onAddEvent, onDeleteEvent }) => {
                       <div className="text-sm text-gray-400 mb-1">Category</div>
                       <select
                         value={eventForm.category}
-                        onChange={(e) => setEventForm(prev => ({ ...prev, category: e.target.value }))}
+                        onChange={(e) => handleFormChange('category', e.target.value)}
                         className="w-full bg-transparent text-white text-base border-none outline-none"
                       >
                         <option value="meeting" className="bg-[#1a1a1a]">Meeting</option>

@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Plus, X, Calendar, Clock, FileText, Flag, MapPin } from 'lucide-react'
+import { Plus, X, Calendar, Clock, FileText, Flag, MapPin, AlertCircle } from 'lucide-react'
 import { Dialog, DialogBackdrop, DialogPanel, DialogTitle } from '@headlessui/react'
 
 const RightSidebar = () => {
@@ -9,6 +9,8 @@ const RightSidebar = () => {
   const [isAssignmentModalOpen, setIsAssignmentModalOpen] = useState(false)
   const [selectedExam, setSelectedExam] = useState(null)
   const [selectedAssignment, setSelectedAssignment] = useState(null)
+  const [examValidationErrors, setExamValidationErrors] = useState({})
+  const [assignmentValidationErrors, setAssignmentValidationErrors] = useState({})
   const [examForm, setExamForm] = useState({
     title: '',
     date: '',
@@ -37,8 +39,65 @@ const RightSidebar = () => {
     return `${diffDays} days`
   }
 
+  const validateExamForm = () => {
+    const errors = {}
+    
+    if (!examForm.title.trim()) {
+      errors.title = 'Title is required'
+    }
+    
+    if (!examForm.date) {
+      errors.date = 'Date is required'
+    }
+    
+    setExamValidationErrors(errors)
+    return Object.keys(errors).length === 0
+  }
+
+  const validateAssignmentForm = () => {
+    const errors = {}
+    
+    if (!assignmentForm.title.trim()) {
+      errors.title = 'Title is required'
+    }
+    
+    if (!assignmentForm.dueDate) {
+      errors.dueDate = 'Due date is required'
+    }
+    
+    setAssignmentValidationErrors(errors)
+    return Object.keys(errors).length === 0
+  }
+
+  const handleExamFormChange = (field, value) => {
+    setExamForm(prev => ({ ...prev, [field]: value }))
+    
+    // Clear validation error for this field when user starts typing
+    if (examValidationErrors[field]) {
+      setExamValidationErrors(prev => {
+        const newErrors = { ...prev }
+        delete newErrors[field]
+        return newErrors
+      })
+    }
+  }
+
+  const handleAssignmentFormChange = (field, value) => {
+    setAssignmentForm(prev => ({ ...prev, [field]: value }))
+    
+    // Clear validation error for this field when user starts typing
+    if (assignmentValidationErrors[field]) {
+      setAssignmentValidationErrors(prev => {
+        const newErrors = { ...prev }
+        delete newErrors[field]
+        return newErrors
+      })
+    }
+  }
+
   const addExamReminder = () => {
     setSelectedExam(null)
+    setExamValidationErrors({})
     setExamForm({
       title: 'New page',
       date: '',
@@ -52,6 +111,7 @@ const RightSidebar = () => {
 
   const handleExamClick = (exam) => {
     setSelectedExam(exam)
+    setExamValidationErrors({})
     setExamForm({
       title: exam.title,
       date: exam.date.toISOString().split('T')[0],
@@ -65,6 +125,7 @@ const RightSidebar = () => {
 
   const addAssignmentReminder = () => {
     setSelectedAssignment(null)
+    setAssignmentValidationErrors({})
     setAssignmentForm({
       title: 'New page',
       dueDate: '',
@@ -77,6 +138,7 @@ const RightSidebar = () => {
 
   const handleAssignmentClick = (assignment) => {
     setSelectedAssignment(assignment)
+    setAssignmentValidationErrors({})
     setAssignmentForm({
       title: assignment.title,
       dueDate: assignment.dueDate.toISOString().split('T')[0],
@@ -88,7 +150,9 @@ const RightSidebar = () => {
   }
 
   const handleSaveExam = () => {
-    if (!examForm.title.trim() || !examForm.date) return
+    if (!validateExamForm()) {
+      return
+    }
 
     if (selectedExam) {
       // Update existing exam
@@ -120,6 +184,7 @@ const RightSidebar = () => {
       setExamReminders(prev => [...prev, newReminder])
     }
     setIsExamModalOpen(false)
+    setExamValidationErrors({})
   }
 
   const handleDeleteExam = () => {
@@ -131,7 +196,9 @@ const RightSidebar = () => {
   }
 
   const handleSaveAssignment = () => {
-    if (!assignmentForm.title.trim() || !assignmentForm.dueDate) return
+    if (!validateAssignmentForm()) {
+      return
+    }
 
     if (selectedAssignment) {
       // Update existing assignment
@@ -161,6 +228,7 @@ const RightSidebar = () => {
       setAssignmentReminders(prev => [...prev, newReminder])
     }
     setIsAssignmentModalOpen(false)
+    setAssignmentValidationErrors({})
   }
 
   const handleDeleteAssignment = () => {
@@ -223,7 +291,7 @@ const RightSidebar = () => {
 
             <button
               onClick={addExamReminder}
-              className="w-full flex items-center justify-center gap-2 py-4 px-4 border border-gray-600 rounded-lg text-gray-400 hover:text-white hover:border-gray-500 transition-colors"
+              className="w-full flex items-center justify-center gap-2 py-4 px-4 border-2 border-solid border-gray-600 rounded-lg text-gray-400 hover:text-white hover:border-gray-500 transition-colors"
             >
               <Plus size={16} />
               <span className="text-sm">New page</span>
@@ -283,7 +351,7 @@ const RightSidebar = () => {
 
             <button
               onClick={addAssignmentReminder}
-              className="w-full flex items-center justify-center gap-2 py-4 px-4 border border-gray-600 rounded-lg text-gray-400 hover:text-white hover:border-gray-500 transition-colors"
+              className="w-full flex items-center justify-center gap-2 py-4 px-4 border-2 border-solid border-gray-600 rounded-lg text-gray-400 hover:text-white hover:border-gray-500 transition-colors"
             >
               <Plus size={16} />
               <span className="text-sm">New page</span>
@@ -307,13 +375,23 @@ const RightSidebar = () => {
             >
               <div className="bg-[#1a1a1a] px-6 pt-6 pb-4">
                 <div className="flex items-center justify-between mb-8">
-                  <input
-                    type="text"
-                    value={examForm.title}
-                    onChange={(e) => setExamForm(prev => ({ ...prev, title: e.target.value }))}
-                    className="text-2xl font-medium text-white bg-transparent border-none outline-none flex-1"
-                    placeholder="New page"
-                  />
+                  <div className="flex-1">
+                    <input
+                      type="text"
+                      value={examForm.title}
+                      onChange={(e) => handleExamFormChange('title', e.target.value)}
+                      className={`text-2xl font-medium bg-transparent border-none outline-none flex-1 w-full ${
+                        examValidationErrors.title ? 'text-red-400' : 'text-white'
+                      }`}
+                      placeholder="New page"
+                    />
+                    {examValidationErrors.title && (
+                      <div className="flex items-center gap-2 mt-1">
+                        <AlertCircle size={14} className="text-red-400" />
+                        <span className="text-red-400 text-sm">{examValidationErrors.title}</span>
+                      </div>
+                    )}
+                  </div>
                   <button
                     onClick={() => setIsExamModalOpen(false)}
                     className="text-gray-400 hover:text-white ml-4"
@@ -324,16 +402,24 @@ const RightSidebar = () => {
 
                 <div className="space-y-4">
                   {/* Date Field */}
-                  <div className="flex items-center gap-4">
-                    <Calendar size={20} className="text-gray-400 flex-shrink-0 cursor-pointer" />
+                  <div className="flex items-start gap-4">
+                    <Calendar size={20} className="text-gray-400 flex-shrink-0 mt-1" />
                     <div className="flex-1">
                       <div className="text-sm text-gray-400 mb-1">Date</div>
                       <input
                         type="date"
                         value={examForm.date}
-                        onChange={(e) => setExamForm(prev => ({ ...prev, date: e.target.value }))}
-                        className="w-full bg-transparent text-white text-base border-none outline-none cursor-pointer"
+                        onChange={(e) => handleExamFormChange('date', e.target.value)}
+                        className={`w-full bg-transparent text-base border-none outline-none cursor-pointer ${
+                          examValidationErrors.date ? 'text-red-400' : 'text-white'
+                        }`}
                       />
+                      {examValidationErrors.date && (
+                        <div className="flex items-center gap-2 mt-1">
+                          <AlertCircle size={14} className="text-red-400" />
+                          <span className="text-red-400 text-sm">{examValidationErrors.date}</span>
+                        </div>
+                      )}
                     </div>
                   </div>
 
@@ -345,7 +431,7 @@ const RightSidebar = () => {
                       <input
                         type="time"
                         value={examForm.time}
-                        onChange={(e) => setExamForm(prev => ({ ...prev, time: e.target.value }))}
+                        onChange={(e) => handleExamFormChange('time', e.target.value)}
                         placeholder="Empty"
                         className="w-full bg-transparent text-white text-base border-none outline-none placeholder-gray-500 cursor-pointer"
                       />
@@ -360,7 +446,7 @@ const RightSidebar = () => {
                       <input
                         type="text"
                         value={examForm.location}
-                        onChange={(e) => setExamForm(prev => ({ ...prev, location: e.target.value }))}
+                        onChange={(e) => handleExamFormChange('location', e.target.value)}
                         placeholder="Empty"
                         className="w-full bg-transparent text-white text-base border-none outline-none placeholder-gray-500"
                       />
@@ -375,7 +461,7 @@ const RightSidebar = () => {
                       <input
                         type="text"
                         value={examForm.notes}
-                        onChange={(e) => setExamForm(prev => ({ ...prev, notes: e.target.value }))}
+                        onChange={(e) => handleExamFormChange('notes', e.target.value)}
                         placeholder="Empty"
                         className="w-full bg-transparent text-white text-base border-none outline-none placeholder-gray-500"
                       />
@@ -399,7 +485,7 @@ const RightSidebar = () => {
                       <input
                         type="checkbox"
                         checked={examForm.attended}
-                        onChange={(e) => setExamForm(prev => ({ ...prev, attended: e.target.checked }))}
+                        onChange={(e) => handleExamFormChange('attended', e.target.checked)}
                         className="w-4 h-4 text-gray-500 bg-gray-800 border-gray-600 rounded focus:ring-gray-500 accent-gray-500"
                       />
                     </div>
@@ -456,13 +542,23 @@ const RightSidebar = () => {
             >
               <div className="bg-[#1a1a1a] px-6 pt-6 pb-4">
                 <div className="flex items-center justify-between mb-8">
-                  <input
-                    type="text"
-                    value={assignmentForm.title}
-                    onChange={(e) => setAssignmentForm(prev => ({ ...prev, title: e.target.value }))}
-                    className="text-2xl font-medium text-white bg-transparent border-none outline-none flex-1"
-                    placeholder="New page"
-                  />
+                  <div className="flex-1">
+                    <input
+                      type="text"
+                      value={assignmentForm.title}
+                      onChange={(e) => handleAssignmentFormChange('title', e.target.value)}
+                      className={`text-2xl font-medium bg-transparent border-none outline-none flex-1 w-full ${
+                        assignmentValidationErrors.title ? 'text-red-400' : 'text-white'
+                      }`}
+                      placeholder="New page"
+                    />
+                    {assignmentValidationErrors.title && (
+                      <div className="flex items-center gap-2 mt-1">
+                        <AlertCircle size={14} className="text-red-400" />
+                        <span className="text-red-400 text-sm">{assignmentValidationErrors.title}</span>
+                      </div>
+                    )}
+                  </div>
                   <button
                     onClick={() => setIsAssignmentModalOpen(false)}
                     className="text-gray-400 hover:text-white ml-4"
@@ -473,16 +569,24 @@ const RightSidebar = () => {
 
                 <div className="space-y-4">
                   {/* Due Date Field */}
-                  <div className="flex items-center gap-4">
-                    <Calendar size={20} className="text-gray-400 flex-shrink-0 cursor-pointer" />
+                  <div className="flex items-start gap-4">
+                    <Calendar size={20} className="text-gray-400 flex-shrink-0 mt-1" />
                     <div className="flex-1">
                       <div className="text-sm text-gray-400 mb-1">Due Date</div>
                       <input
                         type="date"
                         value={assignmentForm.dueDate}
-                        onChange={(e) => setAssignmentForm(prev => ({ ...prev, dueDate: e.target.value }))}
-                        className="w-full bg-transparent text-white text-base border-none outline-none cursor-pointer"
+                        onChange={(e) => handleAssignmentFormChange('dueDate', e.target.value)}
+                        className={`w-full bg-transparent text-base border-none outline-none cursor-pointer ${
+                          assignmentValidationErrors.dueDate ? 'text-red-400' : 'text-white'
+                        }`}
                       />
+                      {assignmentValidationErrors.dueDate && (
+                        <div className="flex items-center gap-2 mt-1">
+                          <AlertCircle size={14} className="text-red-400" />
+                          <span className="text-red-400 text-sm">{assignmentValidationErrors.dueDate}</span>
+                        </div>
+                      )}
                     </div>
                   </div>
 
@@ -493,7 +597,7 @@ const RightSidebar = () => {
                       <div className="text-sm text-gray-400 mb-1">Status</div>
                       <select
                         value={assignmentForm.status}
-                        onChange={(e) => setAssignmentForm(prev => ({ ...prev, status: e.target.value }))}
+                        onChange={(e) => handleAssignmentFormChange('status', e.target.value)}
                         className="w-full bg-transparent text-white text-base border-none outline-none"
                       >
                         <option value="Not started" className="bg-[#1a1a1a]">Not started</option>
@@ -512,7 +616,7 @@ const RightSidebar = () => {
                       <input
                         type="text"
                         value={assignmentForm.notes}
-                        onChange={(e) => setAssignmentForm(prev => ({ ...prev, notes: e.target.value }))}
+                        onChange={(e) => handleAssignmentFormChange('notes', e.target.value)}
                         placeholder="Empty"
                         className="w-full bg-transparent text-white text-base border-none outline-none placeholder-gray-500"
                       />
@@ -536,7 +640,7 @@ const RightSidebar = () => {
                       <input
                         type="checkbox"
                         checked={assignmentForm.submitted}
-                        onChange={(e) => setAssignmentForm(prev => ({ ...prev, submitted: e.target.checked }))}
+                        onChange={(e) => handleAssignmentFormChange('submitted', e.target.checked)}
                         className="w-4 h-4 text-gray-500 bg-gray-800 border-gray-600 rounded focus:ring-gray-500 accent-gray-500"
                       />
                     </div>
