@@ -7,6 +7,21 @@ const QuickLinks = () => {
   const isLifestylePage = window.location.pathname === '/lifestyle'
   const isHealthFitnessPage = window.location.pathname === '/health-fitness'
   const isTimetablePage = window.location.pathname === '/timetable'
+  const isCourseMaterialsPage = window.location.pathname === '/course-materials'
+  const isStudyChecklistPage = window.location.pathname === '/study-checklist'
+  const isAssignmentPlannerPage = window.location.pathname === '/assignment-planner'
+  const isStudyNotebookPage = window.location.pathname === '/study-notebook'
+  const isImportantConceptsPage = window.location.pathname === '/important-concepts'
+  const isProjectPlannerPage = window.location.pathname === '/project-planner'
+  const isGroupProjectsPage = window.location.pathname === '/group-projects'
+  const isEssayPlannerPage = window.location.pathname === '/essay-planner'
+  const isExamPreparationPage = window.location.pathname === '/exam-preparation'
+  const isExamReflectionPage = window.location.pathname === '/exam-reflection'
+  const isLifestyleDayPage = window.location.pathname === '/lifestyle-day'
+  const isLifestyleWeekPage = window.location.pathname === '/lifestyle-week'
+  const isLifestyleMonthPage = window.location.pathname === '/lifestyle-month'
+  const isLifestyleYearPage = window.location.pathname === '/lifestyle-year'
+  const isLifestyleContactsPage = window.location.pathname === '/lifestyle-contacts'
   
   const mainLinks = [
     {
@@ -20,29 +35,29 @@ const QuickLinks = () => {
     {
       title: 'Assignments',
       items: [
-        { name: 'Assignment Planner', icon: FileText, href: '#assignment-planner' },
-        { name: 'Study Notebook', icon: BookOpen, href: '#notebook' },
-        { name: 'Important Concepts', icon: Target, href: '#concepts' }
+        { name: 'Assignment Planner', icon: FileText, href: '/assignment-planner' },
+        { name: 'Study Notebook', icon: BookOpen, href: '/study-notebook' },
+        { name: 'Important Concepts', icon: Target, href: '/important-concepts' }
       ]
     },
     {
       title: 'Projects',
       items: [
-        { name: 'Project Planner', icon: Target, href: '#project-planner' },
-        { name: 'Group Projects', icon: Users, href: '#group-projects' }
+        { name: 'Project Planner', icon: Target, href: '/project-planner' },
+        { name: 'Group Projects', icon: Users, href: '/group-projects' }
       ]
     },
     {
       title: 'Writing',
       items: [
-        { name: 'Essay Planner', icon: PenTool, href: '#essay-planner' }
+        { name: 'Essay Planner', icon: PenTool, href: '/essay-planner' }
       ]
     },
     {
       title: 'Exams',
       items: [
-        { name: 'Exam Preparation', icon: Target, href: '#exam-prep' },
-        { name: 'Exam Reflection', icon: FileText, href: '#exam-reflection' }
+        { name: 'Exam Preparation', icon: Target, href: '/exam-preparation' },
+        { name: 'Exam Reflection', icon: FileText, href: '/exam-reflection' }
       ]
     }
   ]
@@ -51,17 +66,17 @@ const QuickLinks = () => {
     {
       title: 'Planner',
       items: [
-        { name: 'Day', icon: Calendar, href: '#day' },
-        { name: 'Week', icon: Calendar, href: '#week' },
-        { name: 'Month', icon: Calendar, href: '#month' },
-        { name: 'Year', icon: Calendar, href: '#year' }
+        { name: 'Day', icon: Calendar, href: '/lifestyle-day' },
+        { name: 'Week', icon: Calendar, href: '/lifestyle-week' },
+        { name: 'Month', icon: Calendar, href: '/lifestyle-month' },
+        { name: 'Year', icon: Calendar, href: '/lifestyle-year' }
       ]
     },
     {
       title: 'Lifestyle',
       items: [
         { name: 'Birthdays', icon: Heart, href: '#birthdays' },
-        { name: 'Contacts', icon: Users, href: '#contacts' },
+        { name: 'Contacts', icon: Users, href: '/lifestyle-contacts' },
         { name: 'Trip Planner', icon: MapPin, href: '#trip-planner' },
         { name: 'Outfit Planner', icon: Target, href: '#outfit-planner' },
         { name: 'Event Planner', icon: Calendar, href: '#event-planner' },
@@ -111,12 +126,12 @@ const QuickLinks = () => {
   ]
 
   let links = mainLinks
-  if (isLifestylePage) {
+  if (isLifestylePage || isLifestyleDayPage || isLifestyleWeekPage || isLifestyleMonthPage || isLifestyleYearPage || isLifestyleContactsPage) {
     links = lifestyleLinks
   } else if (isHealthFitnessPage) {
     links = healthFitnessLinks
-  } else if (isTimetablePage) {
-    links = mainLinks // Use same links as student planner for timetable
+  } else if (isTimetablePage || isCourseMaterialsPage || isStudyChecklistPage || isAssignmentPlannerPage || isStudyNotebookPage || isImportantConceptsPage || isProjectPlannerPage || isGroupProjectsPage || isEssayPlannerPage || isExamPreparationPage || isExamReflectionPage) {
+    links = mainLinks // Use same links as student planner for all student planner pages
   }
 
   return (
