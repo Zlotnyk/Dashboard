@@ -5,7 +5,6 @@
 /* CSS Variables for dynamic theming */
 :root {
   --accent-color: #97e7aa;
-  --block-bg-color: #2a2a2a; /* More gray background for blocks */
 }
 
 /* Base container for the flip clock */
@@ -304,9 +303,4 @@
 
 .ring-accent {
 	--tw-ring-color: var(--accent-color) !important;
-}
-
-/* Block background utility class */
-.bg-block {
-	background-color: var(--block-bg-color) !important;
 }

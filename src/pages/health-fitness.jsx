@@ -37,14 +37,14 @@ function HealthFitnessPage() {
 						{/* Top Row - Two blocks side by side */}
 						<div className='flex flex-row gap-4'>
 							{/* Workout Tracker Block */}
-							<div className='flex-1 min-h-[300px] bg-block rounded-lg p-4 flex items-center justify-center'>
+							<div className='flex-1 min-h-[300px] bg-[#1a1a1a] rounded-lg p-4 flex items-center justify-center'>
 								<h3 className='text-xl font-[Libre_Baskerville] italic text-white'>
 									Workout Tracker
 								</h3>
 							</div>
 
 							{/* Nutrition Log Block */}
-							<div className='flex-1 min-h-[300px] bg-block rounded-lg p-4 flex items-center justify-center'>
+							<div className='flex-1 min-h-[300px] bg-[#1a1a1a] rounded-lg p-4 flex items-center justify-center'>
 								<h3 className='text-xl font-[Libre_Baskerville] italic text-white'>
 									Nutrition Log
 								</h3>
@@ -52,21 +52,21 @@ function HealthFitnessPage() {
 						</div>
 
 						{/* Health Metrics Block */}
-						<div className='min-h-[200px] bg-block rounded-lg p-4 flex items-center justify-center'>
+						<div className='min-h-[200px] bg-[#1a1a1a] rounded-lg p-4 flex items-center justify-center'>
 							<h3 className='text-xl font-[Libre_Baskerville] italic text-white'>
 								Health Metrics
 							</h3>
 						</div>
 
 						{/* Fitness Goals Block */}
-						<div className='min-h-[200px] bg-block rounded-lg p-4 flex items-center justify-center'>
+						<div className='min-h-[200px] bg-[#1a1a1a] rounded-lg p-4 flex items-center justify-center'>
 							<h3 className='text-xl font-[Libre_Baskerville] italic text-white'>
 								Fitness Goals
 							</h3>
 						</div>
 
 						{/* Progress Charts Block */}
-						<div className='min-h-[300px] bg-block rounded-lg p-4 flex items-center justify-center'>
+						<div className='min-h-[300px] bg-[#1a1a1a] rounded-lg p-4 flex items-center justify-center'>
 							<h3 className='text-xl font-[Libre_Baskerville] italic text-white'>
 								Progress Charts
 							</h3>

@@ -116,7 +116,7 @@ const QuickLinks = () => {
   }
 
   return (
-    <div className="w-full bg-block rounded-lg p-4 pl-6">
+    <div className="w-full bg-[#1a1a1a] rounded-lg p-4 pl-6">
       <div className="space-y-6">
         {links.map((section, sectionIndex) => (
           <div key={sectionIndex}>
