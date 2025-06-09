@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react'
 import '../App.css'
 
 const GifContainer = () => {
-  const [currentGif, setCurrentGif] = useState('Green2.gif')
+  const [currentGif, setCurrentGif] = useState('Green.gif')
 
   useEffect(() => {
     // Load saved background GIF from localStorage
