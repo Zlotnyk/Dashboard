@@ -367,10 +367,10 @@ const TripPlanner = () => {
             )
           })}
 
-          {/* Add New Trip Card - Updated with solid border */}
+          {/* Add New Trip Card - Updated with gray border */}
           <button
             onClick={handleAddTrip}
-            className="bg-[#2a2a2a] border-2 border-solid border-gray-600 rounded-lg p-4 hover:border-gray-500 hover:bg-[#333333] transition-colors flex flex-col items-center justify-center min-h-[200px] group"
+            className="bg-[#2a2a2a] border-2 border-solid border-gray-500 rounded-lg p-4 hover:border-gray-400 hover:bg-[#333333] transition-colors flex flex-col items-center justify-center min-h-[200px] group"
           >
             <Plus size={24} className="text-gray-400 group-hover:text-white mb-2" />
             <span className="text-gray-400 group-hover:text-white text-sm">
