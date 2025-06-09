@@ -7,10 +7,14 @@ import WavyLines from '../components/wavy-lines'
 import FlipClock from '../components/FlipClock/'
 import QuickLinks from '../components/quick-links'
 import BigCalendar from '../components/big-calendar'
+import TodayTasks from '../components/today-tasks'
+import UpcomingBirthdays from '../components/upcoming-birthdays'
+import { generateMockTasks } from '../components/Task_Timeline/timeline_utils'
 import '../App.css'
 
 function LifestylePage() {
 	const [events, setEvents] = useState([])
+	const [tasks, setTasks] = useState(generateMockTasks())
 
 	const handleEventAdd = event => {
 		setEvents(prevEvents => [...prevEvents, event])
@@ -18,6 +22,20 @@ function LifestylePage() {
 
 	const handleEventDelete = eventId => {
 		setEvents(prevEvents => prevEvents.filter(event => event.id !== eventId))
+	}
+
+	const handleTaskAdd = task => {
+		setTasks(prevTasks => [...prevTasks, task])
+	}
+
+	const handleTaskUpdate = updatedTask => {
+		setTasks(prevTasks =>
+			prevTasks.map(task => (task.id === updatedTask.id ? updatedTask : task))
+		)
+	}
+
+	const handleTaskDelete = taskId => {
+		setTasks(prevTasks => prevTasks.filter(task => task.id !== taskId))
 	}
 
 	return (
@@ -48,17 +66,18 @@ function LifestylePage() {
 						{/* Top Row - Two blocks side by side */}
 						<div className='flex flex-row gap-4 h-1/4'>
 							{/* Today Tasks Block */}
-							<div className='flex-1 border-2 border-dashed border-gray-500 rounded-lg p-4 flex items-center justify-center'>
-								<h3 className='text-xl font-[Libre_Baskerville] italic text-white'>
-									Today Tasks
-								</h3>
+							<div className='flex-1'>
+								<TodayTasks
+									tasks={tasks}
+									onAddTask={handleTaskAdd}
+									onUpdateTask={handleTaskUpdate}
+									onDeleteTask={handleTaskDelete}
+								/>
 							</div>
 
 							{/* Upcoming Birthdays Block */}
-							<div className='flex-1 border-2 border-dashed border-gray-500 rounded-lg p-4 flex items-center justify-center'>
-								<h3 className='text-xl font-[Libre_Baskerville] italic text-white'>
-									Upcoming Birthdays
-								</h3>
+							<div className='flex-1'>
+								<UpcomingBirthdays events={events} />
 							</div>
 						</div>
 
