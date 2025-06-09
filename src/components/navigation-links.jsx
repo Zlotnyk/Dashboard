@@ -29,9 +29,9 @@ const NavigationLinks = () => {
               <button 
                 key={index} 
                 onClick={() => handleNavigation(link.href)}
-                className="flex items-center gap-2 hover:text-[var(--accent-color,#97e7aa)] transition-colors text-base group"
+                className="flex items-center gap-2 hover:text-accent transition-colors text-base group"
               >
-                <IconComponent size={18} className="text-[var(--accent-color,#97e7aa)] group-hover:text-[var(--accent-color,#97e7aa)]" />
+                <IconComponent size={18} className="text-accent group-hover:text-accent" />
                 {link.name}
               </button>
             )

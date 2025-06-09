@@ -38,11 +38,11 @@ export default function Notes() {
 		<div className='w-full min-h-[400px] rounded-lg p-5'>
 			<div className='flex items-center justify-between mb-4'>
 				<h2 className='text-xl font-[Libre_Baskerville] italic text-[#e0e0e0]'>
-					Today’s Notes
+					Today's Notes
 				</h2>
 				<button
 					onClick={addNote}
-					className='px-4 py-2 bg-[#97e7aa] text-white rounded hover:bg-[#75b384] text-sm'
+					className='px-4 py-2 bg-accent text-white rounded hover:bg-accent-80 text-sm'
 				>
 					Add a new note
 				</button>

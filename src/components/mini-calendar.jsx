@@ -101,7 +101,7 @@ const MiniCalendar = () => {
             key={day} 
             className={`h-6 flex items-center justify-center cursor-pointer rounded ${
               isToday(day) 
-                ? 'bg-[#97e7aa] text-white font-bold' 
+                ? 'bg-accent text-white font-bold' 
                 : 'text-gray-300 hover:bg-gray-800'
             }`}
           >
