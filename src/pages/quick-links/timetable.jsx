@@ -301,7 +301,6 @@ function TimetablePage() {
                             validationErrors.weekDay ? 'border-red-400' : ''
                           }`}
                         >
-                          <option value="" className="bg-[#2a2a2a]">Wednesday</option>
                           {weekDays.map(day => (
                             <option key={day} value={day} className="bg-[#2a2a2a]">{day}</option>
                           ))}
