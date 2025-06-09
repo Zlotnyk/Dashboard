@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { ChevronLeft, ChevronRight, Plus, X } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Plus, X, Calendar, MapPin, Clock } from 'lucide-react'
 import { Dialog, DialogBackdrop, DialogPanel, DialogTitle } from '@headlessui/react'
 
 const BigCalendar = ({ events = [], onAddEvent, onDeleteEvent }) => {
@@ -75,7 +75,7 @@ const BigCalendar = ({ events = [], onAddEvent, onDeleteEvent }) => {
     setSelectedDay(day)
     setSelectedEvent(null)
     setEventForm({
-      title: '',
+      title: 'New page',
       date: selectedDate.toISOString().split('T')[0],
       time: '',
       location: '',
@@ -256,117 +256,113 @@ const BigCalendar = ({ events = [], onAddEvent, onDeleteEvent }) => {
         </div>
       </div>
 
-      {/* Event Modal */}
+      {/* Event Modal - Redesigned */}
       <Dialog open={isModalOpen} onClose={setIsModalOpen} className="relative z-50">
-        <DialogBackdrop className="fixed inset-0 bg-black/50" />
+        <DialogBackdrop 
+          transition
+          className="fixed inset-0 bg-gray-500/75 transition-opacity data-closed:opacity-0 data-enter:duration-300 data-enter:ease-out data-leave:duration-200 data-leave:ease-in"
+        />
         
-        <div className="fixed inset-0 flex items-center justify-center p-4">
-          <DialogPanel className="bg-[#1a1a1a] rounded-lg w-full max-w-lg">
-            <div className="px-6 pt-6 pb-4">
-              <div className="flex items-center justify-between mb-6">
-                <DialogTitle className="text-xl font-semibold text-white">
-                  {selectedEvent ? 'Edit Event' : 'Create Event'}
-                </DialogTitle>
-                <button
-                  onClick={() => setIsModalOpen(false)}
-                  className="text-gray-400 hover:text-white"
-                >
-                  <X size={24} />
-                </button>
-              </div>
-
-              <div className="space-y-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-3">
-                    Event Title
-                  </label>
-                  <input
-                    type="text"
-                    value={eventForm.title}
-                    onChange={(e) => setEventForm(prev => ({ ...prev, title: e.target.value }))}
-                    className="w-full px-4 py-3 bg-gray-800 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#97e7aa]"
-                    placeholder="Enter event title..."
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-3">
-                    Date
-                  </label>
-                  <input
-                    type="date"
-                    value={eventForm.date}
-                    onChange={(e) => setEventForm(prev => ({ ...prev, date: e.target.value }))}
-                    className="w-full px-4 py-3 bg-gray-800 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-[#97e7aa]"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-3">
-                    Time
-                  </label>
-                  <input
-                    type="time"
-                    value={eventForm.time}
-                    onChange={(e) => setEventForm(prev => ({ ...prev, time: e.target.value }))}
-                    className="w-full px-4 py-3 bg-gray-800 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-[#97e7aa]"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-3">
-                    Location
-                  </label>
-                  <input
-                    type="text"
-                    value={eventForm.location}
-                    onChange={(e) => setEventForm(prev => ({ ...prev, location: e.target.value }))}
-                    className="w-full px-4 py-3 bg-gray-800 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#97e7aa]"
-                    placeholder="Enter location..."
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-3">
-                    Type
-                  </label>
-                  <select
-                    value={eventForm.type}
-                    onChange={(e) => setEventForm(prev => ({ ...prev, type: e.target.value }))}
-                    className="w-full px-4 py-3 bg-gray-800 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-[#97e7aa]"
+        <div className="fixed inset-0 z-10 w-screen overflow-y-auto">
+          <div className="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+            <DialogPanel 
+              transition
+              className="relative transform overflow-hidden rounded-lg bg-[#1a1a1a] text-left shadow-xl transition-all data-closed:translate-y-4 data-closed:opacity-0 data-enter:duration-300 data-enter:ease-out data-leave:duration-200 data-leave:ease-in sm:my-8 sm:w-full sm:max-w-lg data-closed:sm:translate-y-0 data-closed:sm:scale-95"
+            >
+              <div className="bg-[#1a1a1a] px-6 pt-6 pb-4">
+                <div className="flex items-center justify-between mb-8">
+                  <DialogTitle className="text-2xl font-medium text-white">
+                    {eventForm.title}
+                  </DialogTitle>
+                  <button
+                    onClick={() => setIsModalOpen(false)}
+                    className="text-gray-400 hover:text-white"
                   >
-                    <option value="meeting">Meeting</option>
-                    <option value="birthday">Birthday</option>
-                    <option value="appointment">Appointment</option>
-                    <option value="reminder">Reminder</option>
-                  </select>
+                    <X size={24} />
+                  </button>
+                </div>
+
+                <div className="space-y-6">
+                  {/* Date Field */}
+                  <div className="flex items-center gap-4">
+                    <Calendar size={20} className="text-gray-400 flex-shrink-0" />
+                    <div className="flex-1">
+                      <div className="text-sm text-gray-400 mb-1">Date</div>
+                      <input
+                        type="date"
+                        value={eventForm.date}
+                        onChange={(e) => setEventForm(prev => ({ ...prev, date: e.target.value }))}
+                        className="w-full bg-transparent text-white text-base border-none outline-none"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Location Field */}
+                  <div className="flex items-center gap-4">
+                    <MapPin size={20} className="text-gray-400 flex-shrink-0" />
+                    <div className="flex-1">
+                      <div className="text-sm text-gray-400 mb-1">Location</div>
+                      <input
+                        type="text"
+                        value={eventForm.location}
+                        onChange={(e) => setEventForm(prev => ({ ...prev, location: e.target.value }))}
+                        placeholder="Empty"
+                        className="w-full bg-transparent text-white text-base border-none outline-none placeholder-gray-500"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Time Field */}
+                  <div className="flex items-center gap-4">
+                    <Clock size={20} className="text-gray-400 flex-shrink-0" />
+                    <div className="flex-1">
+                      <div className="text-sm text-gray-400 mb-1">Time</div>
+                      <input
+                        type="time"
+                        value={eventForm.time}
+                        onChange={(e) => setEventForm(prev => ({ ...prev, time: e.target.value }))}
+                        placeholder="Empty"
+                        className="w-full bg-transparent text-white text-base border-none outline-none placeholder-gray-500"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Add a property button */}
+                  <button className="flex items-center gap-2 text-gray-400 hover:text-white text-sm">
+                    <Plus size={16} />
+                    Add a property
+                  </button>
                 </div>
               </div>
-            </div>
 
-            <div className="px-6 py-4 flex gap-3">
-              {selectedEvent && (
-                <button
-                  onClick={handleDeleteEvent}
-                  className="px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
-                >
-                  Delete
-                </button>
-              )}
-              <button
-                onClick={() => setIsModalOpen(false)}
-                className="px-6 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleSaveEvent}
-                className="flex-1 px-6 py-3 bg-[#97e7aa] text-white rounded-lg hover:bg-[#75b384] transition-colors"
-              >
-                {selectedEvent ? 'Update Event' : 'Save Event'}
-              </button>
-            </div>
-          </DialogPanel>
+              {/* Footer with action buttons */}
+              <div className="bg-[#1a1a1a] px-6 py-4 border-t border-gray-700">
+                <div className="flex gap-3">
+                  {selectedEvent && (
+                    <button
+                      onClick={handleDeleteEvent}
+                      className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm"
+                    >
+                      Delete
+                    </button>
+                  )}
+                  <div className="flex-1"></div>
+                  <button
+                    onClick={() => setIsModalOpen(false)}
+                    className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors text-sm"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleSaveEvent}
+                    className="px-4 py-2 bg-[#97e7aa] text-white rounded-lg hover:bg-[#75b384] transition-colors text-sm"
+                  >
+                    Save
+                  </button>
+                </div>
+              </div>
+            </DialogPanel>
+          </div>
         </div>
       </Dialog>
     </>
