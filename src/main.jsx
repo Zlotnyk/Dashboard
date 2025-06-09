@@ -4,6 +4,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom'
 import './index.css'
 import App from './App.jsx'
 import LifestylePage from './pages/lifestyle.jsx'
+import HealthFitnessPage from './pages/health-fitness.jsx'
 
 function NotFoundPage() {
 	return (
@@ -20,6 +21,7 @@ createRoot(document.getElementById('root')).render(
 			<Routes>
 				<Route path='/' element={<App />} />
 				<Route path='/lifestyle' element={<LifestylePage />} />
+				<Route path='/health-fitness' element={<HealthFitnessPage />} />
 				<Route path='*' element={<NotFoundPage />} />
 			</Routes>
 		</Router>

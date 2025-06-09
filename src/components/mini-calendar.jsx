@@ -59,7 +59,7 @@ const MiniCalendar = () => {
   }
 
   return (
-    <div className="w-full bg-[#1a1a1a] rounded-lg p-4">
+    <div className="w-full bg-block rounded-lg p-4">
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <button

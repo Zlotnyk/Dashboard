@@ -2,8 +2,9 @@ import React from 'react'
 import { BookOpen, FileText, PenTool, Target, Clock, Users, Calendar, Heart, MapPin, Utensils, Dumbbell, Brain, TrendingUp } from 'lucide-react'
 
 const QuickLinks = () => {
-  // Check if we're on the lifestyle page
+  // Check current page
   const isLifestylePage = window.location.pathname === '/lifestyle'
+  const isHealthFitnessPage = window.location.pathname === '/health-fitness'
   
   const mainLinks = [
     {
@@ -70,10 +71,52 @@ const QuickLinks = () => {
     }
   ]
 
-  const links = isLifestylePage ? lifestyleLinks : mainLinks
+  const healthFitnessLinks = [
+    {
+      title: 'Workouts',
+      items: [
+        { name: 'Workout Plans', icon: Dumbbell, href: '#workout-plans' },
+        { name: 'Exercise Library', icon: BookOpen, href: '#exercise-library' },
+        { name: 'Progress Tracker', icon: TrendingUp, href: '#progress-tracker' }
+      ]
+    },
+    {
+      title: 'Nutrition',
+      items: [
+        { name: 'Meal Planning', icon: Utensils, href: '#meal-planning' },
+        { name: 'Calorie Counter', icon: Target, href: '#calorie-counter' },
+        { name: 'Recipe Book', icon: BookOpen, href: '#recipe-book' },
+        { name: 'Water Tracker', icon: Target, href: '#water-tracker' }
+      ]
+    },
+    {
+      title: 'Health',
+      items: [
+        { name: 'Health Metrics', icon: Heart, href: '#health-metrics' },
+        { name: 'Sleep Tracker', icon: Brain, href: '#sleep-tracker' },
+        { name: 'Mood Tracker', icon: Heart, href: '#mood-tracker' },
+        { name: 'Medication Log', icon: FileText, href: '#medication-log' }
+      ]
+    },
+    {
+      title: 'Goals',
+      items: [
+        { name: 'Fitness Goals', icon: Target, href: '#fitness-goals' },
+        { name: 'Weight Goals', icon: TrendingUp, href: '#weight-goals' },
+        { name: 'Habit Tracker', icon: Calendar, href: '#habit-tracker' }
+      ]
+    }
+  ]
+
+  let links = mainLinks
+  if (isLifestylePage) {
+    links = lifestyleLinks
+  } else if (isHealthFitnessPage) {
+    links = healthFitnessLinks
+  }
 
   return (
-    <div className="w-full bg-[#1a1a1a] rounded-lg p-4 pl-6">
+    <div className="w-full bg-block rounded-lg p-4 pl-6">
       <div className="space-y-6">
         {links.map((section, sectionIndex) => (
           <div key={sectionIndex}>

@@ -243,7 +243,7 @@ const RightSidebar = () => {
     <>
       <div className="space-y-6">
         {/* Exam Reminder Section */}
-        <div className="bg-[#1a1a1a] rounded-lg p-4">
+        <div className="bg-block rounded-lg p-4">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-[Libre_Baskerville] italic text-white">
               Exam Reminder
@@ -300,7 +300,7 @@ const RightSidebar = () => {
         </div>
 
         {/* Assignment Reminder Section */}
-        <div className="bg-[#1a1a1a] rounded-lg p-4">
+        <div className="bg-block rounded-lg p-4">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-lg font-[Libre_Baskerville] italic text-white">
               Assignment Reminder
