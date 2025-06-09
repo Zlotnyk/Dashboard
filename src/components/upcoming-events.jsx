@@ -229,7 +229,7 @@ const UpcomingEvents = ({ events = [] }) => {
             filteredEvents.map(event => (
               <div 
                 key={event.id}
-                className="bg-gray-800/50 rounded-lg p-3 hover:bg-gray-700/50 transition-colors group cursor-pointer"
+                className="bg-[#2a2a2a] rounded-lg p-3 hover:bg-[#333333] transition-colors group cursor-pointer"
                 onClick={() => handleEditEvent(event)}
               >
                 <div className="flex items-center justify-between">

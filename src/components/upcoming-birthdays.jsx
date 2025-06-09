@@ -275,7 +275,7 @@ const UpcomingBirthdays = ({ events = [] }) => {
             filteredBirthdays.map(birthday => (
               <div 
                 key={birthday.id}
-                className="bg-gray-800/50 rounded-lg p-3 hover:bg-gray-700/50 transition-colors group"
+                className="bg-[#2a2a2a] rounded-lg p-3 hover:bg-[#333333] transition-colors group"
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
