@@ -196,9 +196,10 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
 			{/* Calendar Grid with Horizontal Scroll */}
 			<div className="relative flex-1 overflow-hidden">
 				<div 
-					ref={scrollRef}
-					className="h-full overflow-x-auto overflow-y-hidden custom-scrollbar"
-				>
+  ref={scrollRef}
+  className="h-full overflow-x-auto overflow-y-hidden custom-scrollbar"
+  style={{ minWidth: '100%' }}
+>
 					<div 
 						className="relative h-full"
 						style={{ minWidth: `${Math.max(100, daysInMonth * 40)}px` }}
