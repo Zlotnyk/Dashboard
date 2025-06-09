@@ -63,7 +63,7 @@ const Notification = ({
   return (
     <div className="fixed top-4 right-4 z-50">
       <div
-        className={`max-w-xl w-full bg-[#1a1a1a] shadow-lg rounded-lg pointer-events-auto ring-1 ring-black ring-opacity-5 border-l-4 ${getBorderColor()} transform transition-all duration-300 ease-in-out ${
+        className={`max-w-2xl w-full bg-[#1a1a1a] shadow-lg rounded-lg pointer-events-auto ring-1 ring-black ring-opacity-5 border-l-4 ${getBorderColor()} transform transition-all duration-300 ease-in-out ${
           show 
             ? 'translate-x-0 opacity-100 scale-100' 
             : 'translate-x-full opacity-0 scale-95'
