@@ -501,15 +501,15 @@ const BigCalendar = ({ events = [], onAddEvent, onDeleteEvent }) => {
         className="relative z-50"
       >
         <DialogBackdrop 
-          className="fixed inset-0 bg-black/50"
+          className="fixed inset-0 bg-black/30 backdrop-blur-sm"
         />
         
         <div className="fixed inset-0 z-10 overflow-y-auto">
           <div className="flex min-h-full items-center justify-center p-4 text-center">
             <DialogPanel 
-              className="relative transform overflow-hidden rounded-lg bg-[#1a1a1a] text-left shadow-xl w-full max-w-lg"
+              className="relative transform overflow-hidden rounded-lg bg-[#1a1a1a]/90 backdrop-blur-md text-left shadow-xl w-full max-w-lg border border-gray-600"
             >
-              <div className="bg-[#1a1a1a] px-6 pt-6 pb-4">
+              <div className="bg-transparent px-6 pt-6 pb-4">
                 <div className="flex items-center justify-between mb-8">
                   <div className="flex-1">
                     <input
@@ -628,7 +628,7 @@ const BigCalendar = ({ events = [], onAddEvent, onDeleteEvent }) => {
               </div>
 
               {/* Footer with action buttons */}
-              <div className="bg-[#1a1a1a] px-6 py-4 border-t border-gray-700">
+              <div className="bg-transparent px-6 py-4 border-t border-gray-600">
                 <div className="flex gap-3">
                   {selectedEvent && (
                     <button
