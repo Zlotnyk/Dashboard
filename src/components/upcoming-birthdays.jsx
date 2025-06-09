@@ -1,16 +1,25 @@
 import React, { useState, useEffect } from 'react'
-import { Plus, Calendar, Cake, X, Settings, Trash2, Edit } from 'lucide-react'
+import { Plus, Calendar, Cake, X, Settings, Trash2, Edit, Filter } from 'lucide-react'
 import { Dialog, DialogBackdrop, DialogPanel, DialogTitle } from '@headlessui/react'
 
 const UpcomingBirthdays = ({ events = [] }) => {
   const [birthdays, setBirthdays] = useState([])
+  const [filteredBirthdays, setFilteredBirthdays] = useState([])
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [isSettingsOpen, setIsSettingsOpen] = useState(false)
   const [selectedBirthday, setSelectedBirthday] = useState(null)
+  const [selectedFilter, setSelectedFilter] = useState(30) // Default to 30 days
   const [birthdayForm, setBirthdayForm] = useState({
     name: '',
     birthDate: ''
   })
+
+  const filterOptions = [
+    { label: '30 days (1 month)', value: 30 },
+    { label: '60 days (2 months)', value: 60 },
+    { label: '90 days (3 months)', value: 90 },
+    { label: '120 days (4 months)', value: 120 }
+  ]
 
   // Calculate age and days until birthday
   const calculateBirthdayInfo = (birthDate) => {
@@ -48,7 +57,7 @@ const UpcomingBirthdays = ({ events = [] }) => {
 
   // Filter birthdays from calendar events and manual entries
   useEffect(() => {
-    // Get birthday events from calendar (within 30 days)
+    // Get birthday events from calendar
     const today = new Date()
     
     const calendarBirthdays = events
@@ -63,7 +72,6 @@ const UpcomingBirthdays = ({ events = [] }) => {
           ...birthdayInfo
         }
       })
-      .filter(birthday => birthday.daysUntil <= 30)
 
     // Get manual birthdays from localStorage
     const savedBirthdays = JSON.parse(localStorage.getItem('manualBirthdays') || '[]')
@@ -76,7 +84,6 @@ const UpcomingBirthdays = ({ events = [] }) => {
           ...birthdayInfo
         }
       })
-      .filter(birthday => birthday.daysUntil <= 30)
 
     // Combine and sort by days until birthday
     const allBirthdays = [...calendarBirthdays, ...manualBirthdays]
@@ -84,6 +91,12 @@ const UpcomingBirthdays = ({ events = [] }) => {
 
     setBirthdays(allBirthdays)
   }, [events])
+
+  // Apply filter when birthdays or selectedFilter changes
+  useEffect(() => {
+    const filtered = birthdays.filter(birthday => birthday.daysUntil <= selectedFilter)
+    setFilteredBirthdays(filtered)
+  }, [birthdays, selectedFilter])
 
   const handleAddBirthday = () => {
     setSelectedBirthday(null)
@@ -130,24 +143,22 @@ const UpcomingBirthdays = ({ events = [] }) => {
 
     // Trigger re-calculation
     const birthdayInfo = calculateBirthdayInfo(birthdayForm.birthDate)
-    if (birthdayInfo.daysUntil <= 30) {
-      if (selectedBirthday) {
-        // Update existing birthday in state
-        setBirthdays(prev => prev.map(birthday => 
-          birthday.id === selectedBirthday.id 
-            ? { ...birthday, name: birthdayForm.name, birthDate: birthdayForm.birthDate, ...birthdayInfo }
-            : birthday
-        ).sort((a, b) => a.daysUntil - b.daysUntil))
-      } else {
-        // Add new birthday to state
-        setBirthdays(prev => [...prev, {
-          id: crypto.randomUUID(),
-          name: birthdayForm.name,
-          birthDate: birthdayForm.birthDate,
-          source: 'manual',
-          ...birthdayInfo
-        }].sort((a, b) => a.daysUntil - b.daysUntil))
-      }
+    if (selectedBirthday) {
+      // Update existing birthday in state
+      setBirthdays(prev => prev.map(birthday => 
+        birthday.id === selectedBirthday.id 
+          ? { ...birthday, name: birthdayForm.name, birthDate: birthdayForm.birthDate, ...birthdayInfo }
+          : birthday
+      ).sort((a, b) => a.daysUntil - b.daysUntil))
+    } else {
+      // Add new birthday to state
+      setBirthdays(prev => [...prev, {
+        id: crypto.randomUUID(),
+        name: birthdayForm.name,
+        birthDate: birthdayForm.birthDate,
+        source: 'manual',
+        ...birthdayInfo
+      }].sort((a, b) => a.daysUntil - b.daysUntil))
     }
   }
 
@@ -172,6 +183,11 @@ const UpcomingBirthdays = ({ events = [] }) => {
     return `${days} days`
   }
 
+  const getFilterLabel = () => {
+    const option = filterOptions.find(opt => opt.value === selectedFilter)
+    return option ? option.label : `${selectedFilter} days`
+  }
+
   return (
     <>
       <div className="w-full h-full bg-[#1a1a1a] rounded-lg p-4">
@@ -192,20 +208,37 @@ const UpcomingBirthdays = ({ events = [] }) => {
         {/* Horizontal line under header */}
         <div className="w-full h-px bg-gray-700 mb-4"></div>
 
-        {/* Subtitle */}
-        <div className="flex items-center gap-2 text-gray-400 text-sm mb-4">
-          <Calendar size={16} />
-          <span>Next 30 Days</span>
+        {/* Filter Section */}
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2 text-gray-400 text-sm">
+            <Calendar size={16} />
+            <span>Next {getFilterLabel()}</span>
+          </div>
+          
+          <div className="relative">
+            <select
+              value={selectedFilter}
+              onChange={(e) => setSelectedFilter(Number(e.target.value))}
+              className="bg-gray-800 border border-gray-600 rounded px-3 py-1 text-sm text-white focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent appearance-none pr-8"
+            >
+              {filterOptions.map(option => (
+                <option key={option.value} value={option.value} className="bg-gray-800">
+                  {option.label}
+                </option>
+              ))}
+            </select>
+            <Filter size={14} className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 pointer-events-none" />
+          </div>
         </div>
 
         {/* Birthday list */}
         <div className="space-y-2">
-          {birthdays.length === 0 ? (
+          {filteredBirthdays.length === 0 ? (
             <div className="text-gray-500 text-sm text-center py-4">
-              No upcoming birthdays
+              No upcoming birthdays in the next {selectedFilter} days
             </div>
           ) : (
-            birthdays.map(birthday => (
+            filteredBirthdays.map(birthday => (
               <div 
                 key={birthday.id}
                 className="bg-gray-800/50 rounded-lg p-3 hover:bg-gray-700/50 transition-colors group"
@@ -219,6 +252,9 @@ const UpcomingBirthdays = ({ events = [] }) => {
                       </div>
                       <div className="text-gray-400 text-xs">
                         Will be {birthday.nextAge} • {formatDaysUntil(birthday.daysUntil)}
+                      </div>
+                      <div className="text-gray-500 text-xs">
+                        {birthday.source === 'calendar' ? 'From calendar' : 'Manual entry'}
                       </div>
                     </div>
                   </div>
@@ -372,6 +408,19 @@ const UpcomingBirthdays = ({ events = [] }) => {
                 </div>
 
                 <div className="space-y-6">
+                  {/* Filter Settings */}
+                  <div className="bg-gray-800/50 rounded-lg p-4">
+                    <h4 className="text-white font-medium mb-3">Filter Settings</h4>
+                    <div className="space-y-2">
+                      <div className="text-sm text-gray-300">
+                        Currently showing: <span className="text-white">{getFilterLabel()}</span>
+                      </div>
+                      <div className="text-xs text-gray-400">
+                        Change the filter in the main view to see birthdays for different time periods.
+                      </div>
+                    </div>
+                  </div>
+
                   {/* Statistics */}
                   <div className="bg-gray-800/50 rounded-lg p-4">
                     <h4 className="text-white font-medium mb-3">Statistics</h4>
@@ -387,6 +436,10 @@ const UpcomingBirthdays = ({ events = [] }) => {
                       <div className="flex justify-between">
                         <span>Manual entries:</span>
                         <span>{birthdays.filter(b => b.source === 'manual').length}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span>In current filter:</span>
+                        <span>{filteredBirthdays.length}</span>
                       </div>
                       <div className="flex justify-between">
                         <span>This week:</span>
@@ -419,7 +472,7 @@ const UpcomingBirthdays = ({ events = [] }) => {
                       <ul className="space-y-1 text-xs">
                         <li>• Birthdays from calendar events automatically appear here</li>
                         <li>• Manual birthdays are stored locally on your device</li>
-                        <li>• Only birthdays within 30 days are shown</li>
+                        <li>• Use the filter to see birthdays for different time periods</li>
                         <li>• Calendar birthdays repeat yearly automatically</li>
                       </ul>
                     </div>

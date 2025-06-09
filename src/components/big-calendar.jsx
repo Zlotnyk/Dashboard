@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { ChevronLeft, ChevronRight, Plus, X, Calendar, MapPin, Clock } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Plus, X, Calendar, MapPin, Clock, ChevronDown } from 'lucide-react'
 import { Dialog, DialogBackdrop, DialogPanel, DialogTitle } from '@headlessui/react'
 
 const BigCalendar = ({ events = [], onAddEvent, onDeleteEvent }) => {
@@ -7,6 +7,8 @@ const BigCalendar = ({ events = [], onAddEvent, onDeleteEvent }) => {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [selectedDay, setSelectedDay] = useState(null)
   const [selectedEvent, setSelectedEvent] = useState(null)
+  const [isYearPickerOpen, setIsYearPickerOpen] = useState(false)
+  const [isMonthPickerOpen, setIsMonthPickerOpen] = useState(false)
   const [eventForm, setEventForm] = useState({
     title: '',
     date: '',
@@ -61,6 +63,32 @@ const BigCalendar = ({ events = [], onAddEvent, onDeleteEvent }) => {
     const newDate = new Date(currentDate)
     newDate.setMonth(currentMonth + direction)
     setCurrentDate(newDate)
+  }
+
+  const navigateYear = (direction) => {
+    const newDate = new Date(currentDate)
+    newDate.setFullYear(currentYear + direction)
+    setCurrentDate(newDate)
+  }
+
+  const selectYear = (year) => {
+    const newDate = new Date(currentDate)
+    newDate.setFullYear(year)
+    setCurrentDate(newDate)
+    setIsYearPickerOpen(false)
+  }
+
+  const selectMonth = (monthIndex) => {
+    const newDate = new Date(currentDate)
+    newDate.setMonth(monthIndex)
+    setCurrentDate(newDate)
+    setIsMonthPickerOpen(false)
+  }
+
+  // Generate year options (current year ± 10 years)
+  const yearOptions = []
+  for (let i = currentYear - 10; i <= currentYear + 10; i++) {
+    yearOptions.push(i)
   }
   
   const isToday = (day, isCurrentMonth = true) => {
@@ -207,6 +235,48 @@ const BigCalendar = ({ events = [], onAddEvent, onDeleteEvent }) => {
           </div>
           
           <div className="flex items-center gap-4">
+            {/* Year Navigation */}
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => navigateYear(-1)}
+                className="p-2 hover:bg-gray-700 rounded"
+              >
+                <ChevronLeft size={16} className="text-gray-400" />
+              </button>
+              <div className="relative">
+                <button
+                  onClick={() => setIsYearPickerOpen(!isYearPickerOpen)}
+                  className="flex items-center gap-1 px-3 py-1 hover:bg-gray-700 rounded text-white text-base font-medium min-w-[80px] justify-center"
+                >
+                  {currentYear}
+                  <ChevronDown size={14} className="text-gray-400" />
+                </button>
+                
+                {isYearPickerOpen && (
+                  <div className="absolute top-full left-0 mt-1 bg-[#1a1a1a] border border-gray-600 rounded-lg shadow-lg z-50 max-h-48 overflow-y-auto">
+                    {yearOptions.map(year => (
+                      <button
+                        key={year}
+                        onClick={() => selectYear(year)}
+                        className={`w-full px-4 py-2 text-left hover:bg-gray-700 ${
+                          year === currentYear ? 'bg-gray-700 text-white' : 'text-gray-300'
+                        }`}
+                      >
+                        {year}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+              <button
+                onClick={() => navigateYear(1)}
+                className="p-2 hover:bg-gray-700 rounded"
+              >
+                <ChevronRight size={16} className="text-gray-400" />
+              </button>
+            </div>
+
+            {/* Month Navigation */}
             <div className="flex items-center gap-2">
               <button
                 onClick={() => navigateMonth(-1)}
@@ -214,9 +284,31 @@ const BigCalendar = ({ events = [], onAddEvent, onDeleteEvent }) => {
               >
                 <ChevronLeft size={16} className="text-gray-400" />
               </button>
-              <span className="text-white text-base font-medium min-w-[120px] text-center">
-                {monthNames[currentMonth]} {currentYear}
-              </span>
+              <div className="relative">
+                <button
+                  onClick={() => setIsMonthPickerOpen(!isMonthPickerOpen)}
+                  className="flex items-center gap-1 px-3 py-1 hover:bg-gray-700 rounded text-white text-base font-medium min-w-[120px] justify-center"
+                >
+                  {monthNames[currentMonth]}
+                  <ChevronDown size={14} className="text-gray-400" />
+                </button>
+                
+                {isMonthPickerOpen && (
+                  <div className="absolute top-full left-0 mt-1 bg-[#1a1a1a] border border-gray-600 rounded-lg shadow-lg z-50 max-h-48 overflow-y-auto">
+                    {monthNames.map((month, index) => (
+                      <button
+                        key={month}
+                        onClick={() => selectMonth(index)}
+                        className={`w-full px-4 py-2 text-left hover:bg-gray-700 ${
+                          index === currentMonth ? 'bg-gray-700 text-white' : 'text-gray-300'
+                        }`}
+                      >
+                        {month}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
               <button
                 onClick={() => navigateMonth(1)}
                 className="p-2 hover:bg-gray-700 rounded"
@@ -459,6 +551,20 @@ const BigCalendar = ({ events = [], onAddEvent, onDeleteEvent }) => {
           </div>
         </div>
       </Dialog>
+
+      {/* Click outside handlers */}
+      {isYearPickerOpen && (
+        <div 
+          className="fixed inset-0 z-40" 
+          onClick={() => setIsYearPickerOpen(false)}
+        />
+      )}
+      {isMonthPickerOpen && (
+        <div 
+          className="fixed inset-0 z-40" 
+          onClick={() => setIsMonthPickerOpen(false)}
+        />
+      )}
     </>
   )
 }
