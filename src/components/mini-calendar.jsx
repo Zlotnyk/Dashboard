@@ -68,7 +68,7 @@ const MiniCalendar = () => {
         >
           <ChevronLeft size={14} className="text-gray-400" />
         </button>
-        <span className="text-white text-sm font-medium">
+        <span className="text-white text-sm font-medium font-[Libre_Baskerville] italic">
           {monthNames[currentMonth]} {currentYear}
         </span>
         <button

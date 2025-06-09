@@ -262,7 +262,7 @@ const RightSidebar = () => {
               examReminders.map(reminder => (
                 <div 
                   key={reminder.id} 
-                  className="bg-gray-800/50 rounded-lg p-4 cursor-pointer hover:bg-gray-700/50 transition-colors"
+                  className="bg-[#2a2a2a] rounded-lg p-4 cursor-pointer hover:bg-[#333333] transition-colors"
                   onClick={() => handleExamClick(reminder)}
                 >
                   <div className="flex items-center gap-2 mb-2">
@@ -319,7 +319,7 @@ const RightSidebar = () => {
               assignmentReminders.map(reminder => (
                 <div 
                   key={reminder.id} 
-                  className="bg-gray-800/50 rounded-lg p-4 cursor-pointer hover:bg-gray-700/50 transition-colors"
+                  className="bg-[#2a2a2a] rounded-lg p-4 cursor-pointer hover:bg-[#333333] transition-colors"
                   onClick={() => handleAssignmentClick(reminder)}
                 >
                   <div className="flex items-center gap-2 mb-2">
@@ -625,6 +625,7 @@ const RightSidebar = () => {
 
                   {/* When Assignment Field */}
                   <div className="flex items-center gap-4">
+                
                     <span className="text-gray-500 text-base">⚠️</span>
                     <div className="flex-1">
                       <div className="text-sm text-gray-400 mb-1">When Assignment</div>

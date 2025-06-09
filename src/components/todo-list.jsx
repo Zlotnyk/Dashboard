@@ -74,94 +74,103 @@ export default function TodoList({
 		<>
 			<div className='w-full min-h-[400px] rounded-lg p-5'>
 				<div className='flex items-center justify-between mb-4'>
-					<h2 className='text-xl font-[Libre_Baskerville] italic text-[#e0e0e0]'>
+					<h2 className='text-lg font-[Libre_Baskerville] italic text-white'>
 						To-Do List
 					</h2>
 					<button
-						className='flex items-center gap-2 px-4 py-2 bg-accent text-white rounded-lg hover:bg-accent-80 text-base'
+						className='flex items-center gap-2 px-3 py-1 bg-accent text-white rounded-lg hover:bg-accent-80 text-sm'
 						onClick={addTodo}
 					>
-						<Plus size={20} />
+						<Plus size={16} />
 						New
 					</button>
 				</div>
 
-				<div className='space-y-3'>
+				{/* Horizontal line under header */}
+				<div className="w-full h-px bg-gray-700 mb-4"></div>
+
+				<div className='space-y-2'>
 					{tasks.map(task => {
 						const isUrgent = task.priority === 'urgent'
 						
 						return (
 							<div
 								key={task.id}
-								className='flex items-center justify-between p-2 rounded'
+								className='bg-[#2a2a2a] rounded-lg p-3 hover:bg-[#333333] transition-colors group'
 							>
-								<div className='flex items-center gap-2 flex-1'>
-									<FileText size={20} className='text-[#a0a0a0]' />
-									{editingId === task.id ? (
-										<div className='flex flex-col gap-2 w-full'>
-											<input
-												autoFocus
-												type='text'
-												value={editingText}
-												onChange={e => setEditingText(e.target.value)}
-												onBlur={finishEditing}
-												onKeyDown={e => {
-													if (e.key === 'Enter') finishEditing()
-												}}
-												className='bg-transparent outline-none text-[#a0a0a0] w-full text-base'
-											/>
-											<input
-												type='date'
-												value={editingStart}
-												onChange={e => setEditingStart(e.target.value)}
-												className='bg-transparent outline-none text-[#a0a0a0] text-base'
-											/>
-											<input
-												type='date'
-												value={editingEnd}
-												onChange={e => setEditingEnd(e.target.value)}
-												className='bg-transparent outline-none text-[#a0a0a0] text-base'
-											/>
-										</div>
-									) : (
-										<div className='flex flex-col'>
-											<div className='flex items-center gap-2'>
-												{isUrgent && <span className="text-orange-500">🔥</span>}
-												<span className='text-[#a0a0a0] text-base'>{task.title}</span>
+								<div className='flex items-center justify-between'>
+									<div className='flex items-center gap-2 flex-1'>
+										<FileText size={16} className='text-gray-400' />
+										{editingId === task.id ? (
+											<div className='flex flex-col gap-2 w-full'>
+												<input
+													autoFocus
+													type='text'
+													value={editingText}
+													onChange={e => setEditingText(e.target.value)}
+													onBlur={finishEditing}
+													onKeyDown={e => {
+														if (e.key === 'Enter') finishEditing()
+													}}
+													className='bg-transparent outline-none text-white w-full text-sm'
+												/>
+												<input
+													type='date'
+													value={editingStart}
+													onChange={e => setEditingStart(e.target.value)}
+													className='bg-transparent outline-none text-gray-400 text-xs'
+												/>
+												<input
+													type='date'
+													value={editingEnd}
+													onChange={e => setEditingEnd(e.target.value)}
+													className='bg-transparent outline-none text-gray-400 text-xs'
+												/>
 											</div>
-											<span className='text-[#a0a0a0] text-sm'>
-												{task.start.toLocaleDateString()}
-											</span>
-										</div>
-									)}
-									{editingId !== task.id && (
-										<button
-											onClick={() => openTaskDrawer(task)}
-											className='border border-gray-500 rounded p-1 hover:bg-gray-700 ml-2'
-											title='Edit Task Details'
-										>
-											<Pencil size={16} className='text-gray-400' />
-										</button>
-									)}
-								</div>
+										) : (
+											<div className='flex flex-col flex-1'>
+												<div className='flex items-center gap-2'>
+													{isUrgent && <span className="text-orange-500">🔥</span>}
+													<span className='text-white text-sm font-medium'>{task.title}</span>
+												</div>
+												<div className='text-gray-400 text-xs'>
+													{task.start.toLocaleDateString()}
+												</div>
+												<div className='text-gray-400 text-xs'>
+													Status: {task.status || 'Not started'}
+												</div>
+											</div>
+										)}
+										{editingId !== task.id && (
+											<button
+												onClick={() => openTaskDrawer(task)}
+												className='opacity-0 group-hover:opacity-100 border border-gray-500 rounded p-1 hover:bg-gray-600 transition-all'
+												title='Edit Task Details'
+											>
+												<Pencil size={12} className='text-gray-400' />
+											</button>
+										)}
+									</div>
 
-								<input
-									type='checkbox'
-									onChange={() => onDeleteTask(task.id)}
-									className='w-4 h-4 cursor-pointer bg-transparent appearance-none border border-gray-400 rounded checked:bg-blue-500 checked:border-transparent'
-									title='Delete'
-								/>
+									<input
+										type='checkbox'
+										onChange={() => onDeleteTask(task.id)}
+										className='w-4 h-4 cursor-pointer bg-transparent appearance-none border border-gray-400 rounded checked:bg-blue-500 checked:border-transparent'
+										title='Complete Task'
+									/>
+								</div>
 							</div>
 						)
 					})}
 
-					<div
-						className='flex items-center gap-3 p-2 hover:bg-[#333] rounded cursor-pointer'
+					{/* New page button */}
+					<button
+						className='w-full flex items-center justify-center gap-2 py-4 px-4 border-2 border-solid border-gray-600 rounded-lg text-gray-400 hover:text-white hover:border-gray-500 transition-colors'
 						onClick={addTodo}
 					>
-						<Plus size={20} className='text-[#a0a0a0]' />
-						<span className='text-[#a0a0a0] text-base'>New task</span>
-					</div>
+						<Plus size={16} />
+						<span className='text-sm'>New page</span>
+					</button>
 				</div>
 			</div>
 

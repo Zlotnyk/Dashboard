@@ -207,10 +207,10 @@ const UpcomingEvents = ({ events = [] }) => {
             <select
               value={selectedFilter}
               onChange={(e) => setSelectedFilter(Number(e.target.value))}
-              className="bg-gray-800 border border-gray-600 rounded px-3 py-1 text-sm text-white focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent appearance-none pr-8"
+              className="bg-[#2a2a2a] border border-gray-600 rounded px-3 py-1 text-sm text-white focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent appearance-none pr-8"
             >
               {filterOptions.map(option => (
-                <option key={option.value} value={option.value} className="bg-gray-800">
+                <option key={option.value} value={option.value} className="bg-[#2a2a2a]">
                   {option.label}
                 </option>
               ))}
@@ -487,7 +487,7 @@ const UpcomingEvents = ({ events = [] }) => {
 
                 <div className="space-y-6">
                   {/* Filter Settings */}
-                  <div className="bg-gray-800/50 rounded-lg p-4">
+                  <div className="bg-[#2a2a2a] rounded-lg p-4">
                     <h4 className="text-white font-medium mb-3">Filter Settings</h4>
                     <div className="space-y-2">
                       <div className="text-sm text-gray-300">
@@ -500,7 +500,7 @@ const UpcomingEvents = ({ events = [] }) => {
                   </div>
 
                   {/* Statistics */}
-                  <div className="bg-gray-800/50 rounded-lg p-4">
+                  <div className="bg-[#2a2a2a] rounded-lg p-4">
                     <h4 className="text-white font-medium mb-3">Statistics</h4>
                     <div className="space-y-2 text-sm text-gray-300">
                       <div className="flex justify-between">
