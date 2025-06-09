@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Settings } from 'lucide-react'
 import { Dialog, DialogBackdrop, DialogPanel, DialogTitle } from '@headlessui/react'
 import { X } from 'lucide-react'
@@ -7,6 +7,83 @@ const Navbar = () => {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false)
   const [isSignInOpen, setIsSignInOpen] = useState(false)
   const [isGetStartedOpen, setIsGetStartedOpen] = useState(false)
+  const [theme, setTheme] = useState('dark')
+  const [accentColor, setAccentColor] = useState('#97e7aa')
+  const [language, setLanguage] = useState('English')
+  const [notifications, setNotifications] = useState({
+    examReminders: true,
+    assignmentReminders: true
+  })
+
+  const colorOptions = [
+    { name: 'Green', value: '#97e7aa' },
+    { name: 'Purple', value: '#a855f7' },
+    { name: 'Blue', value: '#3b82f6' },
+    { name: 'Red', value: '#ef4444' },
+    { name: 'Orange', value: '#f97316' },
+    { name: 'Pink', value: '#ec4899' }
+  ]
+
+  // Apply theme changes to document
+  useEffect(() => {
+    if (theme === 'light') {
+      document.documentElement.style.setProperty('--bg-primary', '#ffffff')
+      document.documentElement.style.setProperty('--bg-secondary', '#f8fafc')
+      document.documentElement.style.setProperty('--text-primary', '#1f2937')
+      document.documentElement.style.setProperty('--text-secondary', '#6b7280')
+      document.documentElement.style.setProperty('--border-color', '#e5e7eb')
+      document.body.style.backgroundColor = '#ffffff'
+      document.body.style.color = '#1f2937'
+    } else {
+      document.documentElement.style.setProperty('--bg-primary', '#1a1a1a')
+      document.documentElement.style.setProperty('--bg-secondary', '#0a0a0a')
+      document.documentElement.style.setProperty('--text-primary', '#ffffff')
+      document.documentElement.style.setProperty('--text-secondary', '#e0e0e0')
+      document.documentElement.style.setProperty('--border-color', '#374151')
+      document.body.style.backgroundColor = 'hsl(0, 0%, 10%)'
+      document.body.style.color = '#ffffff'
+    }
+  }, [theme])
+
+  // Apply accent color changes
+  useEffect(() => {
+    document.documentElement.style.setProperty('--accent-color', accentColor)
+    // Update CSS custom properties for accent color
+    const style = document.createElement('style')
+    style.textContent = `
+      .bg-accent { background-color: ${accentColor} !important; }
+      .text-accent { color: ${accentColor} !important; }
+      .border-accent { border-color: ${accentColor} !important; }
+      .accent-color { accent-color: ${accentColor} !important; }
+    `
+    document.head.appendChild(style)
+    
+    return () => {
+      document.head.removeChild(style)
+    }
+  }, [accentColor])
+
+  const handleSaveSettings = () => {
+    // Save settings to localStorage
+    localStorage.setItem('theme', theme)
+    localStorage.setItem('accentColor', accentColor)
+    localStorage.setItem('language', language)
+    localStorage.setItem('notifications', JSON.stringify(notifications))
+    setIsSettingsOpen(false)
+  }
+
+  // Load settings from localStorage on component mount
+  useEffect(() => {
+    const savedTheme = localStorage.getItem('theme')
+    const savedAccentColor = localStorage.getItem('accentColor')
+    const savedLanguage = localStorage.getItem('language')
+    const savedNotifications = localStorage.getItem('notifications')
+
+    if (savedTheme) setTheme(savedTheme)
+    if (savedAccentColor) setAccentColor(savedAccentColor)
+    if (savedLanguage) setLanguage(savedLanguage)
+    if (savedNotifications) setNotifications(JSON.parse(savedNotifications))
+  }, [])
 
   return (
     <>
@@ -26,7 +103,8 @@ const Navbar = () => {
           </button>
           <button 
             onClick={() => setIsGetStartedOpen(true)}
-            className="px-4 py-2 bg-[#97e7aa] text-white rounded-lg hover:bg-[#75b384] transition-colors text-sm font-medium"
+            className="px-4 py-2 bg-accent text-white rounded-lg hover:opacity-80 transition-colors text-sm font-medium"
+            style={{ backgroundColor: accentColor }}
           >
             Get started
           </button>
@@ -65,41 +143,106 @@ const Navbar = () => {
                   </button>
                 </div>
 
-                <div className="space-y-4">
+                <div className="space-y-6">
+                  {/* Theme Section */}
                   <div className="border-b border-gray-700 pb-4">
-                    <h3 className="text-white font-medium mb-2">Theme</h3>
+                    <h3 className="text-white font-medium mb-3">Theme</h3>
                     <div className="space-y-2">
                       <label className="flex items-center gap-2">
-                        <input type="radio" name="theme" value="dark" defaultChecked className="accent-[#97e7aa]" />
+                        <input 
+                          type="radio" 
+                          name="theme" 
+                          value="dark" 
+                          checked={theme === 'dark'}
+                          onChange={(e) => setTheme(e.target.value)}
+                          className="accent-color"
+                          style={{ accentColor }}
+                        />
                         <span className="text-gray-300">Dark</span>
                       </label>
                       <label className="flex items-center gap-2">
-                        <input type="radio" name="theme" value="light" className="accent-[#97e7aa]" />
+                        <input 
+                          type="radio" 
+                          name="theme" 
+                          value="light" 
+                          checked={theme === 'light'}
+                          onChange={(e) => setTheme(e.target.value)}
+                          className="accent-color"
+                          style={{ accentColor }}
+                        />
                         <span className="text-gray-300">Light</span>
                       </label>
                     </div>
                   </div>
 
+                  {/* Accent Color Section */}
                   <div className="border-b border-gray-700 pb-4">
-                    <h3 className="text-white font-medium mb-2">Notifications</h3>
+                    <h3 className="text-white font-medium mb-3">Accent Color</h3>
+                    <div className="grid grid-cols-3 gap-2">
+                      {colorOptions.map((color) => (
+                        <button
+                          key={color.value}
+                          onClick={() => setAccentColor(color.value)}
+                          className={`flex items-center gap-2 p-2 rounded-lg border transition-colors ${
+                            accentColor === color.value 
+                              ? 'border-white bg-gray-800' 
+                              : 'border-gray-600 hover:border-gray-500'
+                          }`}
+                        >
+                          <div 
+                            className="w-4 h-4 rounded-full"
+                            style={{ backgroundColor: color.value }}
+                          />
+                          <span className="text-gray-300 text-sm">{color.name}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Notifications Section */}
+                  <div className="border-b border-gray-700 pb-4">
+                    <h3 className="text-white font-medium mb-3">Notifications</h3>
                     <div className="space-y-2">
                       <label className="flex items-center justify-between">
                         <span className="text-gray-300">Exam reminders</span>
-                        <input type="checkbox" defaultChecked className="accent-[#97e7aa]" />
+                        <input 
+                          type="checkbox" 
+                          checked={notifications.examReminders}
+                          onChange={(e) => setNotifications(prev => ({
+                            ...prev,
+                            examReminders: e.target.checked
+                          }))}
+                          className="accent-color"
+                          style={{ accentColor }}
+                        />
                       </label>
                       <label className="flex items-center justify-between">
                         <span className="text-gray-300">Assignment reminders</span>
-                        <input type="checkbox" defaultChecked className="accent-[#97e7aa]" />
+                        <input 
+                          type="checkbox" 
+                          checked={notifications.assignmentReminders}
+                          onChange={(e) => setNotifications(prev => ({
+                            ...prev,
+                            assignmentReminders: e.target.checked
+                          }))}
+                          className="accent-color"
+                          style={{ accentColor }}
+                        />
                       </label>
                     </div>
                   </div>
 
+                  {/* Language Section */}
                   <div>
-                    <h3 className="text-white font-medium mb-2">Language</h3>
-                    <select className="w-full bg-gray-800 border border-gray-600 rounded text-white p-2">
-                      <option>English</option>
-                      <option>Ukrainian</option>
-                      <option>Spanish</option>
+                    <h3 className="text-white font-medium mb-3">Language</h3>
+                    <select 
+                      value={language}
+                      onChange={(e) => setLanguage(e.target.value)}
+                      className="w-full bg-gray-800 border border-gray-600 rounded text-white p-2 focus:outline-none focus:ring-2 focus:ring-accent"
+                      style={{ '--tw-ring-color': accentColor }}
+                    >
+                      <option value="English">English</option>
+                      <option value="Ukrainian">Ukrainian (в розробці)</option>
                     </select>
                   </div>
                 </div>
@@ -114,8 +257,9 @@ const Navbar = () => {
                     Cancel
                   </button>
                   <button
-                    onClick={() => setIsSettingsOpen(false)}
-                    className="px-4 py-2 bg-[#97e7aa] text-white rounded-lg hover:bg-[#75b384] transition-colors text-sm"
+                    onClick={handleSaveSettings}
+                    className="px-4 py-2 bg-accent text-white rounded-lg hover:opacity-80 transition-colors text-sm"
+                    style={{ backgroundColor: accentColor }}
                   >
                     Save
                   </button>
@@ -157,7 +301,8 @@ const Navbar = () => {
                     <label className="block text-sm text-gray-300 mb-2">Email</label>
                     <input
                       type="email"
-                      className="w-full px-3 py-2 bg-transparent text-white focus:outline-none focus:ring-2 focus:ring-[#97e7aa] border-b border-gray-600"
+                      className="w-full px-3 py-2 bg-transparent text-white focus:outline-none focus:ring-2 focus:ring-accent border-b border-gray-600"
+                      style={{ '--tw-ring-color': accentColor }}
                       placeholder="Enter your email"
                     />
                   </div>
@@ -166,12 +311,16 @@ const Navbar = () => {
                     <label className="block text-sm text-gray-300 mb-2">Password</label>
                     <input
                       type="password"
-                      className="w-full px-3 py-2 bg-transparent text-white focus:outline-none focus:ring-2 focus:ring-[#97e7aa] border-b border-gray-600"
+                      className="w-full px-3 py-2 bg-transparent text-white focus:outline-none focus:ring-2 focus:ring-accent border-b border-gray-600"
+                      style={{ '--tw-ring-color': accentColor }}
                       placeholder="Enter your password"
                     />
                   </div>
 
-                  <button className="w-full py-2 bg-[#97e7aa] text-white rounded-lg hover:bg-[#75b384] transition-colors font-medium">
+                  <button 
+                    className="w-full py-2 bg-accent text-white rounded-lg hover:opacity-80 transition-colors font-medium"
+                    style={{ backgroundColor: accentColor }}
+                  >
                     Sign In
                   </button>
 
@@ -200,7 +349,8 @@ const Navbar = () => {
                         setIsSignInOpen(false)
                         setIsGetStartedOpen(true)
                       }}
-                      className="text-[#97e7aa] hover:underline"
+                      className="text-accent hover:underline"
+                      style={{ color: accentColor }}
                     >
                       Sign up
                     </button>
@@ -243,7 +393,8 @@ const Navbar = () => {
                     <label className="block text-sm text-gray-300 mb-2">Full Name</label>
                     <input
                       type="text"
-                      className="w-full px-3 py-2 bg-transparent text-white focus:outline-none focus:ring-2 focus:ring-[#97e7aa] border-b border-gray-600"
+                      className="w-full px-3 py-2 bg-transparent text-white focus:outline-none focus:ring-2 focus:ring-accent border-b border-gray-600"
+                      style={{ '--tw-ring-color': accentColor }}
                       placeholder="Enter your full name"
                     />
                   </div>
@@ -252,7 +403,8 @@ const Navbar = () => {
                     <label className="block text-sm text-gray-300 mb-2">Email</label>
                     <input
                       type="email"
-                      className="w-full px-3 py-2 bg-transparent text-white focus:outline-none focus:ring-2 focus:ring-[#97e7aa] border-b border-gray-600"
+                      className="w-full px-3 py-2 bg-transparent text-white focus:outline-none focus:ring-2 focus:ring-accent border-b border-gray-600"
+                      style={{ '--tw-ring-color': accentColor }}
                       placeholder="Enter your email"
                     />
                   </div>
@@ -261,7 +413,8 @@ const Navbar = () => {
                     <label className="block text-sm text-gray-300 mb-2">Password</label>
                     <input
                       type="password"
-                      className="w-full px-3 py-2 bg-transparent text-white focus:outline-none focus:ring-2 focus:ring-[#97e7aa] border-b border-gray-600"
+                      className="w-full px-3 py-2 bg-transparent text-white focus:outline-none focus:ring-2 focus:ring-accent border-b border-gray-600"
+                      style={{ '--tw-ring-color': accentColor }}
                       placeholder="Create a password"
                     />
                   </div>
@@ -270,12 +423,16 @@ const Navbar = () => {
                     <label className="block text-sm text-gray-300 mb-2">Confirm Password</label>
                     <input
                       type="password"
-                      className="w-full px-3 py-2 bg-transparent text-white focus:outline-none focus:ring-2 focus:ring-[#97e7aa] border-b border-gray-600"
+                      className="w-full px-3 py-2 bg-transparent text-white focus:outline-none focus:ring-2 focus:ring-accent border-b border-gray-600"
+                      style={{ '--tw-ring-color': accentColor }}
                       placeholder="Confirm your password"
                     />
                   </div>
 
-                  <button className="w-full py-2 bg-[#97e7aa] text-white rounded-lg hover:bg-[#75b384] transition-colors font-medium">
+                  <button 
+                    className="w-full py-2 bg-accent text-white rounded-lg hover:opacity-80 transition-colors font-medium"
+                    style={{ backgroundColor: accentColor }}
+                  >
                     Create Account
                   </button>
 
@@ -304,7 +461,8 @@ const Navbar = () => {
                         setIsGetStartedOpen(false)
                         setIsSignInOpen(true)
                       }}
-                      className="text-[#97e7aa] hover:underline"
+                      className="text-accent hover:underline"
+                      style={{ color: accentColor }}
                     >
                       Sign in
                     </button>
