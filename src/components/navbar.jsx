@@ -445,7 +445,7 @@ const Navbar = () => {
                     >
                       Sign in
                     </button>
-                  </div>
+                  </p>
                 </div>
               </div>
             </DialogPanel>
