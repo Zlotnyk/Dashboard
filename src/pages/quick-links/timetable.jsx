@@ -294,7 +294,7 @@ function TimetablePage() {
                       className='w-full flex items-center justify-center gap-2 py-3 px-3 border-2 border-solid border-gray-600 rounded-lg text-gray-400 hover:text-white hover:border-gray-500 transition-colors'
                     >
                       <Plus size={16} />
-                      <span className='text-sm'>New page</span>
+                      <span className='text-sm'>Create Subject</span>
                     </button>
                   </div>
                 ))}
