@@ -3,6 +3,8 @@ import { body } from 'express-validator';
 import { register, login, logout, getMe, updateProfile, changePassword, forgotPassword, resetPassword } from '../controllers/authController.js';
 import { protect } from '../middleware/auth.js';
 import { validateRegister, validateLogin, validate } from '../middleware/validation.js';
+import passport from '../config/passport.js';
+import { getSignedJwtToken, sendTokenResponse } from '../middleware/auth.js';
 
 const router = express.Router();
 
@@ -76,5 +78,51 @@ router.put('/reset-password/:resettoken', [
     .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/)
     .withMessage('Password must contain at least one uppercase letter, one lowercase letter, and one number')
 ], validate, resetPassword);
+
+// Google OAuth routes
+// @route   GET /api/auth/google
+// @desc    Start Google OAuth flow
+// @access  Public
+router.get('/google', 
+  passport.authenticate('google', { 
+    scope: ['profile', 'email'] 
+  })
+);
+
+// @route   GET /api/auth/google/callback
+// @desc    Google OAuth callback
+// @access  Public
+router.get('/google/callback', 
+  passport.authenticate('google', { 
+    failureRedirect: `${process.env.CLIENT_URL}/login?error=oauth_failed`,
+    session: false 
+  }),
+  async (req, res) => {
+    try {
+      // Update last login
+      await req.user.updateLastLogin();
+      
+      // Generate JWT token
+      const token = getSignedJwtToken(req.user._id);
+      
+      // Redirect to frontend with token
+      res.redirect(`${process.env.CLIENT_URL}/auth/success?token=${token}`);
+    } catch (error) {
+      console.error('Google OAuth callback error:', error);
+      res.redirect(`${process.env.CLIENT_URL}/login?error=oauth_callback_failed`);
+    }
+  }
+);
+
+// @route   GET /api/auth/google/success
+// @desc    Handle successful Google OAuth (for frontend)
+// @access  Public
+router.get('/google/success', (req, res) => {
+  res.json({
+    success: true,
+    message: 'Google OAuth successful',
+    instructions: 'Extract token from URL and use it for authentication'
+  });
+});
 
 export default router;

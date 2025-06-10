@@ -6,6 +6,8 @@ import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import compression from 'compression';
 import morgan from 'morgan';
+import session from 'express-session';
+import passport from './config/passport.js';
 
 // Import routes
 import authRoutes from './routes/auth.js';
@@ -61,6 +63,21 @@ app.use(cors(corsOptions));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
+// Session configuration for Passport
+app.use(session({
+  secret: process.env.SESSION_SECRET || 'your-session-secret',
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    secure: process.env.NODE_ENV === 'production',
+    maxAge: 24 * 60 * 60 * 1000 // 24 hours
+  }
+}));
+
+// Passport middleware
+app.use(passport.initialize());
+app.use(passport.session());
+
 // Connect to MongoDB
 const connectDB = async () => {
   try {
@@ -78,7 +95,12 @@ app.get('/api/health', (req, res) => {
     success: true,
     message: 'DOOIT API is running!',
     timestamp: new Date().toISOString(),
-    environment: process.env.NODE_ENV
+    environment: process.env.NODE_ENV,
+    features: {
+      googleOAuth: !!process.env.GOOGLE_CLIENT_ID,
+      emailService: !!process.env.EMAIL_USER,
+      cloudinary: !!process.env.CLOUDINARY_CLOUD_NAME
+    }
   });
 });
 
@@ -104,6 +126,7 @@ const startServer = async () => {
   app.listen(PORT, () => {
     console.log(`🚀 Server running on port ${PORT} in ${process.env.NODE_ENV} mode`);
     console.log(`📱 API Documentation: http://localhost:${PORT}/api/health`);
+    console.log(`🔐 Google OAuth: ${process.env.GOOGLE_CLIENT_ID ? '✅ Configured' : '❌ Not configured'}`);
   });
 };
 

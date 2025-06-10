@@ -24,6 +24,11 @@ const userSchema = new mongoose.Schema({
     minlength: [6, 'Password must be at least 6 characters'],
     select: false
   },
+  googleId: {
+    type: String,
+    unique: true,
+    sparse: true // Allows multiple null values
+  },
   avatar: {
     type: String,
     default: null
@@ -86,6 +91,7 @@ const userSchema = new mongoose.Schema({
 
 // Index for better performance
 userSchema.index({ email: 1 });
+userSchema.index({ googleId: 1 });
 userSchema.index({ createdAt: -1 });
 
 // Virtual for user's full profile
@@ -98,13 +104,14 @@ userSchema.virtual('profile').get(function() {
     preferences: this.preferences,
     isEmailVerified: this.isEmailVerified,
     lastLogin: this.lastLogin,
-    createdAt: this.createdAt
+    createdAt: this.createdAt,
+    isGoogleUser: !!this.googleId
   };
 });
 
-// Hash password before saving
+// Hash password before saving (only for non-Google users)
 userSchema.pre('save', async function(next) {
-  if (!this.isModified('password')) {
+  if (!this.isModified('password') || this.googleId) {
     return next();
   }
   
@@ -113,8 +120,11 @@ userSchema.pre('save', async function(next) {
   next();
 });
 
-// Compare password method
+// Compare password method (skip for Google users)
 userSchema.methods.comparePassword = async function(candidatePassword) {
+  if (this.googleId) {
+    return false; // Google users can't login with password
+  }
   return await bcrypt.compare(candidatePassword, this.password);
 };
 

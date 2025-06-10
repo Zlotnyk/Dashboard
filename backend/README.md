@@ -5,6 +5,7 @@ Backend API for DOOIT Student Planner & Lifestyle Dashboard built with Node.js, 
 ## 🚀 Features
 
 - **Authentication & Authorization**: JWT-based auth with bcrypt password hashing
+- **Google OAuth 2.0**: Sign in with Google integration
 - **User Management**: Profile management, preferences, and statistics
 - **Task Management**: CRUD operations for tasks with priority and status tracking
 - **Event Management**: Calendar events with categories and recurring support
@@ -23,6 +24,7 @@ Backend API for DOOIT Student Planner & Lifestyle Dashboard built with Node.js, 
 - Node.js (v16 or higher)
 - MongoDB (v4.4 or higher)
 - npm or yarn
+- Google Cloud Console project (for OAuth)
 
 ## 🛠️ Installation
 
@@ -49,13 +51,35 @@ Backend API for DOOIT Student Planner & Lifestyle Dashboard built with Node.js, 
    MONGODB_URI=mongodb://localhost:27017/dooit
    JWT_SECRET=your_super_secret_jwt_key_here
    JWT_EXPIRE=7d
+   SESSION_SECRET=your_session_secret_here
+   GOOGLE_CLIENT_ID=your_google_client_id_here
+   GOOGLE_CLIENT_SECRET=your_google_client_secret_here
+   GOOGLE_CALLBACK_URL=http://localhost:5000/api/auth/google/callback
    CLIENT_URL=http://localhost:5173
    ```
 
-4. **Start MongoDB**
+4. **Google OAuth Setup**
+   
+   a. Go to [Google Cloud Console](https://console.cloud.google.com/)
+   
+   b. Create a new project or select existing one
+   
+   c. Enable Google+ API
+   
+   d. Go to "Credentials" → "Create Credentials" → "OAuth 2.0 Client IDs"
+   
+   e. Set application type to "Web application"
+   
+   f. Add authorized redirect URIs:
+      - `http://localhost:5000/api/auth/google/callback` (development)
+      - `https://yourdomain.com/api/auth/google/callback` (production)
+   
+   g. Copy Client ID and Client Secret to your `.env` file
+
+5. **Start MongoDB**
    Make sure MongoDB is running on your system.
 
-5. **Start the server**
+6. **Start the server**
    ```bash
    # Development mode with nodemon
    npm run dev
@@ -96,10 +120,45 @@ Content-Type: application/json
 }
 ```
 
+#### Google OAuth Login
+```http
+GET /api/auth/google
+```
+Redirects to Google OAuth consent screen.
+
+#### Google OAuth Callback
+```http
+GET /api/auth/google/callback
+```
+Handles Google OAuth callback and redirects to frontend with JWT token.
+
 #### Get Current User
 ```http
 GET /api/auth/me
 Authorization: Bearer <token>
+```
+
+### Frontend Integration for Google OAuth
+
+To integrate Google OAuth in your React frontend:
+
+```javascript
+// Login with Google button
+const handleGoogleLogin = () => {
+  window.location.href = 'http://localhost:5000/api/auth/google';
+};
+
+// Handle OAuth success (create a route like /auth/success)
+useEffect(() => {
+  const urlParams = new URLSearchParams(window.location.search);
+  const token = urlParams.get('token');
+  
+  if (token) {
+    localStorage.setItem('token', token);
+    // Redirect to dashboard
+    navigate('/dashboard');
+  }
+}, []);
 ```
 
 ### Task Endpoints
@@ -285,6 +344,7 @@ Content-Type: application/json
 
 ### User Model
 - Personal information (name, email, password)
+- Google OAuth integration (googleId)
 - Preferences (theme, language, notifications)
 - Authentication tokens and verification status
 
@@ -326,12 +386,14 @@ Content-Type: application/json
 ## 🔒 Security Features
 
 - **JWT Authentication**: Secure token-based authentication
+- **Google OAuth 2.0**: Secure third-party authentication
 - **Password Hashing**: bcrypt with salt rounds
 - **Rate Limiting**: Prevent API abuse
 - **CORS Protection**: Cross-origin request security
 - **Input Validation**: Comprehensive data validation
 - **Helmet**: Security headers
 - **Data Sanitization**: XSS and injection prevention
+- **Session Management**: Secure session handling for OAuth
 
 ## 🚀 Performance Optimizations
 
@@ -381,7 +443,22 @@ npm run test:coverage
 | `MONGODB_URI` | MongoDB connection string | `mongodb://localhost:27017/dooit` |
 | `JWT_SECRET` | JWT secret key | Required |
 | `JWT_EXPIRE` | JWT expiration time | `7d` |
+| `SESSION_SECRET` | Session secret for OAuth | Required |
+| `GOOGLE_CLIENT_ID` | Google OAuth Client ID | Required for OAuth |
+| `GOOGLE_CLIENT_SECRET` | Google OAuth Client Secret | Required for OAuth |
+| `GOOGLE_CALLBACK_URL` | Google OAuth callback URL | Required for OAuth |
 | `CLIENT_URL` | Frontend URL for CORS | `http://localhost:5173` |
+
+## 🔄 OAuth Flow
+
+1. User clicks "Sign in with Google" on frontend
+2. Frontend redirects to `/api/auth/google`
+3. User authenticates with Google
+4. Google redirects to `/api/auth/google/callback`
+5. Backend creates/finds user and generates JWT
+6. Backend redirects to frontend with JWT token
+7. Frontend extracts token and stores it
+8. Frontend uses token for subsequent API calls
 
 ## 🤝 Contributing
 
