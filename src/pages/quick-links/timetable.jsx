@@ -294,7 +294,7 @@ function TimetablePage() {
                       className='w-full flex items-center justify-center gap-2 py-3 px-3 border-2 border-solid border-gray-600 rounded-lg text-gray-400 hover:text-white hover:border-gray-500 transition-colors'
                     >
                       <Plus size={16} />
-                      <span className='text-sm'>Create Subject</span>
+                      <span className='text-sm'>New page</span>
                     </button>
                   </div>
                 ))}
@@ -335,7 +335,7 @@ function TimetablePage() {
                 <div className="flex h-full flex-col overflow-y-scroll bg-[#1a1a1a] border-l border-gray-700 shadow-2xl">
                   <div className="px-4 sm:px-6 py-6 border-b border-gray-700">
                     <DialogTitle className="text-lg font-semibold text-white">
-                      {selectedClass ? 'Edit Class' : 'New page'}
+                      {selectedClass ? 'Edit Class' : 'Create Subject'}
                     </DialogTitle>
                   </div>
 
