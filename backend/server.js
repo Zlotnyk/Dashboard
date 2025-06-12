@@ -97,12 +97,15 @@ app.get('/api/health', (req, res) => {
     timestamp: new Date().toISOString(),
     environment: process.env.NODE_ENV,
     features: {
-      googleOAuth: !!process.env.GOOGLE_CLIENT_ID,
+      googleOAuth: !!(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET),
       emailService: !!process.env.EMAIL_USER,
       cloudinary: !!process.env.CLOUDINARY_CLOUD_NAME
     }
   });
 });
+
+// Favicon handler (prevent 404 errors)
+app.get('/favicon.ico', (req, res) => res.status(204).end());
 
 // API Routes
 app.use('/api/auth', authRoutes);
@@ -126,7 +129,7 @@ const startServer = async () => {
   app.listen(PORT, () => {
     console.log(`🚀 Server running on port ${PORT} in ${process.env.NODE_ENV} mode`);
     console.log(`📱 API Documentation: http://localhost:${PORT}/api/health`);
-    console.log(`🔐 Google OAuth: ${process.env.GOOGLE_CLIENT_ID ? '✅ Configured' : '❌ Not configured'}`);
+    console.log(`🔐 Google OAuth: ${(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) ? '✅ Configured' : '❌ Not configured'}`);
   });
 };
 

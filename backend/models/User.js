@@ -13,6 +13,7 @@ const userSchema = new mongoose.Schema({
     required: [true, 'Email is required'],
     unique: true,
     lowercase: true,
+    index: true, // Single index definition
     match: [
       /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/,
       'Please enter a valid email'
@@ -27,7 +28,8 @@ const userSchema = new mongoose.Schema({
   googleId: {
     type: String,
     unique: true,
-    sparse: true // Allows multiple null values
+    sparse: true, // Allows multiple null values
+    index: true // Single index definition
   },
   avatar: {
     type: String,
@@ -88,11 +90,6 @@ const userSchema = new mongoose.Schema({
   toJSON: { virtuals: true },
   toObject: { virtuals: true }
 });
-
-// Remove duplicate indexes - only keep one definition per field
-userSchema.index({ email: 1 });
-userSchema.index({ googleId: 1 });
-userSchema.index({ createdAt: -1 });
 
 // Virtual for user's full profile
 userSchema.virtual('profile').get(function() {
