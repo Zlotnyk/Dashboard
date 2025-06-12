@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Plus, X, Calendar, Clock, FileText, Flag, MapPin, AlertCircle } from 'lucide-react'
 import { Dialog, DialogBackdrop, DialogPanel, DialogTitle } from '@headlessui/react'
 
@@ -26,6 +26,87 @@ const RightSidebar = () => {
     notes: '',
     submitted: false
   })
+
+  // Load data from localStorage
+  useEffect(() => {
+    const savedExamReminders = localStorage.getItem('examReminders')
+    const savedAssignmentReminders = localStorage.getItem('assignmentReminders')
+    
+    if (savedExamReminders) {
+      try {
+        const parsedExamReminders = JSON.parse(savedExamReminders).map(reminder => ({
+          ...reminder,
+          date: new Date(reminder.date)
+        }))
+        setExamReminders(parsedExamReminders)
+      } catch (error) {
+        console.error('Error parsing exam reminders:', error)
+      }
+    }
+    
+    if (savedAssignmentReminders) {
+      try {
+        const parsedAssignmentReminders = JSON.parse(savedAssignmentReminders).map(reminder => ({
+          ...reminder,
+          dueDate: new Date(reminder.dueDate)
+        }))
+        setAssignmentReminders(parsedAssignmentReminders)
+      } catch (error) {
+        console.error('Error parsing assignment reminders:', error)
+      }
+    }
+  }, [])
+
+  // Save to localStorage
+  useEffect(() => {
+    if (examReminders.length > 0) {
+      localStorage.setItem('examReminders', JSON.stringify(examReminders))
+    }
+  }, [examReminders])
+
+  useEffect(() => {
+    if (assignmentReminders.length > 0) {
+      localStorage.setItem('assignmentReminders', JSON.stringify(assignmentReminders))
+    }
+  }, [assignmentReminders])
+
+  // Sync with exam preparation data
+  useEffect(() => {
+    const savedExams = localStorage.getItem('examPreparationData')
+    
+    if (savedExams) {
+      try {
+        const parsedExams = JSON.parse(savedExams).map(exam => ({
+          ...exam,
+          date: new Date(exam.date)
+        }))
+        
+        // For each exam in the exam preparation data, ensure there's a corresponding reminder
+        parsedExams.forEach(exam => {
+          const existingReminder = examReminders.find(reminder => reminder.examId === exam.id)
+          
+          if (!existingReminder) {
+            // Create a new reminder for this exam
+            const newReminder = {
+              id: crypto.randomUUID(),
+              examId: exam.id,
+              title: exam.exam,
+              date: new Date(exam.date),
+              time: exam.time || '',
+              location: exam.location || '',
+              notes: exam.notes || '',
+              attended: false,
+              isUrgent: calculateDaysUntil(exam.date) === 'Tomorrow.'
+            }
+            
+            setExamReminders(prev => [...prev, newReminder])
+          }
+        })
+      } catch (error) {
+        console.error('Error syncing with exam preparation data:', error)
+      }
+    }
+  }, [])
 
   const calculateDaysUntil = (date) => {
     const today = new Date()

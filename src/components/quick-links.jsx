@@ -16,7 +16,6 @@ const QuickLinks = () => {
   const isProjectPlannerPage = window.location.pathname === '/project-planner'
   const isEssayPlannerPage = window.location.pathname === '/essay-planner'
   const isExamPreparationPage = window.location.pathname === '/exam-preparation'
-  const isExamReflectionPage = window.location.pathname === '/exam-reflection'
   const isLifestyleDayPage = window.location.pathname === '/lifestyle-day'
   const isLifestyleWeekPage = window.location.pathname === '/lifestyle-week'
   const isLifestyleMonthPage = window.location.pathname === '/lifestyle-month'
@@ -75,8 +74,7 @@ const QuickLinks = () => {
     {
       title: 'Exams',
       items: [
-        { name: 'Exam Preparation', icon: Target, href: '/exam-preparation' },
-        { name: 'Exam Reflection', icon: FileText, href: '/exam-reflection' }
+        { name: 'Exam Preparation', icon: Target, href: '/exam-preparation' }
       ]
     }
   ]
@@ -149,7 +147,7 @@ const QuickLinks = () => {
     links = lifestyleLinks
   } else if (isHealthFitnessPage) {
     links = healthFitnessLinks
-  } else if (isTimetablePage || isCourseMaterialsPage || isAssignmentPlannerPage || isImportantConceptsPage || isProjectPlannerPage || isEssayPlannerPage || isExamPreparationPage || isExamReflectionPage) {
+  } else if (isTimetablePage || isCourseMaterialsPage || isAssignmentPlannerPage || isImportantConceptsPage || isProjectPlannerPage || isEssayPlannerPage || isExamPreparationPage) {
     links = mainLinks // Use same links as student planner for all student planner pages
   }
 

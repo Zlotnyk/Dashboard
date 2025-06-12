@@ -15,7 +15,6 @@ import ImportantConceptsPage from './pages/quick-links/important-concepts.jsx'
 import ProjectPlannerPage from './pages/quick-links/project-planner.jsx'
 import EssayPlannerPage from './pages/quick-links/essay-planner.jsx'
 import ExamPreparationPage from './pages/quick-links/exam-preparation.jsx'
-import ExamReflectionPage from './pages/quick-links/exam-reflection.jsx'
 import LifestyleDayPage from './pages/quick-links/lifestyle-day.jsx'
 import LifestyleWeekPage from './pages/quick-links/lifestyle-week.jsx'
 import LifestyleMonthPage from './pages/quick-links/lifestyle-month.jsx'
@@ -52,7 +51,6 @@ createRoot(document.getElementById('root')).render(
 					<Route path='/project-planner' element={<ProjectPlannerPage />} />
 					<Route path='/essay-planner' element={<EssayPlannerPage />} />
 					<Route path='/exam-preparation' element={<ExamPreparationPage />} />
-					<Route path='/exam-reflection' element={<ExamReflectionPage />} />
 					<Route path='/lifestyle-day' element={<LifestyleDayPage />} />
 					<Route path='/lifestyle-week' element={<LifestyleWeekPage />} />
 					<Route path='/lifestyle-month' element={<LifestyleMonthPage />} />
