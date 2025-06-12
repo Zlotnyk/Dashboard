@@ -20,7 +20,8 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
     dragMode: null, // 'move', 'resize-left', 'resize-right'
     startX: 0,
     originalStart: null,
-    originalEnd: null
+    originalEnd: null,
+    hasMoved: false // NEW: Track if mouse actually moved during drag
   })
   
   const timelineRef = useRef(null)
@@ -159,7 +160,8 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
       dragMode: mode,
       startX: e.clientX,
       originalStart: new Date(task.start),
-      originalEnd: new Date(task.end)
+      originalEnd: new Date(task.end),
+      hasMoved: false // Reset movement tracking
     })
     
     // Prevent text selection during drag
@@ -168,7 +170,9 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
 
   const handleTaskClick = (task, e) => {
     e.stopPropagation()
-    if (!dragState.isDragging) {
+    
+    // FIXED: Only open drawer if we're not dragging AND haven't moved
+    if (!dragState.isDragging && !dragState.hasMoved) {
       setDrawerTask(task)
       setIsDrawerOpen(true)
     }
@@ -227,7 +231,8 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
   }
 
   const handleTimelineClick = async (e) => {
-    if (dragState.isDragging) return
+    // FIXED: Don't create task if we just finished dragging
+    if (dragState.isDragging || dragState.hasMoved) return
     
     if (e.target === timelineRef.current || e.target.closest('.timeline-background')) {
       const rect = timelineRef.current.getBoundingClientRect()
@@ -300,6 +305,12 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
       if (!dragState.isDragging || !dragState.draggedTask) return
       
       const deltaX = e.clientX - dragState.startX
+      
+      // TRACK MOVEMENT: If mouse moved more than 5px, consider it a drag
+      if (Math.abs(deltaX) > 5) {
+        setDragState(prev => ({ ...prev, hasMoved: true }))
+      }
+      
       const daysDelta = Math.round(deltaX / dayWidth)
       
       if (daysDelta === 0) return // No change
@@ -351,6 +362,10 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
         }
       }
       
+      // IMPORTANT: Keep hasMoved state for a short time to prevent modal opening
+      const wasDragging = dragState.isDragging
+      const hadMoved = dragState.hasMoved
+      
       // Reset drag state
       setDragState({
         isDragging: false,
@@ -358,8 +373,16 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
         dragMode: null,
         startX: 0,
         originalStart: null,
-        originalEnd: null
+        originalEnd: null,
+        hasMoved: hadMoved // Keep movement state temporarily
       })
+      
+      // Clear movement state after a short delay
+      if (hadMoved) {
+        setTimeout(() => {
+          setDragState(prev => ({ ...prev, hasMoved: false }))
+        }, 100)
+      }
       
       // Re-enable text selection
       document.body.style.userSelect = ''
