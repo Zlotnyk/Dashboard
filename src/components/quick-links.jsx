@@ -11,7 +11,6 @@ const QuickLinks = () => {
   const isHealthFitnessPage = window.location.pathname === '/health-fitness'
   const isTimetablePage = window.location.pathname === '/timetable'
   const isCourseMaterialsPage = window.location.pathname === '/course-materials'
-  const isStudyChecklistPage = window.location.pathname === '/study-checklist'
   const isAssignmentPlannerPage = window.location.pathname === '/assignment-planner'
   const isStudyNotebookPage = window.location.pathname === '/study-notebook'
   const isImportantConceptsPage = window.location.pathname === '/important-concepts'
@@ -53,8 +52,7 @@ const QuickLinks = () => {
           quickAction: isTimetablePage ? handleQuickAddClass : null,
           quickActionLabel: 'Add Class'
         },
-        { name: 'Course Materials', icon: BookOpen, href: '/course-materials' },
-        { name: 'Study Checklist', icon: Target, href: '/study-checklist' }
+        { name: 'Course Materials', icon: BookOpen, href: '/course-materials' }
       ]
     },
     {
@@ -155,7 +153,7 @@ const QuickLinks = () => {
     links = lifestyleLinks
   } else if (isHealthFitnessPage) {
     links = healthFitnessLinks
-  } else if (isTimetablePage || isCourseMaterialsPage || isStudyChecklistPage || isAssignmentPlannerPage || isStudyNotebookPage || isImportantConceptsPage || isProjectPlannerPage || isGroupProjectsPage || isEssayPlannerPage || isExamPreparationPage || isExamReflectionPage) {
+  } else if (isTimetablePage || isCourseMaterialsPage || isAssignmentPlannerPage || isStudyNotebookPage || isImportantConceptsPage || isProjectPlannerPage || isGroupProjectsPage || isEssayPlannerPage || isExamPreparationPage || isExamReflectionPage) {
     links = mainLinks // Use same links as student planner for all student planner pages
   }
 
