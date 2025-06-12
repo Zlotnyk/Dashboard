@@ -22,11 +22,22 @@ const clearAllLocalData = () => {
     'tasks',
     'events',
     'notes',
-    'reminders'
+    'reminders',
+    'accentColor',
+    'backgroundGif',
+    'language',
+    'notifications'
   ];
   
   keysToRemove.forEach(key => {
     localStorage.removeItem(key);
+  });
+  
+  // Також очищуємо всі ключі з префіксом user_
+  Object.keys(localStorage).forEach(key => {
+    if (key.startsWith('user_')) {
+      localStorage.removeItem(key);
+    }
   });
 };
 

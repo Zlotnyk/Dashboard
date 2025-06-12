@@ -1,33 +1,6 @@
 export const generateMockTasks = () => {
-	return [
-		{
-			id: '1',
-			title: '12314',
-			start: new Date(2025, 5, 6), // June 6, 2025
-			end: new Date(2025, 5, 10), // June 10, 2025
-			progress: 0,
-			status: 'Not started',
-			color: '#97e7aa'
-		},
-		{
-			id: '2',
-			title: 'New page',
-			start: new Date(2025, 5, 1), // June 1, 2025
-			end: new Date(2025, 5, 4), // June 4, 2025
-			progress: 0,
-			status: 'Not started',
-			color: '#97e7aa'
-		},
-		{
-			id: '3',
-			title: 'New page',
-			start: new Date(2025, 5, 1), // June 1, 2025
-			end: new Date(2025, 5, 3), // June 3, 2025
-			progress: 0,
-			status: 'Not started',
-			color: '#97e7aa'
-		}
-	]
+	// Return empty array for clean start
+	return []
 }
 
 export const formatDate = (date) => {
@@ -48,4 +21,26 @@ export const getMonthName = (month) => {
 		'July', 'August', 'September', 'October', 'November', 'December'
 	]
 	return monthNames[month]
+}
+
+// Utility function to snap date to day boundary
+export const snapToDay = (date) => {
+	const snapped = new Date(date)
+	snapped.setHours(0, 0, 0, 0)
+	return snapped
+}
+
+// Utility function to calculate task duration in days
+export const getTaskDuration = (startDate, endDate) => {
+	const start = new Date(startDate)
+	const end = new Date(endDate)
+	const diffTime = Math.abs(end - start)
+	return Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+}
+
+// Utility function to check if task overlaps with date range
+export const taskOverlapsRange = (task, rangeStart, rangeEnd) => {
+	const taskStart = new Date(task.start)
+	const taskEnd = new Date(task.end)
+	return taskStart <= rangeEnd && taskEnd >= rangeStart
 }
