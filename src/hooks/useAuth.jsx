@@ -13,6 +13,81 @@ export const useAuth = () => {
   return context;
 };
 
+// Функція для очищення локальних даних при вході нового користувача
+const clearUserSpecificData = () => {
+  const keysToRemove = [
+    'trips',
+    'manualBirthdays',
+    'timetableSchedule',
+    'tasks',
+    'events',
+    'notes',
+    'reminders'
+  ];
+  
+  keysToRemove.forEach(key => {
+    localStorage.removeItem(key);
+  });
+};
+
+// Функція для створення ключа з ID користувача
+const getUserKey = (userId, key) => {
+  return userId ? `${userId}_${key}` : key;
+};
+
+// Функція для міграції даних до користувацького простору
+const migrateDataToUser = (userId) => {
+  const keysToMigrate = [
+    'trips',
+    'manualBirthdays',
+    'timetableSchedule'
+  ];
+  
+  keysToMigrate.forEach(key => {
+    const data = localStorage.getItem(key);
+    if (data) {
+      // Зберігаємо дані з префіксом користувача
+      localStorage.setItem(getUserKey(userId, key), data);
+      // Видаляємо старі дані без префіксу
+      localStorage.removeItem(key);
+    }
+  });
+};
+
+// Функція для завантаження даних користувача
+const loadUserData = (userId) => {
+  const keysToLoad = [
+    'trips',
+    'manualBirthdays',
+    'timetableSchedule'
+  ];
+  
+  keysToLoad.forEach(key => {
+    const userData = localStorage.getItem(getUserKey(userId, key));
+    if (userData) {
+      // Завантажуємо дані користувача в загальний простір
+      localStorage.setItem(key, userData);
+    }
+  });
+};
+
+// Функція для збереження даних користувача
+const saveUserData = (userId) => {
+  const keysToSave = [
+    'trips',
+    'manualBirthdays',
+    'timetableSchedule'
+  ];
+  
+  keysToSave.forEach(key => {
+    const data = localStorage.getItem(key);
+    if (data) {
+      // Зберігаємо дані з префіксом користувача
+      localStorage.setItem(getUserKey(userId, key), data);
+    }
+  });
+};
+
 // Провайдер аутентифікації
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
@@ -29,8 +104,12 @@ export const AuthProvider = ({ children }) => {
       const token = localStorage.getItem('token');
       if (token) {
         const response = await authAPI.getMe();
-        setUser(response.data.data);
+        const userData = response.data.data;
+        setUser(userData);
         setIsAuthenticated(true);
+        
+        // Завантажуємо дані користувача
+        loadUserData(userData.id);
       }
     } catch (error) {
       console.error('Auth check failed:', error);
@@ -44,11 +123,15 @@ export const AuthProvider = ({ children }) => {
   const login = async (credentials) => {
     try {
       const response = await authAPI.login(credentials);
-      const { token, user } = response.data;
+      const { token, user: userData } = response.data;
       
       localStorage.setItem('token', token);
-      setUser(user);
+      setUser(userData);
       setIsAuthenticated(true);
+      
+      // Очищуємо локальні дані та завантажуємо дані користувача
+      clearUserSpecificData();
+      loadUserData(userData.id);
       
       return { success: true };
     } catch (error) {
@@ -63,11 +146,14 @@ export const AuthProvider = ({ children }) => {
   const register = async (userData) => {
     try {
       const response = await authAPI.register(userData);
-      const { token, user } = response.data;
+      const { token, user: newUser } = response.data;
       
       localStorage.setItem('token', token);
-      setUser(user);
+      setUser(newUser);
       setIsAuthenticated(true);
+      
+      // Очищуємо локальні дані для нового користувача
+      clearUserSpecificData();
       
       return { success: true };
     } catch (error) {
@@ -81,17 +167,21 @@ export const AuthProvider = ({ children }) => {
 
   const logout = async () => {
     try {
+      // Зберігаємо дані поточного користувача перед виходом
+      if (user?.id) {
+        saveUserData(user.id);
+      }
+      
       await authAPI.logout();
     } catch (error) {
       console.error('Logout error:', error);
     } finally {
-      // НЕ очищуємо localStorage повністю, тільки токен
       localStorage.removeItem('token');
       setUser(null);
       setIsAuthenticated(false);
       
-      // Зберігаємо всі інші дані в localStorage
-      // Вони залишаться доступними після виходу
+      // Очищуємо дані в загальному просторі
+      clearUserSpecificData();
     }
   };
 
@@ -108,6 +198,27 @@ export const AuthProvider = ({ children }) => {
       };
     }
   };
+
+  // Автоматично зберігаємо дані користувача при зміні
+  useEffect(() => {
+    if (isAuthenticated && user?.id) {
+      const handleBeforeUnload = () => {
+        saveUserData(user.id);
+      };
+
+      window.addEventListener('beforeunload', handleBeforeUnload);
+      
+      // Також зберігаємо дані кожні 30 секунд
+      const interval = setInterval(() => {
+        saveUserData(user.id);
+      }, 30000);
+
+      return () => {
+        window.removeEventListener('beforeunload', handleBeforeUnload);
+        clearInterval(interval);
+      };
+    }
+  }, [isAuthenticated, user?.id]);
 
   const value = {
     user,
