@@ -2,483 +2,176 @@
 
 Backend API for DOOIT Student Planner & Lifestyle Dashboard built with Node.js, Express, and MongoDB.
 
-## 🚀 Features
+## 🚀 Quick Setup
 
-- **Authentication & Authorization**: JWT-based auth with bcrypt password hashing
-- **Google OAuth 2.0**: Sign in with Google integration
-- **User Management**: Profile management, preferences, and statistics
-- **Task Management**: CRUD operations for tasks with priority and status tracking
-- **Event Management**: Calendar events with categories and recurring support
-- **Timetable Management**: Class schedule management with conflict detection
-- **Trip Planning**: Travel planning with itineraries, photos, and budget tracking
-- **Birthday Tracking**: Birthday management with age calculation and reminders
-- **Notes System**: Note-taking with categories, tags, and search functionality
-- **Reminder System**: Exam and assignment reminders with notifications
-- **Data Validation**: Comprehensive input validation and sanitization
-- **Error Handling**: Centralized error handling with detailed responses
-- **Security**: Rate limiting, CORS, helmet, and input sanitization
-- **Performance**: Compression, caching, and optimized database queries
+### 1. Install Dependencies
+```bash
+npm install
+```
 
-## 📋 Prerequisites
+### 2. Setup Environment Variables
+```bash
+cp .env.example .env
+```
 
-- Node.js (v16 or higher)
-- MongoDB (v4.4 or higher)
-- npm or yarn
-- Google Cloud Console project (for OAuth)
+Edit `.env` file with your configuration:
+```env
+PORT=5000
+NODE_ENV=development
+MONGODB_URI=mongodb://localhost:27017/dooit
+JWT_SECRET=your_super_secret_jwt_key_here
+JWT_EXPIRE=7d
+SESSION_SECRET=your_session_secret_here
+CLIENT_URL=http://localhost:5173
+```
 
-## 🛠️ Installation
+### 3. Start MongoDB
 
-1. **Clone the repository**
+#### Option A: MongoDB Community Server (Recommended)
+1. Download and install [MongoDB Community Server](https://www.mongodb.com/try/download/community)
+2. Start MongoDB service:
+   - **Windows**: MongoDB should start automatically as a service
+   - **macOS**: `brew services start mongodb/brew/mongodb-community`
+   - **Linux**: `sudo systemctl start mongod`
+
+#### Option B: MongoDB Atlas (Cloud)
+1. Create account at [MongoDB Atlas](https://www.mongodb.com/atlas)
+2. Create a cluster
+3. Get connection string and update `MONGODB_URI` in `.env`
+
+#### Option C: Docker
+```bash
+docker run -d -p 27017:27017 --name mongodb mongo:latest
+```
+
+### 4. Generate Secure Keys
+```bash
+# Generate JWT_SECRET
+node -e "console.log('JWT_SECRET=' + require('crypto').randomBytes(64).toString('hex'))"
+
+# Generate SESSION_SECRET  
+node -e "console.log('SESSION_SECRET=' + require('crypto').randomBytes(64).toString('hex'))"
+```
+
+### 5. Start the Server
+```bash
+# Development mode
+npm run dev
+
+# Production mode
+npm start
+```
+
+## 🔧 Troubleshooting
+
+### MongoDB Connection Issues
+
+**Error**: `connect ECONNREFUSED ::1:27017`
+
+**Solutions**:
+1. **Check if MongoDB is running**:
    ```bash
-   git clone <repository-url>
-   cd dooit-backend
-   ```
-
-2. **Install dependencies**
-   ```bash
-   npm install
-   ```
-
-3. **Environment Setup**
-   ```bash
-   cp .env.example .env
-   ```
+   # Windows
+   net start MongoDB
    
-   Edit `.env` file with your configuration:
+   # macOS
+   brew services list | grep mongodb
+   
+   # Linux
+   sudo systemctl status mongod
+   ```
+
+2. **Start MongoDB**:
+   ```bash
+   # Windows
+   net start MongoDB
+   
+   # macOS
+   brew services start mongodb/brew/mongodb-community
+   
+   # Linux
+   sudo systemctl start mongod
+   ```
+
+3. **Alternative connection string** (if IPv6 issues):
    ```env
-   PORT=5000
-   NODE_ENV=development
-   MONGODB_URI=mongodb://localhost:27017/dooit
-   JWT_SECRET=your_super_secret_jwt_key_here
-   JWT_EXPIRE=7d
-   SESSION_SECRET=your_session_secret_here
-   GOOGLE_CLIENT_ID=your_google_client_id_here
-   GOOGLE_CLIENT_SECRET=your_google_client_secret_here
-   GOOGLE_CALLBACK_URL=http://localhost:5000/api/auth/google/callback
-   CLIENT_URL=http://localhost:5173
+   MONGODB_URI=mongodb://127.0.0.1:27017/dooit
    ```
 
-4. **Google OAuth Setup**
-   
-   a. Go to [Google Cloud Console](https://console.cloud.google.com/)
-   
-   b. Create a new project or select existing one
-   
-   c. Enable Google+ API
-   
-   d. Go to "Credentials" → "Create Credentials" → "OAuth 2.0 Client IDs"
-   
-   e. Set application type to "Web application"
-   
-   f. Add authorized redirect URIs:
-      - `http://localhost:5000/api/auth/google/callback` (development)
-      - `https://yourdomain.com/api/auth/google/callback` (production)
-   
-   g. Copy Client ID and Client Secret to your `.env` file
+### Google OAuth Setup (Optional)
 
-5. **Start MongoDB**
-   Make sure MongoDB is running on your system.
-
-6. **Start the server**
-   ```bash
-   # Development mode with nodemon
-   npm run dev
-   
-   # Production mode
-   npm start
+1. Go to [Google Cloud Console](https://console.cloud.google.com/)
+2. Create a new project or select existing one
+3. Enable Google+ API
+4. Create OAuth 2.0 credentials
+5. Add authorized redirect URIs:
+   - `http://localhost:5000/api/auth/google/callback`
+6. Update `.env` with your credentials:
+   ```env
+   GOOGLE_CLIENT_ID=your_google_client_id
+   GOOGLE_CLIENT_SECRET=your_google_client_secret
+   GOOGLE_CALLBACK_URL=http://localhost:5000/api/auth/google/callback
    ```
 
 ## 📚 API Documentation
 
-### Base URL
-```
-http://localhost:5000/api
+### Health Check
+```http
+GET /api/health
 ```
 
-### Authentication Endpoints
-
-#### Register User
+### Authentication
 ```http
 POST /api/auth/register
-Content-Type: application/json
-
-{
-  "name": "John Doe",
-  "email": "john@example.com",
-  "password": "Password123"
-}
-```
-
-#### Login User
-```http
 POST /api/auth/login
-Content-Type: application/json
-
-{
-  "email": "john@example.com",
-  "password": "Password123"
-}
-```
-
-#### Google OAuth Login
-```http
-GET /api/auth/google
-```
-Redirects to Google OAuth consent screen.
-
-#### Google OAuth Callback
-```http
-GET /api/auth/google/callback
-```
-Handles Google OAuth callback and redirects to frontend with JWT token.
-
-#### Get Current User
-```http
 GET /api/auth/me
-Authorization: Bearer <token>
+POST /api/auth/logout
 ```
 
-### Frontend Integration for Google OAuth
-
-To integrate Google OAuth in your React frontend:
-
-```javascript
-// Login with Google button
-const handleGoogleLogin = () => {
-  window.location.href = 'http://localhost:5000/api/auth/google';
-};
-
-// Handle OAuth success (create a route like /auth/success)
-useEffect(() => {
-  const urlParams = new URLSearchParams(window.location.search);
-  const token = urlParams.get('token');
-  
-  if (token) {
-    localStorage.setItem('token', token);
-    // Redirect to dashboard
-    navigate('/dashboard');
-  }
-}, []);
-```
-
-### Task Endpoints
-
-#### Get All Tasks
-```http
-GET /api/tasks
-Authorization: Bearer <token>
-```
-
-#### Create Task
-```http
-POST /api/tasks
-Authorization: Bearer <token>
-Content-Type: application/json
-
-{
-  "title": "Complete project",
-  "description": "Finish the DOOIT project",
-  "startDate": "2025-01-15T00:00:00.000Z",
-  "endDate": "2025-01-20T00:00:00.000Z",
-  "priority": "urgent",
-  "status": "In progress"
-}
-```
-
-#### Update Task
-```http
-PUT /api/tasks/:id
-Authorization: Bearer <token>
-Content-Type: application/json
-
-{
-  "title": "Updated task title",
-  "status": "Completed"
-}
-```
-
-#### Delete Task
-```http
-DELETE /api/tasks/:id
-Authorization: Bearer <token>
-```
-
-### Event Endpoints
-
-#### Get All Events
-```http
-GET /api/events
-Authorization: Bearer <token>
-```
-
-#### Create Event
-```http
-POST /api/events
-Authorization: Bearer <token>
-Content-Type: application/json
-
-{
-  "title": "Team Meeting",
-  "date": "2025-01-15T00:00:00.000Z",
-  "time": "14:30",
-  "location": "Conference Room A",
-  "category": "meeting"
-}
-```
-
-### Timetable Endpoints
-
-#### Get Timetable
-```http
-GET /api/timetable
-Authorization: Bearer <token>
-```
-
-#### Create Timetable Entry
-```http
-POST /api/timetable
-Authorization: Bearer <token>
-Content-Type: application/json
-
-{
-  "title": "Mathematics",
-  "weekDay": "Monday",
-  "startTime": "09:00",
-  "endTime": "10:30",
-  "classroom": "Room 101",
-  "professor": "Dr. Smith"
-}
-```
-
-### Trip Endpoints
-
-#### Get All Trips
-```http
-GET /api/trips
-Authorization: Bearer <token>
-```
-
-#### Create Trip
-```http
-POST /api/trips
-Authorization: Bearer <token>
-Content-Type: application/json
-
-{
-  "title": "Summer Vacation",
-  "destination": "Paris, France",
-  "startDate": "2025-07-01T00:00:00.000Z",
-  "endDate": "2025-07-10T00:00:00.000Z",
-  "budget": 2000,
-  "status": "Planning"
-}
-```
-
-### Birthday Endpoints
-
-#### Get All Birthdays
-```http
-GET /api/birthdays
-Authorization: Bearer <token>
-```
-
-#### Create Birthday
-```http
-POST /api/birthdays
-Authorization: Bearer <token>
-Content-Type: application/json
-
-{
-  "name": "Alice Johnson",
-  "birthDate": "1995-03-15T00:00:00.000Z",
-  "relationship": "Friend",
-  "email": "alice@example.com"
-}
-```
-
-### Note Endpoints
-
-#### Get All Notes
-```http
-GET /api/notes
-Authorization: Bearer <token>
-```
-
-#### Create Note
-```http
-POST /api/notes
-Authorization: Bearer <token>
-Content-Type: application/json
-
-{
-  "content": "Remember to buy groceries",
-  "category": "personal",
-  "tags": ["shopping", "reminder"]
-}
-```
-
-### Reminder Endpoints
-
-#### Get All Reminders
-```http
-GET /api/reminders
-Authorization: Bearer <token>
-```
-
-#### Create Reminder
-```http
-POST /api/reminders
-Authorization: Bearer <token>
-Content-Type: application/json
-
-{
-  "title": "Math Exam",
-  "type": "exam",
-  "dueDate": "2025-01-20T00:00:00.000Z",
-  "subject": "Mathematics",
-  "priority": "high"
-}
-```
-
-## 🗄️ Database Schema
-
-### User Model
-- Personal information (name, email, password)
-- Google OAuth integration (googleId)
-- Preferences (theme, language, notifications)
-- Authentication tokens and verification status
-
-### Task Model
-- Task details (title, description, dates)
-- Status and priority tracking
-- Progress monitoring and completion status
-
-### Event Model
-- Event information (title, date, time, location)
-- Category-based organization
-- Birthday-specific fields and recurring events
-
-### Timetable Model
-- Class schedule information
-- Time conflict detection
-- Professor and classroom details
-
-### Trip Model
-- Travel planning details
-- Itinerary and accommodation tracking
-- Photo uploads and budget management
-
-### Birthday Model
-- Personal information and relationships
-- Age calculation and next birthday tracking
-- Gift ideas and celebration history
-
-### Note Model
-- Content and categorization
-- Tags and search functionality
-- Pinning and archiving capabilities
-
-### Reminder Model
-- Exam and assignment reminders
-- Priority and status tracking
-- Notification settings
+### Resources
+- Tasks: `/api/tasks`
+- Events: `/api/events`
+- Notes: `/api/notes`
+- Reminders: `/api/reminders`
+- Birthdays: `/api/birthdays`
+- Trips: `/api/trips`
 
 ## 🔒 Security Features
 
-- **JWT Authentication**: Secure token-based authentication
-- **Google OAuth 2.0**: Secure third-party authentication
-- **Password Hashing**: bcrypt with salt rounds
-- **Rate Limiting**: Prevent API abuse
-- **CORS Protection**: Cross-origin request security
-- **Input Validation**: Comprehensive data validation
-- **Helmet**: Security headers
-- **Data Sanitization**: XSS and injection prevention
-- **Session Management**: Secure session handling for OAuth
-
-## 🚀 Performance Optimizations
-
-- **Database Indexing**: Optimized queries with proper indexes
-- **Compression**: Gzip compression for responses
-- **Caching**: Strategic caching implementation
-- **Pagination**: Efficient data loading
-- **Aggregation**: Complex queries using MongoDB aggregation
-
-## 📊 Error Handling
-
-The API uses consistent error response format:
-
-```json
-{
-  "success": false,
-  "message": "Error description",
-  "errors": ["Detailed error messages"]
-}
-```
-
-Common HTTP status codes:
-- `200` - Success
-- `201` - Created
-- `400` - Bad Request
-- `401` - Unauthorized
-- `403` - Forbidden
-- `404` - Not Found
-- `500` - Internal Server Error
-
-## 🧪 Testing
-
-```bash
-# Run tests
-npm test
-
-# Run tests with coverage
-npm run test:coverage
-```
+- JWT Authentication
+- Password hashing with bcrypt
+- Rate limiting
+- CORS protection
+- Input validation
+- XSS protection
 
 ## 📝 Environment Variables
 
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `PORT` | Server port | `5000` |
-| `NODE_ENV` | Environment | `development` |
-| `MONGODB_URI` | MongoDB connection string | `mongodb://localhost:27017/dooit` |
-| `JWT_SECRET` | JWT secret key | Required |
-| `JWT_EXPIRE` | JWT expiration time | `7d` |
-| `SESSION_SECRET` | Session secret for OAuth | Required |
-| `GOOGLE_CLIENT_ID` | Google OAuth Client ID | Required for OAuth |
-| `GOOGLE_CLIENT_SECRET` | Google OAuth Client Secret | Required for OAuth |
-| `GOOGLE_CALLBACK_URL` | Google OAuth callback URL | Required for OAuth |
-| `CLIENT_URL` | Frontend URL for CORS | `http://localhost:5173` |
+| Variable | Description | Required |
+|----------|-------------|----------|
+| `PORT` | Server port | No (default: 5000) |
+| `MONGODB_URI` | MongoDB connection string | Yes |
+| `JWT_SECRET` | JWT secret key | Yes |
+| `SESSION_SECRET` | Session secret | Yes |
+| `CLIENT_URL` | Frontend URL | Yes |
+| `GOOGLE_CLIENT_ID` | Google OAuth Client ID | No |
+| `GOOGLE_CLIENT_SECRET` | Google OAuth Secret | No |
 
-## 🔄 OAuth Flow
+## 🚀 Deployment
 
-1. User clicks "Sign in with Google" on frontend
-2. Frontend redirects to `/api/auth/google`
-3. User authenticates with Google
-4. Google redirects to `/api/auth/google/callback`
-5. Backend creates/finds user and generates JWT
-6. Backend redirects to frontend with JWT token
-7. Frontend extracts token and stores it
-8. Frontend uses token for subsequent API calls
+### Production Environment
+```env
+NODE_ENV=production
+MONGODB_URI=your_production_mongodb_uri
+JWT_SECRET=your_production_jwt_secret
+SESSION_SECRET=your_production_session_secret
+CLIENT_URL=https://yourdomain.com
+```
 
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Add tests for new functionality
-5. Ensure all tests pass
-6. Submit a pull request
-
-## 📄 License
-
-This project is licensed under the MIT License.
-
-## 🆘 Support
-
-For support and questions:
-- Create an issue in the repository
-- Contact the development team
-- Check the documentation
+### Build and Start
+```bash
+npm start
+```
 
 ---
 
