@@ -43,14 +43,12 @@ function TimetablePage() {
     if (savedSchedule) {
       setSchedule(JSON.parse(savedSchedule))
     }
-  }, [isAuthenticated, user])
+  }, [])
 
   // Save schedule to localStorage
   useEffect(() => {
-    if (isAuthenticated) {
-      localStorage.setItem('timetableSchedule', JSON.stringify(schedule))
-    }
-  }, [schedule, isAuthenticated])
+    localStorage.setItem('timetableSchedule', JSON.stringify(schedule))
+  }, [schedule])
 
   // Listen for quick add events from QuickLinks
   useEffect(() => {
@@ -64,7 +62,7 @@ function TimetablePage() {
     return () => {
       window.removeEventListener('quickAddClass', handleQuickAddClass)
     }
-  }, [isAuthenticated])
+  }, [])
 
   const validateForm = () => {
     const errors = {}
@@ -107,11 +105,6 @@ function TimetablePage() {
   }
 
   const handleAddClass = (day) => {
-    if (!isAuthenticated) {
-      alert('Please sign in to add classes')
-      return
-    }
-    
     setSelectedDay(day)
     setSelectedClass(null)
     setValidationErrors({})
@@ -127,11 +120,6 @@ function TimetablePage() {
   }
 
   const handleEditClass = (cls) => {
-    if (!isAuthenticated) {
-      alert('Please sign in to edit classes')
-      return
-    }
-    
     setSelectedClass(cls)
     setSelectedDay(cls.weekDay)
     setValidationErrors({})

@@ -36,11 +36,6 @@ const QuickLinks = () => {
 
   // Quick add function for timetable
   const handleQuickAddClass = () => {
-    if (!isAuthenticated) {
-      alert('Please sign in to add classes')
-      return
-    }
-    
     // Dispatch custom event to trigger class addition in timetable
     window.dispatchEvent(new CustomEvent('quickAddClass', {
       detail: { day: 'Monday' } // Default to Monday, user can change in modal

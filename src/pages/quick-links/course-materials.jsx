@@ -45,40 +45,38 @@ function CourseMaterialsPage() {
 
   // Load data from localStorage
   useEffect(() => {
-    if (isAuthenticated) {
-      const savedTextbooks = localStorage.getItem('courseTextbooks')
-      const savedResources = localStorage.getItem('courseResources')
-      
-      if (savedTextbooks) {
-        try {
-          setTextbooks(JSON.parse(savedTextbooks))
-        } catch (error) {
-          console.error('Error parsing textbooks:', error)
-        }
-      }
-      
-      if (savedResources) {
-        try {
-          setOnlineResources(JSON.parse(savedResources))
-        } catch (error) {
-          console.error('Error parsing resources:', error)
-        }
+    const savedTextbooks = localStorage.getItem('courseTextbooks')
+    const savedResources = localStorage.getItem('courseResources')
+    
+    if (savedTextbooks) {
+      try {
+        setTextbooks(JSON.parse(savedTextbooks))
+      } catch (error) {
+        console.error('Error parsing textbooks:', error)
       }
     }
-  }, [isAuthenticated])
+    
+    if (savedResources) {
+      try {
+        setOnlineResources(JSON.parse(savedResources))
+      } catch (error) {
+        console.error('Error parsing resources:', error)
+      }
+    }
+  }, [])
 
   // Save to localStorage
   useEffect(() => {
-    if (isAuthenticated && textbooks.length > 0) {
+    if (textbooks.length > 0) {
       localStorage.setItem('courseTextbooks', JSON.stringify(textbooks))
     }
-  }, [textbooks, isAuthenticated])
+  }, [textbooks])
 
   useEffect(() => {
-    if (isAuthenticated && onlineResources.length > 0) {
+    if (onlineResources.length > 0) {
       localStorage.setItem('courseResources', JSON.stringify(onlineResources))
     }
-  }, [onlineResources, isAuthenticated])
+  }, [onlineResources])
 
   const validateTextbookForm = () => {
     const errors = {}
@@ -155,10 +153,6 @@ function CourseMaterialsPage() {
 
   // Inline editing functions
   const startEditingTextbook = (textbook) => {
-    if (!isAuthenticated) {
-      alert('Please sign in to edit textbooks')
-      return
-    }
     setEditingTextbook(textbook.id)
     setEditingValues({
       title: textbook.title,
@@ -171,10 +165,6 @@ function CourseMaterialsPage() {
   }
 
   const startEditingResource = (resource) => {
-    if (!isAuthenticated) {
-      alert('Please sign in to edit resources')
-      return
-    }
     setEditingResource(resource.id)
     setEditingValues({
       title: resource.title,
@@ -215,11 +205,6 @@ function CourseMaterialsPage() {
   }
 
   const addNewTextbook = () => {
-    if (!isAuthenticated) {
-      alert('Please sign in to add textbooks')
-      return
-    }
-
     const newTextbook = {
       id: crypto.randomUUID(),
       title: '',
@@ -236,11 +221,6 @@ function CourseMaterialsPage() {
   }
 
   const addNewResource = () => {
-    if (!isAuthenticated) {
-      alert('Please sign in to add resources')
-      return
-    }
-
     const newResource = {
       id: crypto.randomUUID(),
       title: '',
