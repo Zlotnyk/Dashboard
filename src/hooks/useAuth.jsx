@@ -13,8 +13,8 @@ export const useAuth = () => {
   return context;
 };
 
-// Функція для очищення локальних даних при вході нового користувача
-const clearUserSpecificData = () => {
+// Функція для очищення всіх локальних даних
+const clearAllLocalData = () => {
   const keysToRemove = [
     'trips',
     'manualBirthdays',
@@ -32,47 +32,13 @@ const clearUserSpecificData = () => {
 
 // Функція для створення ключа з ID користувача
 const getUserKey = (userId, key) => {
-  return userId ? `${userId}_${key}` : key;
-};
-
-// Функція для міграції даних до користувацького простору
-const migrateDataToUser = (userId) => {
-  const keysToMigrate = [
-    'trips',
-    'manualBirthdays',
-    'timetableSchedule'
-  ];
-  
-  keysToMigrate.forEach(key => {
-    const data = localStorage.getItem(key);
-    if (data) {
-      // Зберігаємо дані з префіксом користувача
-      localStorage.setItem(getUserKey(userId, key), data);
-      // Видаляємо старі дані без префіксу
-      localStorage.removeItem(key);
-    }
-  });
-};
-
-// Функція для завантаження даних користувача
-const loadUserData = (userId) => {
-  const keysToLoad = [
-    'trips',
-    'manualBirthdays',
-    'timetableSchedule'
-  ];
-  
-  keysToLoad.forEach(key => {
-    const userData = localStorage.getItem(getUserKey(userId, key));
-    if (userData) {
-      // Завантажуємо дані користувача в загальний простір
-      localStorage.setItem(key, userData);
-    }
-  });
+  return userId ? `user_${userId}_${key}` : key;
 };
 
 // Функція для збереження даних користувача
 const saveUserData = (userId) => {
+  if (!userId) return;
+  
   const keysToSave = [
     'trips',
     'manualBirthdays',
@@ -84,6 +50,51 @@ const saveUserData = (userId) => {
     if (data) {
       // Зберігаємо дані з префіксом користувача
       localStorage.setItem(getUserKey(userId, key), data);
+    }
+  });
+};
+
+// Функція для завантаження даних користувача
+const loadUserData = (userId) => {
+  if (!userId) return;
+  
+  // Спочатку очищуємо поточні дані
+  clearAllLocalData();
+  
+  const keysToLoad = [
+    'trips',
+    'manualBirthdays',
+    'timetableSchedule'
+  ];
+  
+  keysToLoad.forEach(key => {
+    const userData = localStorage.getItem(getUserKey(userId, key));
+    if (userData) {
+      // Завантажуємо дані користувача
+      localStorage.setItem(key, userData);
+    } else {
+      // Якщо даних немає, створюємо порожні структури
+      switch (key) {
+        case 'trips':
+          localStorage.setItem(key, JSON.stringify([]));
+          break;
+        case 'manualBirthdays':
+          localStorage.setItem(key, JSON.stringify([]));
+          break;
+        case 'timetableSchedule':
+          localStorage.setItem(key, JSON.stringify({
+            Monday: [],
+            Tuesday: [],
+            Wednesday: [],
+            Thursday: [],
+            Friday: [],
+            Saturday: [],
+            Sunday: []
+          }));
+          break;
+        default:
+          localStorage.setItem(key, JSON.stringify([]));
+      }
     }
   });
 };
@@ -110,11 +121,15 @@ export const AuthProvider = ({ children }) => {
         
         // Завантажуємо дані користувача
         loadUserData(userData.id);
+      } else {
+        // Якщо токена немає, очищуємо всі дані
+        clearAllLocalData();
       }
     } catch (error) {
       console.error('Auth check failed:', error);
       localStorage.removeItem('token');
       setIsAuthenticated(false);
+      clearAllLocalData();
     } finally {
       setLoading(false);
     }
@@ -129,8 +144,7 @@ export const AuthProvider = ({ children }) => {
       setUser(userData);
       setIsAuthenticated(true);
       
-      // Очищуємо локальні дані та завантажуємо дані користувача
-      clearUserSpecificData();
+      // Завантажуємо дані користувача
       loadUserData(userData.id);
       
       return { success: true };
@@ -152,8 +166,8 @@ export const AuthProvider = ({ children }) => {
       setUser(newUser);
       setIsAuthenticated(true);
       
-      // Очищуємо локальні дані для нового користувача
-      clearUserSpecificData();
+      // Для нового користувача створюємо порожні структури даних
+      loadUserData(newUser.id);
       
       return { success: true };
     } catch (error) {
@@ -180,8 +194,8 @@ export const AuthProvider = ({ children }) => {
       setUser(null);
       setIsAuthenticated(false);
       
-      // Очищуємо дані в загальному просторі
-      clearUserSpecificData();
+      // Очищуємо всі дані
+      clearAllLocalData();
     }
   };
 

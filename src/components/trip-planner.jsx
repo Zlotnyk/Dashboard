@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react'
 import { Plus, Calendar, MapPin, Clock, X, Edit, Trash2, Plane, AlertCircle, Camera, Upload } from 'lucide-react'
 import { Dialog, DialogBackdrop, DialogPanel, DialogTitle } from '@headlessui/react'
+import { useAuth } from '../hooks/useAuth'
 
 const TripPlanner = () => {
+  const { isAuthenticated, user } = useAuth()
   const [trips, setTrips] = useState([])
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [selectedTrip, setSelectedTrip] = useState(null)
@@ -36,14 +38,14 @@ const TripPlanner = () => {
       photos: trip.photos || []
     }))
     setTrips(tripsWithDates)
-  }, [])
+  }, [isAuthenticated, user])
 
   // Save trips to localStorage whenever trips change
   useEffect(() => {
-    if (trips.length > 0) {
+    if (isAuthenticated) {
       localStorage.setItem('trips', JSON.stringify(trips))
     }
-  }, [trips])
+  }, [trips, isAuthenticated])
 
   const calculateDuration = (startDate, endDate) => {
     if (!startDate || !endDate) return 0
@@ -98,6 +100,11 @@ const TripPlanner = () => {
   }
 
   const handleAddTrip = () => {
+    if (!isAuthenticated) {
+      alert('Please sign in to add trips')
+      return
+    }
+    
     setSelectedTrip(null)
     setValidationErrors({})
     setTripForm({
@@ -114,6 +121,11 @@ const TripPlanner = () => {
   }
 
   const handleEditTrip = (trip) => {
+    if (!isAuthenticated) {
+      alert('Please sign in to edit trips')
+      return
+    }
+    
     setSelectedTrip(trip)
     setValidationErrors({})
     setTripForm({
@@ -367,7 +379,7 @@ const TripPlanner = () => {
             )
           })}
 
-          {/* Add New Trip Card - Updated with gray border */}
+          {/* Add New Trip Card */}
           <button
             onClick={handleAddTrip}
             className="bg-[#2a2a2a] border-2 border-solid border-gray-500 rounded-lg p-4 hover:border-gray-400 hover:bg-[#333333] transition-colors flex flex-col items-center justify-center min-h-[200px] group"

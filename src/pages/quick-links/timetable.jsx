@@ -8,9 +8,11 @@ import FlipClock from '../../components/FlipClock/'
 import QuickLinks from '../../components/quick-links'
 import { Plus, X, Clock, User, MapPin, Calendar, AlertCircle } from 'lucide-react'
 import { Dialog, DialogBackdrop, DialogPanel, DialogTitle, TransitionChild } from '@headlessui/react'
+import { useAuth } from '../../hooks/useAuth'
 import '../../App.css'
 
 function TimetablePage() {
+  const { isAuthenticated, user } = useAuth()
   const [schedule, setSchedule] = useState({
     Monday: [],
     Tuesday: [],
@@ -41,12 +43,14 @@ function TimetablePage() {
     if (savedSchedule) {
       setSchedule(JSON.parse(savedSchedule))
     }
-  }, [])
+  }, [isAuthenticated, user])
 
   // Save schedule to localStorage
   useEffect(() => {
-    localStorage.setItem('timetableSchedule', JSON.stringify(schedule))
-  }, [schedule])
+    if (isAuthenticated) {
+      localStorage.setItem('timetableSchedule', JSON.stringify(schedule))
+    }
+  }, [schedule, isAuthenticated])
 
   const validateForm = () => {
     const errors = {}
@@ -89,6 +93,11 @@ function TimetablePage() {
   }
 
   const handleAddClass = (day) => {
+    if (!isAuthenticated) {
+      alert('Please sign in to add classes')
+      return
+    }
+    
     setSelectedDay(day)
     setSelectedClass(null)
     setValidationErrors({})
@@ -104,6 +113,11 @@ function TimetablePage() {
   }
 
   const handleEditClass = (cls) => {
+    if (!isAuthenticated) {
+      alert('Please sign in to edit classes')
+      return
+    }
+    
     setSelectedClass(cls)
     setSelectedDay(cls.weekDay)
     setValidationErrors({})
