@@ -12,7 +12,6 @@ const QuickLinks = () => {
   const isTimetablePage = window.location.pathname === '/timetable'
   const isCourseMaterialsPage = window.location.pathname === '/course-materials'
   const isAssignmentPlannerPage = window.location.pathname === '/assignment-planner'
-  const isStudyNotebookPage = window.location.pathname === '/study-notebook'
   const isImportantConceptsPage = window.location.pathname === '/important-concepts'
   const isProjectPlannerPage = window.location.pathname === '/project-planner'
   const isGroupProjectsPage = window.location.pathname === '/group-projects'
@@ -59,7 +58,6 @@ const QuickLinks = () => {
       title: 'Assignments',
       items: [
         { name: 'Assignment Planner', icon: FileText, href: '/assignment-planner' },
-        { name: 'Study Notebook', icon: BookOpen, href: '/study-notebook' },
         { name: 'Important Concepts', icon: Target, href: '/important-concepts' }
       ]
     },
@@ -153,7 +151,7 @@ const QuickLinks = () => {
     links = lifestyleLinks
   } else if (isHealthFitnessPage) {
     links = healthFitnessLinks
-  } else if (isTimetablePage || isCourseMaterialsPage || isAssignmentPlannerPage || isStudyNotebookPage || isImportantConceptsPage || isProjectPlannerPage || isGroupProjectsPage || isEssayPlannerPage || isExamPreparationPage || isExamReflectionPage) {
+  } else if (isTimetablePage || isCourseMaterialsPage || isAssignmentPlannerPage || isImportantConceptsPage || isProjectPlannerPage || isGroupProjectsPage || isEssayPlannerPage || isExamPreparationPage || isExamReflectionPage) {
     links = mainLinks // Use same links as student planner for all student planner pages
   }
 
