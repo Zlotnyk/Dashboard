@@ -18,7 +18,7 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
   const [originalTaskData, setOriginalTaskData] = useState(null)
   const [loading, setLoading] = useState(false)
   const [dragStartPosition, setDragStartPosition] = useState({ x: 0, y: 0 })
-  const [dragThreshold] = useState(5) // Minimum pixels to start drag
+  const [dragThreshold] = useState(8) // Increased threshold for better control
   const [hasDragStarted, setHasDragStarted] = useState(false)
   const timelineRef = useRef(null)
   const scrollRef = useRef(null)
@@ -198,7 +198,7 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
     }
   }
 
-  // Improved drag handling with proper threshold
+  // Completely rewritten drag handling for better precision
   const handleMouseDown = (e, task) => {
     e.preventDefault()
     e.stopPropagation()
@@ -216,8 +216,8 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
       end: new Date(task.end)
     })
     
-    // Smaller resize zones for better precision (10px fixed width)
-    const resizeZoneWidth = 10
+    // Fixed resize zones (12px from each edge)
+    const resizeZoneWidth = 12
     
     if (clickX < resizeZoneWidth) {
       setDragMode('resize-start')
@@ -308,7 +308,7 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
     }
   }
 
-  // Enhanced drag handling with proper threshold and snap-to-grid
+  // Completely rewritten drag handling with proper threshold and precision
   useEffect(() => {
     const handleMouseMoveGlobal = (e) => {
       if (!draggedTask || !timelineRef.current || !originalTaskData) return
@@ -328,8 +328,9 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
       const rect = timelineRef.current.getBoundingClientRect()
       const x = e.clientX - rect.left + (scrollRef.current?.scrollLeft || 0)
       
-      // Snap to day grid with better precision
-      const dayIndex = Math.max(0, Math.min(daysToShow.length - 1, Math.round(x / dayWidth)))
+      // Improved snap-to-grid with better precision
+      const exactDayIndex = x / dayWidth
+      const dayIndex = Math.max(0, Math.min(daysToShow.length - 1, Math.round(exactDayIndex)))
       
       let updatedTask = { ...draggedTask }
 
@@ -344,15 +345,19 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
         
       } else if (dragMode === 'resize-start') {
         const newStartDay = daysToShow[dayIndex]
-        if (newStartDay < originalTaskData.end) {
+        const originalEnd = new Date(originalTaskData.end)
+        
+        if (newStartDay <= originalEnd) {
           updatedTask.start = new Date(newStartDay)
-          updatedTask.end = new Date(originalTaskData.end)
+          updatedTask.end = originalEnd
         }
         
       } else if (dragMode === 'resize-end') {
         const newEndDay = daysToShow[dayIndex]
-        if (newEndDay >= originalTaskData.start) {
-          updatedTask.start = new Date(originalTaskData.start)
+        const originalStart = new Date(originalTaskData.start)
+        
+        if (newEndDay >= originalStart) {
+          updatedTask.start = originalStart
           updatedTask.end = new Date(newEndDay)
         }
       }
@@ -383,7 +388,7 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
       setTimeout(() => {
         setIsDragging(false)
         setHasDragStarted(false)
-      }, 100)
+      }, 150) // Increased delay for better stability
     }
 
     if (draggedTask) {
@@ -604,7 +609,7 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
           >
             <div 
               ref={timelineRef}
-              className="relative h-full timeline-background cursor-pointer"
+              className="relative h-full timeline-background cursor-pointer select-none"
               style={{ width: `${totalWidth}px` }}
               onClick={handleTimelineClick}
               onMouseMove={handleMouseMove}
@@ -694,7 +699,7 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
                 return null
               })()}
 
-              {/* Grid hover indicator */}
+              {/* Grid hover indicator - only show when not dragging */}
               {!isDragging && !hasDragStarted && mousePosition.y > (viewMode === 'Month' ? 72 : 40) && (
                 <div
                   className="absolute w-8 h-8 rounded-full flex items-center justify-center z-30 pointer-events-none opacity-60"
@@ -720,13 +725,13 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
                   const taskId = task.id || task._id
                   
                   // Fixed resize zone width for better precision
-                  const resizeZoneWidth = 10
+                  const resizeZoneWidth = 12
                   
                   return (
                     <div
                       key={taskId}
                       className={`absolute h-10 rounded cursor-pointer transition-all duration-200 group z-20 select-none ${
-                        draggedTask?.id === taskId || draggedTask?._id === taskId ? 'opacity-80 shadow-lg' : ''
+                        draggedTask?.id === taskId || draggedTask?._id === taskId ? 'opacity-80 shadow-lg z-30' : ''
                       }`}
                       style={{
                         left: `${getDayPosition(task.start)}px`,
@@ -739,19 +744,19 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
                     >
                       {/* Resize handles with better visibility */}
                       <div 
-                        className="absolute left-0 top-0 h-full cursor-ew-resize opacity-0 group-hover:opacity-100 bg-white bg-opacity-50 rounded-l transition-opacity flex items-center justify-center"
+                        className="absolute left-0 top-0 h-full cursor-ew-resize opacity-0 group-hover:opacity-100 bg-white bg-opacity-30 rounded-l transition-opacity flex items-center justify-center"
                         style={{ width: `${resizeZoneWidth}px` }}
                       >
-                        <div className="w-1 h-4 bg-white opacity-60 rounded"></div>
+                        <div className="w-1 h-4 bg-white opacity-80 rounded"></div>
                       </div>
                       <div 
-                        className="absolute right-0 top-0 h-full cursor-ew-resize opacity-0 group-hover:opacity-100 bg-white bg-opacity-50 rounded-r transition-opacity flex items-center justify-center"
+                        className="absolute right-0 top-0 h-full cursor-ew-resize opacity-0 group-hover:opacity-100 bg-white bg-opacity-30 rounded-r transition-opacity flex items-center justify-center"
                         style={{ width: `${resizeZoneWidth}px` }}
                       >
-                        <div className="w-1 h-4 bg-white opacity-60 rounded"></div>
+                        <div className="w-1 h-4 bg-white opacity-80 rounded"></div>
                       </div>
                       
-                      <div className="flex items-center h-full px-3 text-white text-sm">
+                      <div className="flex items-center h-full px-3 text-white text-sm pointer-events-none">
                         {isUrgent && <span className="mr-1">🔥</span>}
                         <span className="truncate">
                           {task.title}

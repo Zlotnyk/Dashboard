@@ -132,13 +132,14 @@ const BigCalendar = ({ events = [], onAddEvent, onDeleteEvent }) => {
   }
 
   const handlePlusClick = (day) => {
+    // Create date for the clicked day in current month/year
     const selectedDate = new Date(currentYear, currentMonth, day)
     setSelectedDay(day)
     setSelectedEvent(null)
     setValidationErrors({})
     setEventForm({
       title: 'New page',
-      date: selectedDate.toISOString().split('T')[0],
+      date: selectedDate.toISOString().split('T')[0], // Format as YYYY-MM-DD
       time: '',
       location: '',
       category: 'meeting'
@@ -152,7 +153,7 @@ const BigCalendar = ({ events = [], onAddEvent, onDeleteEvent }) => {
     setValidationErrors({})
     setEventForm({
       title: event.title,
-      date: event.date.toISOString().split('T')[0],
+      date: event.date.toISOString().split('T')[0], // Format as YYYY-MM-DD
       time: event.time,
       location: event.location,
       category: event.category
@@ -170,7 +171,7 @@ const BigCalendar = ({ events = [], onAddEvent, onDeleteEvent }) => {
       const updatedEvent = {
         ...selectedEvent,
         title: eventForm.title,
-        date: new Date(eventForm.date),
+        date: new Date(eventForm.date), // Create proper Date object
         time: eventForm.time,
         location: eventForm.location,
         category: eventForm.category,
@@ -185,7 +186,7 @@ const BigCalendar = ({ events = [], onAddEvent, onDeleteEvent }) => {
       const newEvent = {
         id: crypto.randomUUID(),
         title: eventForm.title,
-        date: new Date(eventForm.date),
+        date: new Date(eventForm.date), // Create proper Date object
         time: eventForm.time,
         location: eventForm.location,
         category: eventForm.category,
