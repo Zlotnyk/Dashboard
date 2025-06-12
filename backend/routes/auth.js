@@ -79,50 +79,67 @@ router.put('/reset-password/:resettoken', [
     .withMessage('Password must contain at least one uppercase letter, one lowercase letter, and one number')
 ], validate, resetPassword);
 
-// Google OAuth routes
-// @route   GET /api/auth/google
-// @desc    Start Google OAuth flow
-// @access  Public
-router.get('/google', 
-  passport.authenticate('google', { 
-    scope: ['profile', 'email'] 
-  })
-);
+// Google OAuth routes - only if Google OAuth is configured
+if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
+  // @route   GET /api/auth/google
+  // @desc    Start Google OAuth flow
+  // @access  Public
+  router.get('/google', 
+    passport.authenticate('google', { 
+      scope: ['profile', 'email'] 
+    })
+  );
 
-// @route   GET /api/auth/google/callback
-// @desc    Google OAuth callback
-// @access  Public
-router.get('/google/callback', 
-  passport.authenticate('google', { 
-    failureRedirect: `${process.env.CLIENT_URL}/login?error=oauth_failed`,
-    session: false 
-  }),
-  async (req, res) => {
-    try {
-      // Update last login
-      await req.user.updateLastLogin();
-      
-      // Generate JWT token
-      const token = getSignedJwtToken(req.user._id);
-      
-      // Redirect to frontend with token
-      res.redirect(`${process.env.CLIENT_URL}/auth/success?token=${token}`);
-    } catch (error) {
-      console.error('Google OAuth callback error:', error);
-      res.redirect(`${process.env.CLIENT_URL}/login?error=oauth_callback_failed`);
+  // @route   GET /api/auth/google/callback
+  // @desc    Google OAuth callback
+  // @access  Public
+  router.get('/google/callback', 
+    passport.authenticate('google', { 
+      failureRedirect: `${process.env.CLIENT_URL}/login?error=oauth_failed`,
+      session: false 
+    }),
+    async (req, res) => {
+      try {
+        // Update last login
+        await req.user.updateLastLogin();
+        
+        // Generate JWT token
+        const token = getSignedJwtToken(req.user._id);
+        
+        // Redirect to frontend with token
+        res.redirect(`${process.env.CLIENT_URL}/auth/success?token=${token}`);
+      } catch (error) {
+        console.error('Google OAuth callback error:', error);
+        res.redirect(`${process.env.CLIENT_URL}/login?error=oauth_callback_failed`);
+      }
     }
-  }
-);
+  );
 
-// @route   GET /api/auth/google/success
-// @desc    Handle successful Google OAuth (for frontend)
-// @access  Public
-router.get('/google/success', (req, res) => {
-  res.json({
-    success: true,
-    message: 'Google OAuth successful',
-    instructions: 'Extract token from URL and use it for authentication'
+  // @route   GET /api/auth/google/success
+  // @desc    Handle successful Google OAuth (for frontend)
+  // @access  Public
+  router.get('/google/success', (req, res) => {
+    res.json({
+      success: true,
+      message: 'Google OAuth successful',
+      instructions: 'Extract token from URL and use it for authentication'
+    });
   });
-});
+} else {
+  // Provide fallback routes when Google OAuth is not configured
+  router.get('/google', (req, res) => {
+    res.status(503).json({
+      success: false,
+      message: 'Google OAuth is not configured on this server'
+    });
+  });
+
+  router.get('/google/callback', (req, res) => {
+    res.status(503).json({
+      success: false,
+      message: 'Google OAuth is not configured on this server'
+    });
+  });
+}
 
 export default router;
