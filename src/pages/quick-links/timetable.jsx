@@ -93,7 +93,7 @@ function TimetablePage() {
     setSelectedClass(null)
     setValidationErrors({})
     setClassForm({
-      title: 'New page',
+      title: '',
       weekDay: day,
       classroom: '',
       professor: '',
@@ -335,7 +335,7 @@ function TimetablePage() {
                 <div className="flex h-full flex-col overflow-y-scroll bg-[#1a1a1a] border-l border-gray-700 shadow-2xl">
                   <div className="px-4 sm:px-6 py-6 border-b border-gray-700">
                     <DialogTitle className="text-lg font-semibold text-white">
-                      {selectedClass ? 'Edit Class' : 'New page'}
+                      {selectedClass ? 'Edit Class' : 'Create Subject'}
                     </DialogTitle>
                   </div>
 
@@ -350,10 +350,11 @@ function TimetablePage() {
                         type="text"
                         value={classForm.title}
                         onChange={(e) => handleFormChange('title', e.target.value)}
-                        className={`w-full px-3 py-3 bg-transparent border-none outline-none text-white placeholder-gray-400 focus:outline-none transition-colors ${
-                          validationErrors.title ? 'text-red-400' : ''
+                        className={`w-full px-3 py-3 bg-transparent border-2 border-solid border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition-colors ${
+                          validationErrors.title ? 'border-red-400' : ''
                         }`}
                         placeholder="Enter class title"
+                        autoFocus
                       />
                       {validationErrors.title && (
                         <div className="flex items-center gap-2 mt-1">
@@ -381,9 +382,6 @@ function TimetablePage() {
                             <option key={day} value={day} className="bg-[#2a2a2a]">{day}</option>
                           ))}
                         </select>
-                        <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                          <X size={16} className="text-gray-400" />
-                        </div>
                       </div>
                       {validationErrors.weekDay && (
                         <div className="flex items-center gap-2 mt-1">
@@ -403,8 +401,8 @@ function TimetablePage() {
                         type="text"
                         value={classForm.classroom}
                         onChange={(e) => handleFormChange('classroom', e.target.value)}
-                        className="w-full px-3 py-3 bg-transparent border-none outline-none text-white placeholder-gray-400 focus:outline-none transition-colors"
-                        placeholder=""
+                        className="w-full px-3 py-3 bg-transparent border-2 border-solid border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition-colors"
+                        placeholder="Enter classroom"
                       />
                     </div>
 
@@ -418,8 +416,8 @@ function TimetablePage() {
                         type="text"
                         value={classForm.professor}
                         onChange={(e) => handleFormChange('professor', e.target.value)}
-                        className="w-full px-3 py-3 bg-transparent border-none outline-none text-white placeholder-gray-400 focus:outline-none transition-colors"
-                        placeholder=""
+                        className="w-full px-3 py-3 bg-transparent border-2 border-solid border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition-colors"
+                        placeholder="Enter professor name"
                       />
                     </div>
 
@@ -433,8 +431,8 @@ function TimetablePage() {
                         type="time"
                         value={classForm.startTime}
                         onChange={(e) => handleFormChange('startTime', e.target.value)}
-                        className={`w-full px-3 py-3 bg-transparent border-none outline-none text-white focus:outline-none transition-colors ${
-                          validationErrors.startTime ? 'text-red-400' : ''
+                        className={`w-full px-3 py-3 bg-transparent border-2 border-solid border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition-colors ${
+                          validationErrors.startTime ? 'border-red-400' : ''
                         }`}
                       />
                       {validationErrors.startTime && (
@@ -455,8 +453,8 @@ function TimetablePage() {
                         type="time"
                         value={classForm.endTime}
                         onChange={(e) => handleFormChange('endTime', e.target.value)}
-                        className={`w-full px-3 py-3 bg-transparent border-none outline-none text-white focus:outline-none transition-colors ${
-                          validationErrors.endTime ? 'text-red-400' : ''
+                        className={`w-full px-3 py-3 bg-transparent border-2 border-solid border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition-colors ${
+                          validationErrors.endTime ? 'border-red-400' : ''
                         }`}
                       />
                       {validationErrors.endTime && (
