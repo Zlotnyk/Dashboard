@@ -52,6 +52,20 @@ function TimetablePage() {
     }
   }, [schedule, isAuthenticated])
 
+  // Listen for quick add events from QuickLinks
+  useEffect(() => {
+    const handleQuickAddClass = (event) => {
+      const { day } = event.detail
+      handleAddClass(day)
+    }
+
+    window.addEventListener('quickAddClass', handleQuickAddClass)
+    
+    return () => {
+      window.removeEventListener('quickAddClass', handleQuickAddClass)
+    }
+  }, [isAuthenticated])
+
   const validateForm = () => {
     const errors = {}
     
@@ -241,6 +255,14 @@ function TimetablePage() {
                 <h2 className='text-2xl font-[Libre_Baskerville] italic text-white'>
                   Timetable
                 </h2>
+                {/* Quick Add Button */}
+                <button
+                  onClick={() => handleAddClass('Monday')}
+                  className="flex items-center gap-2 px-4 py-2 bg-accent text-white rounded-lg hover:bg-accent-80 transition-colors text-sm"
+                >
+                  <Plus size={16} />
+                  Quick Add Class
+                </button>
               </div>
 
               {/* Horizontal line under header */}

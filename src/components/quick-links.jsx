@@ -1,8 +1,11 @@
 import React from 'react'
-import { BookOpen, FileText, PenTool, Target, Clock, Users, Calendar, Heart, MapPin, Utensils, Dumbbell, Brain, TrendingUp } from 'lucide-react'
+import { BookOpen, FileText, PenTool, Target, Clock, Users, Calendar, Heart, MapPin, Utensils, Dumbbell, Brain, TrendingUp, Plus } from 'lucide-react'
 import { Link } from 'react-router-dom'
+import { useAuth } from '../hooks/useAuth'
 
 const QuickLinks = () => {
+  const { isAuthenticated } = useAuth()
+  
   // Check current page
   const isLifestylePage = window.location.pathname === '/lifestyle'
   const isHealthFitnessPage = window.location.pathname === '/health-fitness'
@@ -30,12 +33,31 @@ const QuickLinks = () => {
   const isLifestyleHabitTrackerPage = window.location.pathname === '/lifestyle-habit-tracker'
   const isLifestyleDreamTrackerPage = window.location.pathname === '/lifestyle-dream-tracker'
   const isLifestyleBucketListPage = window.location.pathname === '/lifestyle-bucket-list'
+
+  // Quick add function for timetable
+  const handleQuickAddClass = () => {
+    if (!isAuthenticated) {
+      alert('Please sign in to add classes')
+      return
+    }
+    
+    // Dispatch custom event to trigger class addition in timetable
+    window.dispatchEvent(new CustomEvent('quickAddClass', {
+      detail: { day: 'Monday' } // Default to Monday, user can change in modal
+    }))
+  }
   
   const mainLinks = [
     {
       title: 'Course',
       items: [
-        { name: 'Timetable', icon: Clock, href: '/timetable' },
+        { 
+          name: 'Timetable', 
+          icon: Clock, 
+          href: '/timetable',
+          quickAction: isTimetablePage ? handleQuickAddClass : null,
+          quickActionLabel: 'Add Class'
+        },
         { name: 'Course Materials', icon: BookOpen, href: '/course-materials' },
         { name: 'Study Checklist', icon: Target, href: '/study-checklist' }
       ]
@@ -159,16 +181,29 @@ const QuickLinks = () => {
                 
                 if (isExternalLink) {
                   return (
-                    <Link
-                      key={itemIndex}
-                      to={item.href}
-                      className="flex items-center gap-3 p-2 hover:bg-gray-800/50 rounded cursor-pointer transition-colors group"
-                    >
-                      <IconComponent size={16} className="text-gray-400 group-hover:text-accent" />
-                      <span className="text-gray-300 text-sm group-hover:text-white">
-                        {item.name}
-                      </span>
-                    </Link>
+                    <div key={itemIndex} className="group">
+                      <Link
+                        to={item.href}
+                        className="flex items-center gap-3 p-2 hover:bg-gray-800/50 rounded cursor-pointer transition-colors group"
+                      >
+                        <IconComponent size={16} className="text-gray-400 group-hover:text-accent" />
+                        <span className="text-gray-300 text-sm group-hover:text-white flex-1">
+                          {item.name}
+                        </span>
+                      </Link>
+                      
+                      {/* Quick Action Button for Timetable */}
+                      {item.quickAction && (
+                        <button
+                          onClick={item.quickAction}
+                          className="w-full flex items-center justify-center gap-2 mt-2 py-2 px-3 border border-gray-600 rounded-lg text-gray-400 hover:text-white hover:border-gray-500 transition-colors text-xs"
+                          title={item.quickActionLabel}
+                        >
+                          <Plus size={12} />
+                          <span>{item.quickActionLabel}</span>
+                        </button>
+                      )}
+                    </div>
                   )
                 }
                 
