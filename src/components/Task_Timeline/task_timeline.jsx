@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react'
-import { ChevronLeft, ChevronRight, Calendar, Plus, Filter, Tag } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Calendar, Plus, Filter, X } from 'lucide-react'
 import TaskDrawer from './task_drawer'
 import { useAuth } from '../../hooks/useAuth'
 import { tasksAPI } from '../../services/api'
@@ -13,15 +13,11 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
   const [drawerTask, setDrawerTask] = useState(null)
   const [loading, setLoading] = useState(false)
   
-  // Filter state
+  // Enhanced filter state
   const [filterOpen, setFilterOpen] = useState(false)
   const [activeFilters, setActiveFilters] = useState({
-    normal: true,
-    urgent: true,
-    'Not started': true,
-    'In progress': true,
-    'Completed': true,
-    'On hold': true
+    priorities: ['normal', 'urgent'],
+    statuses: ['Not started', 'In progress', 'Completed', 'On hold']
   })
   
   // SIMPLIFIED DRAG STATE
@@ -32,11 +28,12 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
     startX: 0,
     originalStart: null,
     originalEnd: null,
-    hasMoved: false // NEW: Track if mouse actually moved during drag
+    hasMoved: false
   })
   
   const timelineRef = useRef(null)
   const scrollRef = useRef(null)
+  const timelineContentRef = useRef(null)
 
   const monthNames = [
     'January', 'February', 'March', 'April', 'May', 'June',
@@ -148,7 +145,7 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
     return dayWidth
   }
 
-  // COMPLETELY NEW DRAG SYSTEM
+  // DRAG SYSTEM
   const handleTaskMouseDown = (e, task) => {
     e.preventDefault()
     e.stopPropagation()
@@ -172,17 +169,15 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
       startX: e.clientX,
       originalStart: new Date(task.start),
       originalEnd: new Date(task.end),
-      hasMoved: false // Reset movement tracking
+      hasMoved: false
     })
     
-    // Prevent text selection during drag
     document.body.style.userSelect = 'none'
   }
 
   const handleTaskClick = (task, e) => {
     e.stopPropagation()
     
-    // FIXED: Only open drawer if we're not dragging AND haven't moved
     if (!dragState.isDragging && !dragState.hasMoved) {
       setDrawerTask(task)
       setIsDrawerOpen(true)
@@ -241,33 +236,38 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
     }
   }
 
-  // FIXED: Completely rewritten timeline click handler with proper date calculation
+  // FIXED: Accurate timeline click handler
   const handleTimelineClick = async (e) => {
-    // Don't create task if we just finished dragging
     if (dragState.isDragging || dragState.hasMoved) return
     
-    if (e.target === timelineRef.current || e.target.closest('.timeline-background')) {
-      const rect = timelineRef.current.getBoundingClientRect()
+    if (e.target === timelineContentRef.current || e.target.closest('.timeline-background')) {
+      const scrollContainer = scrollRef.current
+      if (!scrollContainer) return
       
-      // FIXED: Get exact click position relative to timeline
-      const clickX = e.clientX - rect.left + (scrollRef.current?.scrollLeft || 0)
+      const containerRect = scrollContainer.getBoundingClientRect()
+      const relativeClickX = e.clientX - containerRect.left
+      const scrollLeft = scrollContainer.scrollLeft
+      const absoluteClickX = relativeClickX + scrollLeft
       
-      // FIXED: Calculate which day was clicked with proper rounding
-      const dayIndex = Math.floor(clickX / dayWidth)
+      const dayIndex = Math.floor(absoluteClickX / dayWidth)
       
-      console.log('Timeline click debug:', {
-        clickX,
+      console.log('FIXED Timeline click debug:', {
+        relativeClickX,
+        scrollLeft,
+        absoluteClickX,
         dayWidth,
         dayIndex,
         totalDays: daysToShow.length,
-        scrollLeft: scrollRef.current?.scrollLeft || 0
+        clickedDate: dayIndex >= 0 && dayIndex < daysToShow.length ? daysToShow[dayIndex].toDateString() : 'Invalid'
       })
       
-      // FIXED: Ensure dayIndex is within valid range
       if (dayIndex >= 0 && dayIndex < daysToShow.length) {
         const clickDay = new Date(daysToShow[dayIndex])
+        clickDay.setHours(0, 0, 0, 0)
+        
         const endDay = new Date(clickDay)
         endDay.setDate(clickDay.getDate() + 1)
+        endDay.setHours(23, 59, 59, 999)
         
         console.log('Creating task for date:', clickDay.toDateString())
         
@@ -321,7 +321,7 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
           setIsDrawerOpen(true)
         }
       } else {
-        console.warn('Click outside valid day range:', dayIndex)
+        console.warn('Click outside valid day range:', dayIndex, 'Total days:', daysToShow.length)
       }
     }
   }
@@ -333,32 +333,28 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
       
       const deltaX = e.clientX - dragState.startX
       
-      // TRACK MOVEMENT: If mouse moved more than 5px, consider it a drag
       if (Math.abs(deltaX) > 5) {
         setDragState(prev => ({ ...prev, hasMoved: true }))
       }
       
       const daysDelta = Math.round(deltaX / dayWidth)
       
-      if (daysDelta === 0) return // No change
+      if (daysDelta === 0) return
       
       const { draggedTask, dragMode, originalStart, originalEnd } = dragState
       let newStart = new Date(originalStart)
       let newEnd = new Date(originalEnd)
       
       if (dragMode === 'move') {
-        // Move entire task
         newStart.setDate(originalStart.getDate() + daysDelta)
         newEnd.setDate(originalEnd.getDate() + daysDelta)
       } else if (dragMode === 'resize-left') {
-        // Resize from left (change start date)
         newStart.setDate(originalStart.getDate() + daysDelta)
         if (newStart >= originalEnd) {
           newStart = new Date(originalEnd)
           newStart.setDate(newStart.getDate() - 1)
         }
       } else if (dragMode === 'resize-right') {
-        // Resize from right (change end date)
         newEnd.setDate(originalEnd.getDate() + daysDelta)
         if (newEnd <= originalStart) {
           newEnd = new Date(originalStart)
@@ -366,7 +362,6 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
         }
       }
       
-      // Update task immediately for visual feedback
       const updatedTask = {
         ...draggedTask,
         start: newStart,
@@ -389,11 +384,8 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
         }
       }
       
-      // IMPORTANT: Keep hasMoved state for a short time to prevent modal opening
-      const wasDragging = dragState.isDragging
       const hadMoved = dragState.hasMoved
       
-      // Reset drag state
       setDragState({
         isDragging: false,
         draggedTask: null,
@@ -401,17 +393,15 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
         startX: 0,
         originalStart: null,
         originalEnd: null,
-        hasMoved: hadMoved // Keep movement state temporarily
+        hasMoved: hadMoved
       })
       
-      // Clear movement state after a short delay
       if (hadMoved) {
         setTimeout(() => {
           setDragState(prev => ({ ...prev, hasMoved: false }))
         }, 100)
       }
       
-      // Re-enable text selection
       document.body.style.userSelect = ''
     }
     
@@ -426,16 +416,29 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
     }
   }, [dragState, dayWidth, onUpdateTask, isAuthenticated])
 
-  // Filter tasks based on active filters
-  const filterTasks = (tasks) => {
-    return tasks.filter(task => {
-      // Check priority filter
-      const priorityMatch = activeFilters[task.priority] || false
-      
-      // Check status filter
-      const statusMatch = activeFilters[task.status] || false
-      
-      return priorityMatch && statusMatch
+  // Enhanced filter functions
+  const togglePriorityFilter = (priority) => {
+    setActiveFilters(prev => ({
+      ...prev,
+      priorities: prev.priorities.includes(priority)
+        ? prev.priorities.filter(p => p !== priority)
+        : [...prev.priorities, priority]
+    }))
+  }
+
+  const toggleStatusFilter = (status) => {
+    setActiveFilters(prev => ({
+      ...prev,
+      statuses: prev.statuses.includes(status)
+        ? prev.statuses.filter(s => s !== status)
+        : [...prev.statuses, status]
+    }))
+  }
+
+  const clearAllFilters = () => {
+    setActiveFilters({
+      priorities: ['normal', 'urgent'],
+      statuses: ['Not started', 'In progress', 'Completed', 'On hold']
     })
   }
 
@@ -450,7 +453,12 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
       return taskStart <= visibleEnd && taskEnd >= visibleStart
     })
     
-    return filterTasks(visibleTasks)
+    // Apply filters
+    return visibleTasks.filter(task => {
+      const priorityMatch = activeFilters.priorities.includes(task.priority)
+      const statusMatch = activeFilters.statuses.includes(task.status)
+      return priorityMatch && statusMatch
+    })
   }
 
   const visibleTasks = getVisibleTasks()
@@ -563,13 +571,8 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
 
   const monthLabels = viewMode === 'Month' ? getMonthLabels() : []
 
-  // Toggle a filter
-  const toggleFilter = (category) => {
-    setActiveFilters(prev => ({
-      ...prev,
-      [category]: !prev[category]
-    }))
-  }
+  // Check if any filters are active
+  const hasActiveFilters = activeFilters.priorities.length < 2 || activeFilters.statuses.length < 4
 
   return (
     <>
@@ -582,23 +585,25 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
           </div>
 
           <div className="flex items-center gap-4">
-            {/* Filter Button */}
-            <button
-              onClick={() => setFilterOpen(!filterOpen)}
-              className="flex items-center gap-2 px-3 py-1 rounded text-white text-sm"
-              style={{ backgroundColor: 'var(--accent-color)' }}
-            >
-              <Filter size={14} />
-              Filter
-              {Object.values(activeFilters).some(v => !v) && (
-                <span className="w-2 h-2 rounded-full bg-white"></span>
-              )}
-            </button>
+            {/* Enhanced Filter Button */}
+            <div className="relative">
+              <button
+                onClick={() => setFilterOpen(!filterOpen)}
+                className="flex items-center gap-2 px-3 py-1 rounded text-white text-sm hover:opacity-80 transition-opacity"
+                style={{ backgroundColor: 'var(--accent-color, #97e7aa)' }}
+              >
+                <Filter size={14} />
+                Filter
+                {hasActiveFilters && (
+                  <span className="w-2 h-2 rounded-full bg-white opacity-80"></span>
+                )}
+              </button>
+            </div>
             
             <div className="flex items-center gap-2">
               <button
                 onClick={() => navigateTime(-1)}
-                className="p-2 hover:bg-gray-700 rounded"
+                className="p-2 hover:bg-gray-700 rounded transition-colors"
                 disabled={loading}
               >
                 <ChevronLeft size={16} className="text-gray-400" />
@@ -608,7 +613,7 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
               </span>
               <button
                 onClick={() => navigateTime(1)}
-                className="p-2 hover:bg-gray-700 rounded"
+                className="p-2 hover:bg-gray-700 rounded transition-colors"
                 disabled={loading}
               >
                 <ChevronRight size={16} className="text-gray-400" />
@@ -617,7 +622,7 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
 
             <div className="flex items-center gap-2">
               <button 
-                className={`px-3 py-1 text-sm rounded ${
+                className={`px-3 py-1 text-sm rounded transition-colors ${
                   viewMode === 'Month' 
                     ? 'text-white' 
                     : 'text-gray-400 hover:text-white'
@@ -629,7 +634,7 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
                 Month
               </button>
               <button 
-                className={`px-3 py-1 text-sm rounded ${
+                className={`px-3 py-1 text-sm rounded transition-colors ${
                   viewMode === 'Week' 
                     ? 'text-white' 
                     : 'text-gray-400 hover:text-white'
@@ -641,7 +646,7 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
                 Week
               </button>
               <button 
-                className="px-3 py-1 text-sm text-gray-400 hover:text-white rounded"
+                className="px-3 py-1 text-sm text-gray-400 hover:text-white rounded transition-colors"
                 onClick={goToToday}
                 disabled={loading}
               >
@@ -649,7 +654,7 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
               </button>
               <button
                 onClick={handleAddTask}
-                className="flex items-center gap-2 px-3 py-1 text-white rounded text-sm hover:opacity-80 disabled:opacity-50"
+                className="flex items-center gap-2 px-3 py-1 text-white rounded text-sm hover:opacity-80 disabled:opacity-50 transition-opacity"
                 style={{ backgroundColor: 'var(--accent-color, #97e7aa)' }}
                 disabled={loading}
               >
@@ -660,29 +665,47 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
           </div>
         </div>
 
-        {/* Filter Panel */}
+        {/* Enhanced Filter Panel */}
         {filterOpen && (
-          <div className="mx-4 mb-2 p-3 bg-[#2a2a2a] rounded-lg border border-gray-700">
-            <div className="grid grid-cols-2 gap-2 mb-2">
+          <div className="mx-4 mb-2 p-4 bg-[#2a2a2a] rounded-lg border border-gray-700 shadow-lg">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-white text-sm font-semibold">Filter Tasks</h3>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={clearAllFilters}
+                  className="text-xs text-gray-400 hover:text-white transition-colors"
+                >
+                  Clear All
+                </button>
+                <button
+                  onClick={() => setFilterOpen(false)}
+                  className="text-gray-400 hover:text-white transition-colors"
+                >
+                  <X size={16} />
+                </button>
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-2 gap-4">
               <div>
                 <h4 className="text-white text-sm font-medium mb-2">Priority</h4>
                 <div className="flex flex-wrap gap-2">
                   <button
-                    onClick={() => toggleFilter('normal')}
-                    className={`px-2 py-1 text-xs rounded ${
-                      activeFilters.normal 
-                        ? 'bg-blue-900/50 border border-blue-700/50 text-white' 
-                        : 'bg-transparent border border-gray-600 text-gray-400'
+                    onClick={() => togglePriorityFilter('normal')}
+                    className={`px-3 py-1 text-xs rounded transition-all ${
+                      activeFilters.priorities.includes('normal')
+                        ? 'bg-blue-600 text-white shadow-md' 
+                        : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
                     }`}
                   >
                     Normal
                   </button>
                   <button
-                    onClick={() => toggleFilter('urgent')}
-                    className={`px-2 py-1 text-xs rounded ${
-                      activeFilters.urgent 
-                        ? 'bg-red-900/50 border border-red-700/50 text-white' 
-                        : 'bg-transparent border border-gray-600 text-gray-400'
+                    onClick={() => togglePriorityFilter('urgent')}
+                    className={`px-3 py-1 text-xs rounded transition-all ${
+                      activeFilters.priorities.includes('urgent')
+                        ? 'bg-red-600 text-white shadow-md' 
+                        : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
                     }`}
                   >
                     🔥 Urgent
@@ -693,48 +716,28 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
               <div>
                 <h4 className="text-white text-sm font-medium mb-2">Status</h4>
                 <div className="flex flex-wrap gap-2">
-                  <button
-                    onClick={() => toggleFilter('Not started')}
-                    className={`px-2 py-1 text-xs rounded ${
-                      activeFilters['Not started'] 
-                        ? 'bg-gray-700 border border-gray-600 text-white' 
-                        : 'bg-transparent border border-gray-600 text-gray-400'
-                    }`}
-                  >
-                    Not started
-                  </button>
-                  <button
-                    onClick={() => toggleFilter('In progress')}
-                    className={`px-2 py-1 text-xs rounded ${
-                      activeFilters['In progress'] 
-                        ? 'bg-blue-900/50 border border-blue-700/50 text-white' 
-                        : 'bg-transparent border border-gray-600 text-gray-400'
-                    }`}
-                  >
-                    In progress
-                  </button>
-                  <button
-                    onClick={() => toggleFilter('Completed')}
-                    className={`px-2 py-1 text-xs rounded ${
-                      activeFilters['Completed'] 
-                        ? 'bg-green-900/50 border border-green-700/50 text-white' 
-                        : 'bg-transparent border border-gray-600 text-gray-400'
-                    }`}
-                  >
-                    Completed
-                  </button>
-                  <button
-                    onClick={() => toggleFilter('On hold')}
-                    className={`px-2 py-1 text-xs rounded ${
-                      activeFilters['On hold'] 
-                        ? 'bg-yellow-900/50 border border-yellow-700/50 text-white' 
-                        : 'bg-transparent border border-gray-600 text-gray-400'
-                    }`}
-                  >
-                    On hold
-                  </button>
+                  {['Not started', 'In progress', 'Completed', 'On hold'].map(status => (
+                    <button
+                      key={status}
+                      onClick={() => toggleStatusFilter(status)}
+                      className={`px-3 py-1 text-xs rounded transition-all ${
+                        activeFilters.statuses.includes(status)
+                          ? 'bg-green-600 text-white shadow-md' 
+                          : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                      }`}
+                    >
+                      {status}
+                    </button>
+                  ))}
                 </div>
               </div>
+            </div>
+            
+            {/* Filter Summary */}
+            <div className="mt-3 pt-3 border-t border-gray-600">
+              <p className="text-xs text-gray-400">
+                Showing {visibleTasks.length} of {tasks.length} tasks
+              </p>
             </div>
           </div>
         )}
@@ -746,7 +749,7 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
             className="h-full overflow-x-auto overflow-y-hidden custom-scrollbar"
           >
             <div 
-              ref={timelineRef}
+              ref={timelineContentRef}
               className="relative h-full timeline-background cursor-pointer select-none"
               style={{ width: `${totalWidth}px` }}
               onClick={handleTimelineClick}
@@ -863,7 +866,7 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
                       onClick={(e) => handleTaskClick(task, e)}
                       onMouseDown={(e) => handleTaskMouseDown(e, task)}
                     >
-                      {/* SIMPLE RESIZE INDICATORS */}
+                      {/* Resize indicators */}
                       <div 
                         className="absolute left-0 top-0 h-full w-5 cursor-ew-resize opacity-0 group-hover:opacity-100 bg-white bg-opacity-20 rounded-l transition-opacity flex items-center justify-center"
                       >
@@ -877,10 +880,10 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
                       
                       <div className="flex items-center h-full px-3 text-white text-sm pointer-events-none">
                         {isUrgent && <span className="mr-1">🔥</span>}
-                        <span className="truncate">
+                        <span className="truncate flex-1">
                           {task.title}
                         </span>
-                        <span className="ml-2 text-xs opacity-75">
+                        <span className="ml-2 text-xs opacity-75 hidden sm:block">
                           {task.status}
                         </span>
                       </div>
