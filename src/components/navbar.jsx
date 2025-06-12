@@ -155,12 +155,24 @@ const Navbar = () => {
               </div>
             </div>
           ) : (
-            <button 
-              onClick={() => setIsLoginOpen(true)}
-              className="px-6 py-2 bg-transparent border border-gray-600 text-white rounded-lg hover:border-gray-400 hover:bg-gray-800/30 transition-colors text-sm font-medium"
-            >
-              Sign in
-            </button>
+            <div className="flex items-center gap-3">
+              {/* Settings icon for unregistered users */}
+              <button 
+                onClick={() => setIsSettingsOpen(true)}
+                className="text-gray-400 hover:text-white transition-colors p-2 rounded-lg hover:bg-gray-800/30"
+                title="Settings"
+              >
+                <Settings size={20} />
+              </button>
+              
+              {/* Sign in button */}
+              <button 
+                onClick={() => setIsLoginOpen(true)}
+                className="px-6 py-2 bg-transparent border border-gray-600 text-white rounded-lg hover:border-gray-400 hover:bg-gray-800/30 transition-colors text-sm font-medium"
+              >
+                Sign in
+              </button>
+            </div>
           )}
         </div>
       </nav>
