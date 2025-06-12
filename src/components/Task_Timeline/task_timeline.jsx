@@ -17,7 +17,9 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 })
   const [originalTaskData, setOriginalTaskData] = useState(null)
   const [loading, setLoading] = useState(false)
-  const [scrollLevel, setScrollLevel] = useState(0) // 0 = minimal, 1 = medium, 2 = full
+  const [dragStartPosition, setDragStartPosition] = useState({ x: 0, y: 0 })
+  const [dragThreshold] = useState(5) // Minimum pixels to start drag
+  const [hasDragStarted, setHasDragStarted] = useState(false)
   const timelineRef = useRef(null)
   const scrollRef = useRef(null)
 
@@ -29,31 +31,28 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
   const currentMonth = currentDate.getMonth()
   const currentYear = currentDate.getFullYear()
   
-  // Smart days calculation based on scroll level
+  // Improved days calculation with better scaling
   const getDaysToShow = () => {
     if (viewMode === 'Week') {
-      // Week view: 1 week + context based on scroll level
-      const baseWeeks = 1 + scrollLevel
+      // Week view: Show 3 weeks with current week in center
       const startOfWeek = new Date(currentDate)
       const day = startOfWeek.getDay()
-      startOfWeek.setDate(startOfWeek.getDate() - day - (scrollLevel * 7))
+      startOfWeek.setDate(startOfWeek.getDate() - day - 7) // Start 1 week earlier
       
       const days = []
-      const totalDays = baseWeeks * 7 + 14 // Base weeks + 2 weeks context
-      for (let i = 0; i < totalDays; i++) {
+      for (let i = 0; i < 21; i++) { // 3 weeks = 21 days
         const date = new Date(startOfWeek)
         date.setDate(startOfWeek.getDate() + i)
         days.push(date)
       }
       return days
     } else {
-      // Month view: Start with minimal (3 days each side), expand with scroll
-      const baseDays = 3 + (scrollLevel * 15) // 3, 18, 33 days each side
+      // Month view: Show current month + 15 days on each side for better context
       const startDate = new Date(currentYear, currentMonth, 1)
-      startDate.setDate(startDate.getDate() - baseDays)
+      startDate.setDate(startDate.getDate() - 15) // 15 days before month start
       
       const endDate = new Date(currentYear, currentMonth + 1, 0)
-      endDate.setDate(endDate.getDate() + baseDays)
+      endDate.setDate(endDate.getDate() + 15) // 15 days after month end
       
       const days = []
       const currentDay = new Date(startDate)
@@ -70,8 +69,8 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
   const daysToShow = getDaysToShow()
   const today = new Date()
   
-  // Dynamic day width based on view mode
-  const dayWidth = viewMode === 'Week' ? 80 : 30
+  // Larger day width for better precision
+  const dayWidth = viewMode === 'Week' ? 120 : 40
   const totalWidth = daysToShow.length * dayWidth
 
   const navigateTime = (direction) => {
@@ -82,19 +81,16 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
       newDate.setMonth(currentMonth + direction)
     }
     setCurrentDate(newDate)
-    // Increase scroll level when navigating
-    setScrollLevel(prev => Math.min(2, prev + 1))
   }
 
   const goToToday = () => {
     setCurrentDate(new Date())
-    setScrollLevel(0) // Reset to minimal view
     setTimeout(() => {
       if (scrollRef.current) {
         const todayPosition = getTodayPosition()
         if (todayPosition >= 0) {
           const containerWidth = scrollRef.current.clientWidth
-          const scrollPosition = Math.max(0, todayPosition - containerWidth / 4)
+          const scrollPosition = Math.max(0, todayPosition - containerWidth / 2)
           scrollRef.current.scrollLeft = scrollPosition
         }
       }
@@ -144,7 +140,7 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
 
   const handleTaskClick = (task, e) => {
     e.stopPropagation()
-    if (!isDragging) {
+    if (!hasDragStarted) {
       setDrawerTask(task)
       setIsDrawerOpen(true)
     }
@@ -202,7 +198,7 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
     }
   }
 
-  // Improved drag handling with snap-to-grid
+  // Improved drag handling with proper threshold
   const handleMouseDown = (e, task) => {
     e.preventDefault()
     e.stopPropagation()
@@ -211,13 +207,17 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
     const clickX = e.clientX - rect.left
     const taskWidth = rect.width
     
+    // Store initial mouse position
+    setDragStartPosition({ x: e.clientX, y: e.clientY })
+    setHasDragStarted(false)
+    
     setOriginalTaskData({
       start: new Date(task.start),
       end: new Date(task.end)
     })
     
-    // Smaller resize zones for better precision
-    const resizeZoneWidth = Math.min(15, taskWidth * 0.2)
+    // Smaller resize zones for better precision (10px fixed width)
+    const resizeZoneWidth = 10
     
     if (clickX < resizeZoneWidth) {
       setDragMode('resize-start')
@@ -233,7 +233,7 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
 
   // Snap-to-grid timeline click
   const handleTimelineClick = async (e) => {
-    if (!isDragging && (e.target === timelineRef.current || e.target.closest('.timeline-background'))) {
+    if (!isDragging && !hasDragStarted && (e.target === timelineRef.current || e.target.closest('.timeline-background'))) {
       const rect = timelineRef.current.getBoundingClientRect()
       const clickX = e.clientX - rect.left + (scrollRef.current?.scrollLeft || 0)
       
@@ -308,16 +308,28 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
     }
   }
 
-  // Enhanced drag handling with snap-to-grid
+  // Enhanced drag handling with proper threshold and snap-to-grid
   useEffect(() => {
     const handleMouseMoveGlobal = (e) => {
       if (!draggedTask || !timelineRef.current || !originalTaskData) return
 
+      // Check if we've moved enough to start dragging
+      if (!hasDragStarted) {
+        const deltaX = Math.abs(e.clientX - dragStartPosition.x)
+        const deltaY = Math.abs(e.clientY - dragStartPosition.y)
+        
+        if (deltaX > dragThreshold || deltaY > dragThreshold) {
+          setHasDragStarted(true)
+        } else {
+          return // Don't start dragging yet
+        }
+      }
+
       const rect = timelineRef.current.getBoundingClientRect()
       const x = e.clientX - rect.left + (scrollRef.current?.scrollLeft || 0)
       
-      // Snap to day grid
-      const dayIndex = Math.max(0, Math.min(daysToShow.length - 1, Math.floor(x / dayWidth)))
+      // Snap to day grid with better precision
+      const dayIndex = Math.max(0, Math.min(daysToShow.length - 1, Math.round(x / dayWidth)))
       
       let updatedTask = { ...draggedTask }
 
@@ -349,7 +361,7 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
     }
 
     const handleMouseUp = async () => {
-      if (draggedTask && isAuthenticated && originalTaskData) {
+      if (draggedTask && isAuthenticated && originalTaskData && hasDragStarted) {
         try {
           const taskId = draggedTask.id || draggedTask._id
           await tasksAPI.updateTask(taskId, {
@@ -365,9 +377,13 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
       setDraggedTask(null)
       setDragMode(null)
       setOriginalTaskData(null)
+      setDragStartPosition({ x: 0, y: 0 })
+      
+      // Reset drag state after a short delay to prevent accidental clicks
       setTimeout(() => {
         setIsDragging(false)
-      }, 150)
+        setHasDragStarted(false)
+      }, 100)
     }
 
     if (draggedTask) {
@@ -379,7 +395,7 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
       document.removeEventListener('mousemove', handleMouseMoveGlobal)
       document.removeEventListener('mouseup', handleMouseUp)
     }
-  }, [draggedTask, dragMode, daysToShow, onUpdateTask, dayWidth, originalTaskData, isAuthenticated])
+  }, [draggedTask, dragMode, daysToShow, onUpdateTask, dayWidth, originalTaskData, isAuthenticated, dragStartPosition, hasDragStarted, dragThreshold])
 
   const getVisibleTasks = () => {
     const visibleStart = daysToShow[0]
@@ -462,22 +478,11 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
       const todayPosition = getTodayPosition()
       if (todayPosition >= 0) {
         const containerWidth = scrollRef.current.clientWidth
-        const scrollPosition = Math.max(0, todayPosition - containerWidth / 4)
+        const scrollPosition = Math.max(0, todayPosition - containerWidth / 2)
         scrollRef.current.scrollLeft = scrollPosition
       }
     }
   }, [viewMode, currentDate])
-
-  // Handle scroll to expand view
-  const handleScroll = (e) => {
-    const { scrollLeft, scrollWidth, clientWidth } = e.target
-    const scrollPercentage = scrollLeft / (scrollWidth - clientWidth)
-    
-    // Expand view when scrolling near edges
-    if (scrollPercentage > 0.8 || scrollPercentage < 0.2) {
-      setScrollLevel(prev => Math.min(2, prev + 1))
-    }
-  }
 
   // Get month labels for month view
   const getMonthLabels = () => {
@@ -596,7 +601,6 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
           <div 
             ref={scrollRef}
             className="h-full overflow-x-auto overflow-y-hidden custom-scrollbar"
-            onScroll={handleScroll}
           >
             <div 
               ref={timelineRef}
@@ -608,7 +612,7 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
               {/* Month Labels (only for month view) */}
               {viewMode === 'Month' && (
                 <div 
-                  className="flex h-6 bg-[#1a1a1a] sticky top-0 z-20 border-b border-gray-600"
+                  className="flex h-8 bg-[#1a1a1a] sticky top-0 z-20 border-b border-gray-600"
                   style={{ width: `${totalWidth}px` }}
                 >
                   {monthLabels.map((month, i) => (
@@ -629,10 +633,10 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
 
               {/* Days Header */}
               <div 
-                className="flex h-8 bg-[#1a1a1a] sticky z-10 border-b border-gray-700"
+                className="flex h-10 bg-[#1a1a1a] sticky z-10 border-b border-gray-700"
                 style={{ 
                   width: `${totalWidth}px`,
-                  top: viewMode === 'Month' ? '24px' : '0px'
+                  top: viewMode === 'Month' ? '32px' : '0px'
                 }}
               >
                 {daysToShow.map((date, i) => {
@@ -644,7 +648,7 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
                   return (
                     <div
                       key={i}
-                      className={`flex items-center justify-center text-xs relative ${
+                      className={`flex items-center justify-center text-sm relative ${
                         isToday
                           ? 'text-white font-semibold' 
                           : 'text-gray-300'
@@ -667,7 +671,7 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
                   className="absolute bottom-0 w-px bg-gray-800 z-0"
                   style={{ 
                     left: `${(i + 1) * dayWidth}px`,
-                    top: viewMode === 'Month' ? '56px' : '32px'
+                    top: viewMode === 'Month' ? '72px' : '40px'
                   }}
                 />
               ))}
@@ -681,7 +685,7 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
                       className="absolute bottom-0 w-0.5 z-20 pointer-events-none"
                       style={{ 
                         left: `${todayPosition + dayWidth / 2}px`,
-                        top: viewMode === 'Month' ? '56px' : '32px',
+                        top: viewMode === 'Month' ? '72px' : '40px',
                         backgroundColor: 'var(--accent-color, #97e7aa)'
                       }}
                     />
@@ -691,23 +695,23 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
               })()}
 
               {/* Grid hover indicator */}
-              {!isDragging && mousePosition.y > (viewMode === 'Month' ? 56 : 32) && (
+              {!isDragging && !hasDragStarted && mousePosition.y > (viewMode === 'Month' ? 72 : 40) && (
                 <div
-                  className="absolute w-6 h-6 rounded-full flex items-center justify-center z-30 pointer-events-none opacity-60"
+                  className="absolute w-8 h-8 rounded-full flex items-center justify-center z-30 pointer-events-none opacity-60"
                   style={{
-                    left: `${Math.floor(mousePosition.x / dayWidth) * dayWidth + dayWidth / 2 - 12}px`,
-                    top: `${mousePosition.y - 12}px`,
+                    left: `${Math.floor(mousePosition.x / dayWidth) * dayWidth + dayWidth / 2 - 16}px`,
+                    top: `${mousePosition.y - 16}px`,
                     backgroundColor: 'var(--accent-color, #97e7aa)'
                   }}
                 >
-                  <Plus size={12} className="text-white" />
+                  <Plus size={16} className="text-white" />
                 </div>
               )}
 
               {/* Tasks Area */}
               <div 
                 className="relative h-full pt-4 pb-4 overflow-y-auto custom-scrollbar z-10"
-                style={{ marginTop: viewMode === 'Month' ? '24px' : '0px' }}
+                style={{ marginTop: viewMode === 'Month' ? '32px' : '0px' }}
               >
                 {visibleTasks.map((task, index) => {
                   const isUrgent = task.priority === 'urgent'
@@ -715,34 +719,39 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
                   const taskWidth = getTaskWidth(task)
                   const taskId = task.id || task._id
                   
-                  const resizeZoneWidth = Math.min(15, taskWidth * 0.2)
+                  // Fixed resize zone width for better precision
+                  const resizeZoneWidth = 10
                   
                   return (
                     <div
                       key={taskId}
-                      className={`absolute h-8 rounded cursor-pointer transition-all duration-200 group z-20 ${
+                      className={`absolute h-10 rounded cursor-pointer transition-all duration-200 group z-20 select-none ${
                         draggedTask?.id === taskId || draggedTask?._id === taskId ? 'opacity-80 shadow-lg' : ''
                       }`}
                       style={{
                         left: `${getDayPosition(task.start)}px`,
                         width: `${taskWidth}px`,
-                        top: `${index * 36 + 8}px`,
+                        top: `${index * 44 + 8}px`,
                         backgroundColor: taskColor
                       }}
                       onClick={(e) => handleTaskClick(task, e)}
                       onMouseDown={(e) => handleMouseDown(e, task)}
                     >
-                      {/* Resize handles */}
+                      {/* Resize handles with better visibility */}
                       <div 
-                        className="absolute left-0 top-0 h-full cursor-ew-resize opacity-0 group-hover:opacity-100 bg-white bg-opacity-40 rounded-l transition-opacity"
+                        className="absolute left-0 top-0 h-full cursor-ew-resize opacity-0 group-hover:opacity-100 bg-white bg-opacity-50 rounded-l transition-opacity flex items-center justify-center"
                         style={{ width: `${resizeZoneWidth}px` }}
-                      />
+                      >
+                        <div className="w-1 h-4 bg-white opacity-60 rounded"></div>
+                      </div>
                       <div 
-                        className="absolute right-0 top-0 h-full cursor-ew-resize opacity-0 group-hover:opacity-100 bg-white bg-opacity-40 rounded-r transition-opacity"
+                        className="absolute right-0 top-0 h-full cursor-ew-resize opacity-0 group-hover:opacity-100 bg-white bg-opacity-50 rounded-r transition-opacity flex items-center justify-center"
                         style={{ width: `${resizeZoneWidth}px` }}
-                      />
+                      >
+                        <div className="w-1 h-4 bg-white opacity-60 rounded"></div>
+                      </div>
                       
-                      <div className="flex items-center h-full px-2 text-white text-xs">
+                      <div className="flex items-center h-full px-3 text-white text-sm">
                         {isUrgent && <span className="mr-1">🔥</span>}
                         <span className="truncate">
                           {task.title}
