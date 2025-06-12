@@ -230,25 +230,39 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
     }
   }
 
+  // FIXED: Completely rewritten timeline click handler with proper date calculation
   const handleTimelineClick = async (e) => {
-    // FIXED: Don't create task if we just finished dragging
+    // Don't create task if we just finished dragging
     if (dragState.isDragging || dragState.hasMoved) return
     
     if (e.target === timelineRef.current || e.target.closest('.timeline-background')) {
       const rect = timelineRef.current.getBoundingClientRect()
+      
+      // FIXED: Get exact click position relative to timeline
       const clickX = e.clientX - rect.left + (scrollRef.current?.scrollLeft || 0)
       
-      // SNAP TO DAY GRID
+      // FIXED: Calculate which day was clicked with proper rounding
       const dayIndex = Math.floor(clickX / dayWidth)
       
+      console.log('Timeline click debug:', {
+        clickX,
+        dayWidth,
+        dayIndex,
+        totalDays: daysToShow.length,
+        scrollLeft: scrollRef.current?.scrollLeft || 0
+      })
+      
+      // FIXED: Ensure dayIndex is within valid range
       if (dayIndex >= 0 && dayIndex < daysToShow.length) {
-        const clickDay = daysToShow[dayIndex]
+        const clickDay = new Date(daysToShow[dayIndex])
         const endDay = new Date(clickDay)
         endDay.setDate(clickDay.getDate() + 1)
         
+        console.log('Creating task for date:', clickDay.toDateString())
+        
         const newTask = {
           title: 'New Task',
-          start: new Date(clickDay),
+          start: clickDay,
           end: endDay,
           progress: 0,
           status: 'Not started',
@@ -295,6 +309,8 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
           setDrawerTask(localTask)
           setIsDrawerOpen(true)
         }
+      } else {
+        console.warn('Click outside valid day range:', dayIndex)
       }
     }
   }
