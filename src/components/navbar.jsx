@@ -1,12 +1,16 @@
 import React, { useState, useEffect } from 'react'
-import { Settings } from 'lucide-react'
+import { Settings, User, LogOut } from 'lucide-react'
 import { Dialog, DialogBackdrop, DialogPanel, DialogTitle } from '@headlessui/react'
 import { X } from 'lucide-react'
+import { useAuth } from '../hooks/useAuth'
+import LoginModal from './auth/LoginModal'
+import RegisterModal from './auth/RegisterModal'
 
 const Navbar = () => {
+  const { user, isAuthenticated, logout } = useAuth()
   const [isSettingsOpen, setIsSettingsOpen] = useState(false)
-  const [isSignInOpen, setIsSignInOpen] = useState(false)
-  const [isGetStartedOpen, setIsGetStartedOpen] = useState(false)
+  const [isLoginOpen, setIsLoginOpen] = useState(false)
+  const [isRegisterOpen, setIsRegisterOpen] = useState(false)
   const [accentColor, setAccentColor] = useState('#97e7aa')
   const [backgroundGif, setBackgroundGif] = useState('Green.gif')
   const [language, setLanguage] = useState('English')
@@ -70,6 +74,20 @@ const Navbar = () => {
     if (savedNotifications) setNotifications(JSON.parse(savedNotifications))
   }, [])
 
+  const handleLogout = async () => {
+    await logout()
+  }
+
+  const switchToRegister = () => {
+    setIsLoginOpen(false)
+    setIsRegisterOpen(true)
+  }
+
+  const switchToLogin = () => {
+    setIsRegisterOpen(false)
+    setIsLoginOpen(true)
+  }
+
   return (
     <>
       <nav className="w-full bg-[#1a1a1a] py-1 px-8 flex items-center justify-between">
@@ -86,19 +104,38 @@ const Navbar = () => {
           >
             <Settings size={20} />
           </button>
-          <button 
-            onClick={() => setIsGetStartedOpen(true)}
-            className="px-4 py-2 text-white rounded-lg hover:opacity-80 transition-colors text-sm font-medium"
-            style={{ backgroundColor: 'var(--accent-color)' }}
-          >
-            Get started
-          </button>
-          <button 
-            onClick={() => setIsSignInOpen(true)}
-            className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors text-sm font-medium"
-          >
-            Sign in
-          </button>
+          
+          {isAuthenticated ? (
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2 text-white">
+                <User size={16} />
+                <span className="text-sm">{user?.name}</span>
+              </div>
+              <button 
+                onClick={handleLogout}
+                className="flex items-center gap-2 px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors text-sm font-medium"
+              >
+                <LogOut size={16} />
+                Sign out
+              </button>
+            </div>
+          ) : (
+            <>
+              <button 
+                onClick={() => setIsRegisterOpen(true)}
+                className="px-4 py-2 text-white rounded-lg hover:opacity-80 transition-colors text-sm font-medium"
+                style={{ backgroundColor: 'var(--accent-color)' }}
+              >
+                Get started
+              </button>
+              <button 
+                onClick={() => setIsLoginOpen(true)}
+                className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors text-sm font-medium"
+              >
+                Sign in
+              </button>
+            </>
+          )}
         </div>
       </nav>
 
@@ -255,203 +292,17 @@ const Navbar = () => {
         </div>
       </Dialog>
 
-      {/* Sign In Modal */}
-      <Dialog open={isSignInOpen} onClose={setIsSignInOpen} className="relative z-50">
-        <DialogBackdrop 
-          transition
-          className="fixed inset-0 bg-black/60 backdrop-blur-sm transition-opacity data-closed:opacity-0 data-enter:duration-300 data-enter:ease-out data-leave:duration-200 data-leave:ease-in"
-        />
-        
-        <div className="fixed inset-0 z-10 w-screen overflow-y-auto">
-          <div className="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
-            <DialogPanel 
-              transition
-              className="relative transform overflow-hidden rounded-xl bg-[#1a1a1a] border border-gray-700 text-left shadow-2xl transition-all data-closed:translate-y-4 data-closed:opacity-0 data-enter:duration-300 data-enter:ease-out data-leave:duration-200 data-leave:ease-in sm:my-8 sm:w-full sm:max-w-md data-closed:sm:translate-y-0 data-closed:sm:scale-95"
-            >
-              <div className="bg-[#1a1a1a] px-6 pt-6 pb-4">
-                <div className="flex items-center justify-between mb-6">
-                  <DialogTitle className="text-xl font-semibold text-white">
-                    Sign In
-                  </DialogTitle>
-                  <button
-                    onClick={() => setIsSignInOpen(false)}
-                    className="text-gray-400 hover:text-white transition-colors p-1 rounded-lg hover:bg-gray-800"
-                  >
-                    <X size={24} />
-                  </button>
-                </div>
-
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm text-gray-300 mb-2">Email</label>
-                    <input
-                      type="email"
-                      className="w-full px-3 py-3 bg-transparent text-white focus:outline-none focus:ring-2 focus:ring-[var(--accent-color)] border-b-2 border-gray-600 focus:border-transparent transition-colors"
-                      placeholder="Enter your email"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm text-gray-300 mb-2">Password</label>
-                    <input
-                      type="password"
-                      className="w-full px-3 py-3 bg-transparent text-white focus:outline-none focus:ring-2 focus:ring-[var(--accent-color)] border-b-2 border-gray-600 focus:border-transparent transition-colors"
-                      placeholder="Enter your password"
-                    />
-                  </div>
-
-                  <button 
-                    className="w-full py-3 text-white rounded-lg hover:opacity-80 transition-colors font-medium mt-6"
-                    style={{ backgroundColor: 'var(--accent-color)' }}
-                  >
-                    Sign In
-                  </button>
-
-                  <div className="relative my-6">
-                    <div className="absolute inset-0 flex items-center">
-                      <div className="w-full border-t border-gray-600"></div>
-                    </div>
-                    <div className="relative flex justify-center text-sm">
-                      <span className="px-2 bg-[#1a1a1a] text-gray-400">Or continue with</span>
-                    </div>
-                  </div>
-
-                  <div className="flex gap-3 justify-center">
-                    <button className="w-12 h-12 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center">
-                      <span className="text-xl font-bold">f</span>
-                    </button>
-                    <button className="w-12 h-12 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center justify-center">
-                      <span className="text-xl font-bold">G</span>
-                    </button>
-                  </div>
-
-                  <p className="text-center text-sm text-gray-400 mt-4">
-                    Don't have an account?{' '}
-                    <button 
-                      onClick={() => {
-                        setIsSignInOpen(false)
-                        setIsGetStartedOpen(true)
-                      }}
-                      className="hover:underline transition-colors"
-                      style={{ color: 'var(--accent-color)' }}
-                    >
-                      Sign up
-                    </button>
-                  </p>
-                </div>
-              </div>
-            </DialogPanel>
-          </div>
-        </div>
-      </Dialog>
-
-      {/* Get Started Modal */}
-      <Dialog open={isGetStartedOpen} onClose={setIsGetStartedOpen} className="relative z-50">
-        <DialogBackdrop 
-          transition
-          className="fixed inset-0 bg-black/60 backdrop-blur-sm transition-opacity data-closed:opacity-0 data-enter:duration-300 data-enter:ease-out data-leave:duration-200 data-leave:ease-in"
-        />
-        
-        <div className="fixed inset-0 z-10 w-screen overflow-y-auto">
-          <div className="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
-            <DialogPanel 
-              transition
-              className="relative transform overflow-hidden rounded-xl bg-[#1a1a1a] border border-gray-700 text-left shadow-2xl transition-all data-closed:translate-y-4 data-closed:opacity-0 data-enter:duration-300 data-enter:ease-out data-leave:duration-200 data-leave:ease-in sm:my-8 sm:w-full sm:max-w-md data-closed:sm:translate-y-0 data-closed:sm:scale-95"
-            >
-              <div className="bg-[#1a1a1a] px-6 pt-6 pb-4">
-                <div className="flex items-center justify-between mb-6">
-                  <DialogTitle className="text-xl font-semibold text-white">
-                    Get Started
-                  </DialogTitle>
-                  <button
-                    onClick={() => setIsGetStartedOpen(false)}
-                    className="text-gray-400 hover:text-white transition-colors p-1 rounded-lg hover:bg-gray-800"
-                  >
-                    <X size={24} />
-                  </button>
-                </div>
-
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm text-gray-300 mb-2">Full Name</label>
-                    <input
-                      type="text"
-                      className="w-full px-3 py-3 bg-transparent text-white focus:outline-none focus:ring-2 focus:ring-[var(--accent-color)] border-b-2 border-gray-600 focus:border-transparent transition-colors"
-                      placeholder="Enter your full name"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm text-gray-300 mb-2">Email</label>
-                    <input
-                      type="email"
-                      className="w-full px-3 py-3 bg-transparent text-white focus:outline-none focus:ring-2 focus:ring-[var(--accent-color)] border-b-2 border-gray-600 focus:border-transparent transition-colors"
-                      placeholder="Enter your email"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm text-gray-300 mb-2">Password</label>
-                    <input
-                      type="password"
-                      className="w-full px-3 py-3 bg-transparent text-white focus:outline-none focus:ring-2 focus:ring-[var(--accent-color)] border-b-2 border-gray-600 focus:border-transparent transition-colors"
-                      placeholder="Create a password"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm text-gray-300 mb-2">Confirm Password</label>
-                    <input
-                      type="password"
-                      className="w-full px-3 py-3 bg-transparent text-white focus:outline-none focus:ring-2 focus:ring-[var(--accent-color)] border-b-2 border-gray-600 focus:border-transparent transition-colors"
-                      placeholder="Confirm your password"
-                    />
-                  </div>
-
-                  <button 
-                    className="w-full py-3 text-white rounded-lg hover:opacity-80 transition-colors font-medium mt-6"
-                    style={{ backgroundColor: 'var(--accent-color)' }}
-                  >
-                    Create Account
-                  </button>
-
-                  <div className="relative my-6">
-                    <div className="absolute inset-0 flex items-center">
-                      <div className="w-full border-t border-gray-600"></div>
-                    </div>
-                    <div className="relative flex justify-center text-sm">
-                      <span className="px-2 bg-[#1a1a1a] text-gray-400">Or continue with</span>
-                    </div>
-                  </div>
-
-                  <div className="flex gap-3 justify-center">
-                    <button className="w-12 h-12 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center">
-                      <span className="text-xl font-bold">f</span>
-                    </button>
-                    <button className="w-12 h-12 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center justify-center">
-                      <span className="text-xl font-bold">G</span>
-                    </button>
-                  </div>
-
-                  <p className="text-center text-sm text-gray-400 mt-4">
-                    Already have an account?{' '}
-                    <button 
-                      onClick={() => {
-                        setIsGetStartedOpen(false)
-                        setIsSignInOpen(true)
-                      }}
-                      className="hover:underline transition-colors"
-                      style={{ color: 'var(--accent-color)' }}
-                    >
-                      Sign in
-                    </button>
-                  </p>
-                </div>
-              </div>
-            </DialogPanel>
-          </div>
-        </div>
-      </Dialog>
+      {/* Auth Modals */}
+      <LoginModal 
+        isOpen={isLoginOpen} 
+        onClose={() => setIsLoginOpen(false)}
+        onSwitchToRegister={switchToRegister}
+      />
+      <RegisterModal 
+        isOpen={isRegisterOpen} 
+        onClose={() => setIsRegisterOpen(false)}
+        onSwitchToLogin={switchToLogin}
+      />
     </>
   )
 }
