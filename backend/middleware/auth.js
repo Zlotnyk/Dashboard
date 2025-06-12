@@ -40,13 +40,15 @@ export const protect = async (req, res, next) => {
       }
 
       next();
-    } catch (error) {
+    } catch (jwtError) {
+      console.error('JWT verification error:', jwtError.message);
       return res.status(401).json({
         success: false,
-        message: 'Not authorized to access this route'
+        message: 'Invalid or expired token'
       });
     }
   } catch (error) {
+    console.error('Auth middleware error:', error);
     return res.status(500).json({
       success: false,
       message: 'Server error in authentication'

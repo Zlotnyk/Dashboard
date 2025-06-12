@@ -9,6 +9,8 @@ export const register = async (req, res, next) => {
   try {
     const { name, email, password } = req.body;
 
+    console.log('Registration attempt:', { name, email });
+
     // Check if user already exists
     const existingUser = await User.findOne({ email });
     if (existingUser) {
@@ -25,8 +27,11 @@ export const register = async (req, res, next) => {
       password
     });
 
+    console.log('User created successfully:', user._id);
+
     sendTokenResponse(user, 201, res);
   } catch (error) {
+    console.error('Registration error:', error);
     res.status(500).json({
       success: false,
       message: 'Server error during registration',
@@ -42,10 +47,13 @@ export const login = async (req, res, next) => {
   try {
     const { email, password } = req.body;
 
+    console.log('Login attempt for:', email);
+
     // Check for user
     const user = await User.findOne({ email }).select('+password');
 
     if (!user) {
+      console.log('User not found:', email);
       return res.status(401).json({
         success: false,
         message: 'Invalid credentials'
@@ -56,6 +64,7 @@ export const login = async (req, res, next) => {
     const isMatch = await user.comparePassword(password);
 
     if (!isMatch) {
+      console.log('Password mismatch for:', email);
       return res.status(401).json({
         success: false,
         message: 'Invalid credentials'
@@ -65,8 +74,11 @@ export const login = async (req, res, next) => {
     // Update last login
     await user.updateLastLogin();
 
+    console.log('Login successful for:', email);
+
     sendTokenResponse(user, 200, res);
   } catch (error) {
+    console.error('Login error:', error);
     res.status(500).json({
       success: false,
       message: 'Server error during login',
@@ -90,6 +102,7 @@ export const logout = async (req, res, next) => {
       message: 'User logged out successfully'
     });
   } catch (error) {
+    console.error('Logout error:', error);
     res.status(500).json({
       success: false,
       message: 'Server error during logout',
@@ -105,11 +118,19 @@ export const getMe = async (req, res, next) => {
   try {
     const user = await User.findById(req.user.id);
 
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'User not found'
+      });
+    }
+
     res.status(200).json({
       success: true,
       data: user.profile
     });
   } catch (error) {
+    console.error('Get me error:', error);
     res.status(500).json({
       success: false,
       message: 'Server error getting user profile',
@@ -143,6 +164,7 @@ export const updateProfile = async (req, res, next) => {
       data: user.profile
     });
   } catch (error) {
+    console.error('Update profile error:', error);
     res.status(500).json({
       success: false,
       message: 'Server error updating profile',
@@ -171,6 +193,7 @@ export const changePassword = async (req, res, next) => {
 
     sendTokenResponse(user, 200, res);
   } catch (error) {
+    console.error('Change password error:', error);
     res.status(500).json({
       success: false,
       message: 'Server error changing password',
@@ -237,6 +260,7 @@ export const forgotPassword = async (req, res, next) => {
       });
     }
   } catch (error) {
+    console.error('Forgot password error:', error);
     res.status(500).json({
       success: false,
       message: 'Server error during password reset',
@@ -276,6 +300,7 @@ export const resetPassword = async (req, res, next) => {
 
     sendTokenResponse(user, 200, res);
   } catch (error) {
+    console.error('Reset password error:', error);
     res.status(500).json({
       success: false,
       message: 'Server error during password reset',
