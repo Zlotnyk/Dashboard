@@ -251,7 +251,7 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
       
       const dayIndex = Math.floor(absoluteClickX / dayWidth)
       
-      console.log('FIXED Timeline click debug:', {
+      console.log('Timeline click debug:', {
         relativeClickX,
         scrollLeft,
         absoluteClickX,
@@ -262,14 +262,20 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
       })
       
       if (dayIndex >= 0 && dayIndex < daysToShow.length) {
-        const clickDay = new Date(daysToShow[dayIndex])
+        const selectedDate = daysToShow[dayIndex]
+        
+        // FIXED: Create date more explicitly to avoid timezone issues
+        const clickDay = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), selectedDate.getDate())
         clickDay.setHours(0, 0, 0, 0)
         
-        const endDay = new Date(clickDay)
-        endDay.setDate(clickDay.getDate() + 1)
+        const endDay = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), selectedDate.getDate())
         endDay.setHours(23, 59, 59, 999)
         
-        console.log('Creating task for date:', clickDay.toDateString())
+        console.log('Creating task for date:', {
+          selectedDate: selectedDate.toDateString(),
+          clickDay: clickDay.toDateString(),
+          endDay: endDay.toDateString()
+        })
         
         const newTask = {
           title: 'New Task',
