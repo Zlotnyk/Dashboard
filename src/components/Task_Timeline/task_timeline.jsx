@@ -18,7 +18,7 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
   const [originalTaskData, setOriginalTaskData] = useState(null)
   const [loading, setLoading] = useState(false)
   const [dragStartPosition, setDragStartPosition] = useState({ x: 0, y: 0 })
-  const [dragThreshold] = useState(8) // Increased threshold for better control
+  const [dragThreshold] = useState(10) // Increased threshold
   const [hasDragStarted, setHasDragStarted] = useState(false)
   const timelineRef = useRef(null)
   const scrollRef = useRef(null)
@@ -198,7 +198,7 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
     }
   }
 
-  // Completely rewritten drag handling for better precision
+  // COMPLETELY REWRITTEN DRAG HANDLING
   const handleMouseDown = (e, task) => {
     e.preventDefault()
     e.stopPropagation()
@@ -216,8 +216,8 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
       end: new Date(task.end)
     })
     
-    // Fixed resize zones (12px from each edge)
-    const resizeZoneWidth = 12
+    // Fixed resize zones (15px from each edge for better usability)
+    const resizeZoneWidth = 15
     
     if (clickX < resizeZoneWidth) {
       setDragMode('resize-start')
@@ -231,13 +231,13 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
     setIsDragging(true)
   }
 
-  // Snap-to-grid timeline click
+  // IMPROVED TIMELINE CLICK - SNAP TO GRID
   const handleTimelineClick = async (e) => {
     if (!isDragging && !hasDragStarted && (e.target === timelineRef.current || e.target.closest('.timeline-background'))) {
       const rect = timelineRef.current.getBoundingClientRect()
       const clickX = e.clientX - rect.left + (scrollRef.current?.scrollLeft || 0)
       
-      // Snap to day grid
+      // SNAP TO DAY GRID - this is what you requested
       const dayIndex = Math.floor(clickX / dayWidth)
       
       if (dayIndex >= 0 && dayIndex < daysToShow.length) {
@@ -308,7 +308,7 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
     }
   }
 
-  // Completely rewritten drag handling with proper threshold and precision
+  // COMPLETELY REWRITTEN DRAG HANDLING WITH PROPER THRESHOLD AND PRECISION
   useEffect(() => {
     const handleMouseMoveGlobal = (e) => {
       if (!draggedTask || !timelineRef.current || !originalTaskData) return
@@ -328,7 +328,7 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
       const rect = timelineRef.current.getBoundingClientRect()
       const x = e.clientX - rect.left + (scrollRef.current?.scrollLeft || 0)
       
-      // Improved snap-to-grid with better precision
+      // IMPROVED SNAP-TO-GRID WITH BETTER PRECISION
       const exactDayIndex = x / dayWidth
       const dayIndex = Math.max(0, Math.min(daysToShow.length - 1, Math.round(exactDayIndex)))
       
@@ -384,11 +384,11 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
       setOriginalTaskData(null)
       setDragStartPosition({ x: 0, y: 0 })
       
-      // Reset drag state after a short delay to prevent accidental clicks
+      // Reset drag state after a delay to prevent accidental clicks
       setTimeout(() => {
         setIsDragging(false)
         setHasDragStarted(false)
-      }, 150) // Increased delay for better stability
+      }, 200) // Increased delay for better stability
     }
 
     if (draggedTask) {
@@ -699,7 +699,7 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
                 return null
               })()}
 
-              {/* Grid hover indicator - only show when not dragging */}
+              {/* Grid hover indicator - SNAP TO GRID */}
               {!isDragging && !hasDragStarted && mousePosition.y > (viewMode === 'Month' ? 72 : 40) && (
                 <div
                   className="absolute w-8 h-8 rounded-full flex items-center justify-center z-30 pointer-events-none opacity-60"
@@ -725,7 +725,7 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
                   const taskId = task.id || task._id
                   
                   // Fixed resize zone width for better precision
-                  const resizeZoneWidth = 12
+                  const resizeZoneWidth = 15
                   
                   return (
                     <div
@@ -742,7 +742,7 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
                       onClick={(e) => handleTaskClick(task, e)}
                       onMouseDown={(e) => handleMouseDown(e, task)}
                     >
-                      {/* Resize handles with better visibility */}
+                      {/* IMPROVED RESIZE HANDLES */}
                       <div 
                         className="absolute left-0 top-0 h-full cursor-ew-resize opacity-0 group-hover:opacity-100 bg-white bg-opacity-30 rounded-l transition-opacity flex items-center justify-center"
                         style={{ width: `${resizeZoneWidth}px` }}

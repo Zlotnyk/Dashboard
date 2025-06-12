@@ -132,14 +132,21 @@ const BigCalendar = ({ events = [], onAddEvent, onDeleteEvent }) => {
   }
 
   const handlePlusClick = (day) => {
-    // Create date for the clicked day in current month/year
+    // FIXED: Create proper date object for the clicked day
     const selectedDate = new Date(currentYear, currentMonth, day)
     setSelectedDay(day)
     setSelectedEvent(null)
     setValidationErrors({})
+    
+    // FIXED: Format date correctly to avoid timezone issues
+    const year = selectedDate.getFullYear()
+    const month = String(selectedDate.getMonth() + 1).padStart(2, '0')
+    const dayStr = String(selectedDate.getDate()).padStart(2, '0')
+    const formattedDate = `${year}-${month}-${dayStr}`
+    
     setEventForm({
       title: 'New page',
-      date: selectedDate.toISOString().split('T')[0], // Format as YYYY-MM-DD
+      date: formattedDate, // This will now show the correct date
       time: '',
       location: '',
       category: 'meeting'
@@ -151,9 +158,17 @@ const BigCalendar = ({ events = [], onAddEvent, onDeleteEvent }) => {
     e.stopPropagation()
     setSelectedEvent(event)
     setValidationErrors({})
+    
+    // FIXED: Format date correctly for editing
+    const eventDate = new Date(event.date)
+    const year = eventDate.getFullYear()
+    const month = String(eventDate.getMonth() + 1).padStart(2, '0')
+    const day = String(eventDate.getDate()).padStart(2, '0')
+    const formattedDate = `${year}-${month}-${day}`
+    
     setEventForm({
       title: event.title,
-      date: event.date.toISOString().split('T')[0], // Format as YYYY-MM-DD
+      date: formattedDate, // This will now show the correct date
       time: event.time,
       location: event.location,
       category: event.category
