@@ -10,6 +10,7 @@ import BigCalendar from '../../components/big-calendar'
 import { Plus, BookOpen, Calendar, Clock, MapPin, Edit, Trash2, AlertCircle, X, CheckSquare, ChevronDown, ChevronRight, Target } from 'lucide-react'
 import { Dialog, DialogBackdrop, DialogPanel, DialogTitle } from '@headlessui/react'
 import { useAuth } from '../../hooks/useAuth'
+import { Notification } from '../../components/ui/notification'
 import '../../App.css'
 
 function ExamPreparationPage() {
@@ -21,6 +22,7 @@ function ExamPreparationPage() {
   const [validationErrors, setValidationErrors] = useState({})
   const [loading, setLoading] = useState(false)
   const [showInfoBox, setShowInfoBox] = useState(true)
+  const [notification, setNotification] = useState(null)
   const [dayBeforeChecklist, setDayBeforeChecklist] = useState([
     { id: 'check-location', text: 'Check Exam location & start time', checked: false },
     { id: 'light-revision', text: 'Do a light revision of your study notes', checked: false },
@@ -41,6 +43,7 @@ function ExamPreparationPage() {
     { id: 'earplugs', text: 'Earplugs (if study in public)', checked: false }
   ])
   const [newChecklistItem, setNewChecklistItem] = useState({ dayBefore: '', examDay: '' })
+  const [editingChecklistItem, setEditingChecklistItem] = useState(null)
 
   // Editing states for inline editing
   const [editingExam, setEditingExam] = useState(null)
@@ -71,6 +74,7 @@ function ExamPreparationPage() {
         setExams(parsedExams)
       } catch (error) {
         console.error('Error parsing exams:', error)
+        showNotification('error', 'Error loading saved exams')
       }
     }
     
@@ -83,6 +87,7 @@ function ExamPreparationPage() {
         setEvents(parsedEvents)
       } catch (error) {
         console.error('Error parsing events:', error)
+        showNotification('error', 'Error loading saved events')
       }
     }
     
@@ -193,6 +198,7 @@ function ExamPreparationPage() {
     
     setEditingExam(null)
     setEditingValues({})
+    showNotification('success', 'Exam updated successfully')
   }
 
   const cancelInlineEdit = () => {
@@ -221,6 +227,7 @@ function ExamPreparationPage() {
     
     // Also delete the corresponding event from the calendar
     setEvents(prev => prev.filter(event => event.examId !== examId))
+    showNotification('success', 'Exam deleted successfully')
   }
 
   const handleEditingValueChange = (field, value) => {
@@ -264,8 +271,10 @@ function ExamPreparationPage() {
       }
       
       setEvents(prevEvents => [...prevEvents, updatedEvent])
+      showNotification('success', 'Exam event created successfully')
     } else {
       setEvents(prevEvents => [...prevEvents, event])
+      showNotification('success', 'Event created successfully')
     }
   }
 
@@ -278,20 +287,37 @@ function ExamPreparationPage() {
     }
     
     setEvents(prevEvents => prevEvents.filter(event => event.id !== eventId))
+    showNotification('success', 'Event deleted successfully')
   }
 
   const handleChecklistItemToggle = (listType, itemId) => {
     if (listType === 'dayBefore') {
       setDayBeforeChecklist(prev => 
-        prev.map(item => 
-          item.id === itemId ? { ...item, checked: !item.checked } : item
-        )
+        prev.map(item => {
+          if (item.id === itemId) {
+            const newState = !item.checked
+            // Show notification when item is checked
+            if (newState) {
+              showNotification('success', `Item "${item.text}" marked as completed`)
+            }
+            return { ...item, checked: newState }
+          }
+          return item
+        })
       )
     } else if (listType === 'examDay') {
       setExamDayChecklist(prev => 
-        prev.map(item => 
-          item.id === itemId ? { ...item, checked: !item.checked } : item
-        )
+        prev.map(item => {
+          if (item.id === itemId) {
+            const newState = !item.checked
+            // Show notification when item is checked
+            if (newState) {
+              showNotification('success', `Item "${item.text}" marked as completed`)
+            }
+            return { ...item, checked: newState }
+          }
+          return item
+        })
       )
     }
   }
@@ -310,9 +336,11 @@ function ExamPreparationPage() {
     if (listType === 'dayBefore') {
       setDayBeforeChecklist(prev => [...prev, newItem])
       setNewChecklistItem(prev => ({ ...prev, dayBefore: '' }))
+      showNotification('success', 'New checklist item added')
     } else if (listType === 'examDay') {
       setExamDayChecklist(prev => [...prev, newItem])
       setNewChecklistItem(prev => ({ ...prev, examDay: '' }))
+      showNotification('success', 'New checklist item added')
     }
   }
 
@@ -330,6 +358,7 @@ function ExamPreparationPage() {
         )
       )
     }
+    showNotification('success', 'Checklist item updated')
   }
 
   const handleChecklistItemDelete = (listType, itemId) => {
@@ -338,6 +367,7 @@ function ExamPreparationPage() {
     } else if (listType === 'examDay') {
       setExamDayChecklist(prev => prev.filter(item => item.id !== itemId))
     }
+    showNotification('success', 'Checklist item deleted')
   }
 
   // Sync exams with calendar events
@@ -362,6 +392,14 @@ function ExamPreparationPage() {
       }
     })
   }, [exams])
+
+  // Show notification
+  const showNotification = (type, message) => {
+    setNotification({ type, message })
+    setTimeout(() => {
+      setNotification(null)
+    }, 3000)
+  }
 
   return (
     <div>
@@ -636,27 +674,35 @@ function ExamPreparationPage() {
                             />
                           </div>
                           <div className="flex-1">
-                            <div className={`text-sm ${item.checked ? 'line-through text-gray-500' : 'text-gray-300'}`}>
-                              {item.text}
-                            </div>
+                            {editingChecklistItem === item.id ? (
+                              <input
+                                type="text"
+                                value={item.text}
+                                onChange={(e) => handleChecklistItemEdit('dayBefore', item.id, e.target.value)}
+                                onBlur={() => setEditingChecklistItem(null)}
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter') {
+                                    setEditingChecklistItem(null)
+                                  }
+                                }}
+                                className="w-full bg-transparent text-white border-b border-gray-600 focus:border-accent outline-none text-sm"
+                                autoFocus
+                              />
+                            ) : (
+                              <div 
+                                className={`text-sm ${item.checked ? 'line-through text-gray-500' : 'text-gray-300'}`}
+                                onClick={() => setEditingChecklistItem(item.id)}
+                              >
+                                {item.text}
+                              </div>
+                            )}
                           </div>
-                          <div className="flex items-center gap-1">
-                            <button
-                              onClick={() => {
-                                const newText = prompt('Edit checklist item:', item.text)
-                                if (newText) handleChecklistItemEdit('dayBefore', item.id, newText)
-                              }}
-                              className="p-1 text-gray-500 hover:text-blue-400 transition-colors"
-                            >
-                              <Edit size={12} />
-                            </button>
-                            <button
-                              onClick={() => handleChecklistItemDelete('dayBefore', item.id)}
-                              className="p-1 text-gray-500 hover:text-red-400 transition-colors"
-                            >
-                              <Trash2 size={12} />
-                            </button>
-                          </div>
+                          <button
+                            onClick={() => handleChecklistItemDelete('dayBefore', item.id)}
+                            className="p-1 text-gray-500 hover:text-red-400 transition-colors"
+                          >
+                            <X size={12} />
+                          </button>
                         </div>
                       ))}
                       
@@ -702,27 +748,35 @@ function ExamPreparationPage() {
                             />
                           </div>
                           <div className="flex-1">
-                            <div className={`text-sm ${item.checked ? 'line-through text-gray-500' : 'text-gray-300'}`}>
-                              {item.text}
-                            </div>
+                            {editingChecklistItem === item.id ? (
+                              <input
+                                type="text"
+                                value={item.text}
+                                onChange={(e) => handleChecklistItemEdit('examDay', item.id, e.target.value)}
+                                onBlur={() => setEditingChecklistItem(null)}
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter') {
+                                    setEditingChecklistItem(null)
+                                  }
+                                }}
+                                className="w-full bg-transparent text-white border-b border-gray-600 focus:border-accent outline-none text-sm"
+                                autoFocus
+                              />
+                            ) : (
+                              <div 
+                                className={`text-sm ${item.checked ? 'line-through text-gray-500' : 'text-gray-300'}`}
+                                onClick={() => setEditingChecklistItem(item.id)}
+                              >
+                                {item.text}
+                              </div>
+                            )}
                           </div>
-                          <div className="flex items-center gap-1">
-                            <button
-                              onClick={() => {
-                                const newText = prompt('Edit checklist item:', item.text)
-                                if (newText) handleChecklistItemEdit('examDay', item.id, newText)
-                              }}
-                              className="p-1 text-gray-500 hover:text-blue-400 transition-colors"
-                            >
-                              <Edit size={12} />
-                            </button>
-                            <button
-                              onClick={() => handleChecklistItemDelete('examDay', item.id)}
-                              className="p-1 text-gray-500 hover:text-red-400 transition-colors"
-                            >
-                              <Trash2 size={12} />
-                            </button>
-                          </div>
+                          <button
+                            onClick={() => handleChecklistItemDelete('examDay', item.id)}
+                            className="p-1 text-gray-500 hover:text-red-400 transition-colors"
+                          >
+                            <X size={12} />
+                          </button>
                         </div>
                       ))}
                       
@@ -772,6 +826,15 @@ function ExamPreparationPage() {
           </section>
         </main>
       </div>
+
+      {/* Notification */}
+      {notification && (
+        <Notification 
+          type={notification.type} 
+          message={notification.message} 
+          onClose={() => setNotification(null)}
+        />
+      )}
     </div>
   )
 }

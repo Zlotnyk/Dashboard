@@ -170,7 +170,18 @@ const TaskDrawer = ({ isOpen, task, onSave, onClose, onDelete }) => {
                         <Flag size={16} />
                         Priority
                       </label>
-                      <div className="grid grid-cols-2 gap-2">
+                      <div className="grid grid-cols-3 gap-2">
+                        <button
+                          type="button"
+                          onClick={() => handleChange('priority', 'can-wait')}
+                          className={`px-3 py-3 rounded-lg text-sm font-medium transition-colors ${
+                            formData.priority === 'can-wait'
+                              ? 'bg-blue-500 text-white'
+                              : 'bg-[#2a2a2a] text-gray-300 hover:bg-gray-700'
+                          }`}
+                        >
+                          Can Wait
+                        </button>
                         <button
                           type="button"
                           onClick={() => handleChange('priority', 'normal')}

@@ -3,7 +3,7 @@ import { Dialog, DialogBackdrop, DialogPanel, DialogTitle } from '@headlessui/re
 import { X, AlertCircle } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 
-const RegisterModal = ({ isOpen, onClose, onSwitchToLogin }) => {
+const RegisterModal = ({ isOpen, onClose, onSwitchToLogin, showNotification }) => {
   const { register } = useAuth();
   const [formData, setFormData] = useState({
     name: '',
@@ -74,8 +74,14 @@ const RegisterModal = ({ isOpen, onClose, onSwitchToLogin }) => {
       onClose();
       setFormData({ name: '', email: '', password: '', confirmPassword: '' });
       setErrors({});
+      if (showNotification) {
+        showNotification('success', 'Account created successfully');
+      }
     } else {
       setErrors({ general: result.error });
+      if (showNotification) {
+        showNotification('error', result.error || 'Registration failed');
+      }
     }
   };
 

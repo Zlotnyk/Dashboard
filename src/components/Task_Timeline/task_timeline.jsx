@@ -3,6 +3,7 @@ import { ChevronLeft, ChevronRight, Calendar, Plus, Filter, Tag } from 'lucide-r
 import TaskDrawer from './task_drawer'
 import { useAuth } from '../../hooks/useAuth'
 import { tasksAPI } from '../../services/api'
+import { Notification } from '../ui/notification'
 
 const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
   const { isAuthenticated } = useAuth()
@@ -12,10 +13,12 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false)
   const [drawerTask, setDrawerTask] = useState(null)
   const [loading, setLoading] = useState(false)
+  const [notification, setNotification] = useState(null)
   
   // Filter state
   const [filterOpen, setFilterOpen] = useState(false)
   const [activeFilters, setActiveFilters] = useState({
+    'can-wait': true,
     normal: true,
     urgent: true,
     'Not started': true,
@@ -224,12 +227,14 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
         onAddTask(createdTask)
         setDrawerTask(createdTask)
         setIsDrawerOpen(true)
+        showNotification('success', 'Task created successfully')
       } catch (error) {
         console.error('Error creating task:', error)
         const localTask = { ...newTask, id: crypto.randomUUID() }
         onAddTask(localTask)
         setDrawerTask(localTask)
         setIsDrawerOpen(true)
+        showNotification('error', 'Error creating task. Using local storage instead.')
       } finally {
         setLoading(false)
       }
@@ -238,6 +243,7 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
       onAddTask(localTask)
       setDrawerTask(localTask)
       setIsDrawerOpen(true)
+      showNotification('info', 'Task saved to local storage. Sign in to sync across devices.')
     }
   }
 
@@ -305,12 +311,14 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
             onAddTask(createdTask)
             setDrawerTask(createdTask)
             setIsDrawerOpen(true)
+            showNotification('success', 'Task created successfully')
           } catch (error) {
             console.error('Error creating task:', error)
             const localTask = { ...newTask, id: crypto.randomUUID() }
             onAddTask(localTask)
             setDrawerTask(localTask)
             setIsDrawerOpen(true)
+            showNotification('error', 'Error creating task. Using local storage instead.')
           } finally {
             setLoading(false)
           }
@@ -319,6 +327,7 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
           onAddTask(localTask)
           setDrawerTask(localTask)
           setIsDrawerOpen(true)
+          showNotification('info', 'Task saved to local storage. Sign in to sync across devices.')
         }
       } else {
         console.warn('Click outside valid day range:', dayIndex)
@@ -384,8 +393,10 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
             startDate: dragState.draggedTask.start,
             endDate: dragState.draggedTask.end
           })
+          showNotification('success', 'Task updated successfully')
         } catch (error) {
           console.error('Error updating task:', error)
+          showNotification('error', 'Error updating task')
         }
       }
       
@@ -478,14 +489,17 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
         }
         
         onUpdateTask(backendTask)
+        showNotification('success', 'Task updated successfully')
       } catch (error) {
         console.error('Error updating task:', error)
         onUpdateTask(updatedTask)
+        showNotification('error', 'Error updating task. Changes saved locally.')
       } finally {
         setLoading(false)
       }
     } else {
       onUpdateTask(updatedTask)
+      showNotification('info', 'Task updated in local storage')
     }
     
     setIsDrawerOpen(false)
@@ -569,6 +583,24 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
       ...prev,
       [category]: !prev[category]
     }))
+  }
+
+  // Show notification
+  const showNotification = (type, message) => {
+    setNotification({ type, message })
+    setTimeout(() => {
+      setNotification(null)
+    }, 3000)
+  }
+
+  // Get priority color
+  const getPriorityColor = (priority) => {
+    switch(priority) {
+      case 'can-wait': return '#3b82f6' // blue
+      case 'normal': return 'var(--accent-color, #97e7aa)' // accent color
+      case 'urgent': return '#ff6b35' // orange-red
+      default: return 'var(--accent-color, #97e7aa)' // accent color
+    }
   }
 
   return (
@@ -668,10 +700,20 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
                 <h4 className="text-white text-sm font-medium mb-2">Priority</h4>
                 <div className="flex flex-wrap gap-2">
                   <button
+                    onClick={() => toggleFilter('can-wait')}
+                    className={`px-2 py-1 text-xs rounded ${
+                      activeFilters['can-wait'] 
+                        ? 'bg-blue-900/50 border border-blue-700/50 text-white' 
+                        : 'bg-transparent border border-gray-600 text-gray-400'
+                    }`}
+                  >
+                    Can Wait
+                  </button>
+                  <button
                     onClick={() => toggleFilter('normal')}
                     className={`px-2 py-1 text-xs rounded ${
                       activeFilters.normal 
-                        ? 'bg-blue-900/50 border border-blue-700/50 text-white' 
+                        ? 'bg-green-900/50 border border-green-700/50 text-white' 
                         : 'bg-transparent border border-gray-600 text-gray-400'
                     }`}
                   >
@@ -842,8 +884,7 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
                 style={{ marginTop: viewMode === 'Month' ? '32px' : '0px' }}
               >
                 {visibleTasks.map((task, index) => {
-                  const isUrgent = task.priority === 'urgent'
-                  const taskColor = isUrgent ? '#ff6b35' : 'var(--accent-color, #97e7aa)'
+                  const taskColor = getPriorityColor(task.priority)
                   const taskWidth = getTaskWidth(task)
                   const taskId = task.id || task._id
                   const isDraggedTask = dragState.draggedTask && (dragState.draggedTask.id === taskId || dragState.draggedTask._id === taskId)
@@ -876,7 +917,7 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
                       </div>
                       
                       <div className="flex items-center h-full px-3 text-white text-sm pointer-events-none">
-                        {isUrgent && <span className="mr-1">🔥</span>}
+                        {task.priority === 'urgent' && <span className="mr-1">🔥</span>}
                         <span className="truncate">
                           {task.title}
                         </span>
@@ -904,9 +945,19 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
             const taskId = drawerTask.id || drawerTask._id
             onDeleteTask(taskId)
             handleDrawerClose()
+            showNotification('success', 'Task deleted successfully')
           }
         }}
       />
+
+      {/* Notification */}
+      {notification && (
+        <Notification 
+          type={notification.type} 
+          message={notification.message} 
+          onClose={() => setNotification(null)}
+        />
+      )}
     </>
   )
 }

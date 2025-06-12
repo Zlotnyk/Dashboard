@@ -3,6 +3,7 @@ import { Plus, FileText, Pencil } from 'lucide-react'
 import TaskDrawer from './Task_Timeline/task_drawer'
 import { useAuth } from '../hooks/useAuth'
 import { tasksAPI } from '../services/api'
+import { Notification } from './ui/notification'
 
 export default function TodoList({
 	onAddTask,
@@ -19,6 +20,7 @@ export default function TodoList({
 	const [isDrawerOpen, setIsDrawerOpen] = useState(false)
 	const [drawerTask, setDrawerTask] = useState(null)
 	const [loading, setLoading] = useState(false)
+	const [notification, setNotification] = useState(null)
 
 	const addTodo = () => {
 		// Open drawer for new task creation
@@ -79,14 +81,17 @@ export default function TodoList({
 					}
 					
 					onUpdateTask(backendTask)
+					showNotification('success', 'Task updated successfully')
 				} catch (error) {
 					console.error('Error updating task:', error)
 					onUpdateTask(updatedTask)
+					showNotification('error', 'Error updating task. Changes saved locally.')
 				} finally {
 					setLoading(false)
 				}
 			} else {
 				onUpdateTask(updatedTask)
+				showNotification('info', 'Task updated in local storage')
 			}
 		}
 		
@@ -125,16 +130,19 @@ export default function TodoList({
 					}
 					
 					onAddTask(backendTask)
+					showNotification('success', 'Task created successfully')
 				} catch (error) {
 					console.error('Error creating task:', error)
 					const localTask = { ...updatedTask, id: crypto.randomUUID() }
 					onAddTask(localTask)
+					showNotification('error', 'Error creating task. Using local storage instead.')
 				} finally {
 					setLoading(false)
 				}
 			} else {
 				const localTask = { ...updatedTask, id: crypto.randomUUID() }
 				onAddTask(localTask)
+				showNotification('info', 'Task saved to local storage. Sign in to sync across devices.')
 			}
 		} else {
 			// This is an existing task
@@ -160,14 +168,17 @@ export default function TodoList({
 					}
 					
 					onUpdateTask(backendTask)
+					showNotification('success', 'Task updated successfully')
 				} catch (error) {
 					console.error('Error updating task:', error)
 					onUpdateTask(updatedTask)
+					showNotification('error', 'Error updating task. Changes saved locally.')
 				} finally {
 					setLoading(false)
 				}
 			} else {
 				onUpdateTask(updatedTask)
+				showNotification('info', 'Task updated in local storage')
 			}
 		}
 		
@@ -186,14 +197,35 @@ export default function TodoList({
 				setLoading(true)
 				await tasksAPI.deleteTask(taskId)
 				onDeleteTask(taskId)
+				showNotification('success', 'Task deleted successfully')
 			} catch (error) {
 				console.error('Error deleting task:', error)
 				onDeleteTask(taskId)
+				showNotification('error', 'Error deleting task from server. Removed locally.')
 			} finally {
 				setLoading(false)
 			}
 		} else {
 			onDeleteTask(taskId)
+			showNotification('info', 'Task deleted from local storage')
+		}
+	}
+
+	// Show notification
+	const showNotification = (type, message) => {
+		setNotification({ type, message })
+		setTimeout(() => {
+			setNotification(null)
+		}, 3000)
+	}
+
+	// Get priority color
+	const getPriorityColor = (priority) => {
+		switch(priority) {
+			case 'can-wait': return '#3b82f6' // blue
+			case 'normal': return 'var(--accent-color, #97e7aa)' // accent color
+			case 'urgent': return '#ff6b35' // orange-red
+			default: return 'var(--accent-color, #97e7aa)' // accent color
 		}
 	}
 
@@ -219,7 +251,8 @@ export default function TodoList({
 
 				<div className='space-y-2'>
 					{tasks.map(task => {
-						const isUrgent = task.priority === 'urgent'
+						const isPriority = task.priority === 'urgent' || task.priority === 'can-wait'
+						const priorityColor = getPriorityColor(task.priority)
 						const taskId = task.id || task._id
 						
 						return (
@@ -262,7 +295,8 @@ export default function TodoList({
 										) : (
 											<div className='flex flex-col flex-1'>
 												<div className='flex items-center gap-2'>
-													{isUrgent && <span className="text-orange-500">🔥</span>}
+													{task.priority === 'urgent' && <span className="text-orange-500">🔥</span>}
+													{task.priority === 'can-wait' && <span className="text-blue-500">⏱️</span>}
 													<span className='text-white text-sm font-medium'>{task.title}</span>
 												</div>
 												<div className='text-gray-400 text-xs'>
@@ -326,6 +360,15 @@ export default function TodoList({
 					}
 				}}
 			/>
+
+			{/* Notification */}
+			{notification && (
+				<Notification 
+					type={notification.type} 
+					message={notification.message} 
+					onClose={() => setNotification(null)}
+				/>
+			)}
 		</>
 	)
 }
