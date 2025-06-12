@@ -1,29 +1,21 @@
 import mongoose from 'mongoose';
 
-const taskSchema = new mongoose.Schema({
+const TaskSchema = new mongoose.Schema({
   user: {
-    type: mongoose.Schema.Types.ObjectId,
+    type: mongoose.Schema.ObjectId,
     ref: 'User',
     required: true
   },
   title: {
     type: String,
-    required: [true, 'Task title is required'],
+    required: [true, 'Please add a task title'],
     trim: true,
-    maxlength: [200, 'Title cannot be more than 200 characters']
+    maxlength: [100, 'Title cannot be more than 100 characters']
   },
   description: {
     type: String,
-    trim: true,
-    maxlength: [1000, 'Description cannot be more than 1000 characters']
-  },
-  startDate: {
-    type: Date,
-    required: [true, 'Start date is required']
-  },
-  endDate: {
-    type: Date,
-    required: [true, 'End date is required']
+    maxlength: [500, 'Description cannot be more than 500 characters'],
+    default: ''
   },
   status: {
     type: String,
@@ -32,8 +24,43 @@ const taskSchema = new mongoose.Schema({
   },
   priority: {
     type: String,
-    enum: ['normal', 'urgent'],
+    enum: ['low', 'normal', 'high', 'urgent'],
     default: 'normal'
+  },
+  startDate: {
+    type: Date,
+    required: [true, 'Please add a start date'],
+    default: Date.now
+  },
+  endDate: {
+    type: Date,
+    required: [true, 'Please add an end date'],
+    validate: {
+      validator: function(value) {
+        return value >= this.startDate;
+      },
+      message: 'End date must be after or equal to start date'
+    }
+  },
+  completedAt: {
+    type: Date
+  },
+  tags: [{
+    type: String,
+    trim: true
+  }],
+  category: {
+    type: String,
+    trim: true,
+    maxlength: [50, 'Category cannot be more than 50 characters']
+  },
+  estimatedHours: {
+    type: Number,
+    min: [0, 'Estimated hours cannot be negative']
+  },
+  actualHours: {
+    type: Number,
+    min: [0, 'Actual hours cannot be negative']
   },
   progress: {
     type: Number,
@@ -41,32 +68,56 @@ const taskSchema = new mongoose.Schema({
     max: 100,
     default: 0
   },
-  color: {
-    type: String,
-    default: '#3B82F6'
-  },
-  tags: [{
-    type: String,
-    trim: true
-  }],
   attachments: [{
     filename: String,
-    url: String,
+    originalName: String,
+    mimetype: String,
     size: Number,
-    uploadedAt: {
+    url: String
+  }],
+  reminders: [{
+    date: Date,
+    message: String,
+    sent: {
+      type: Boolean,
+      default: false
+    }
+  }],
+  subtasks: [{
+    title: {
+      type: String,
+      required: true,
+      trim: true
+    },
+    completed: {
+      type: Boolean,
+      default: false
+    },
+    createdAt: {
       type: Date,
       default: Date.now
     }
   }],
-  isCompleted: {
+  isRecurring: {
     type: Boolean,
     default: false
   },
-  completedAt: Date,
-  dueDate: Date,
-  reminders: [{
-    type: Date
-  }]
+  recurringPattern: {
+    type: String,
+    enum: ['daily', 'weekly', 'monthly', 'yearly'],
+    required: function() {
+      return this.isRecurring;
+    }
+  },
+  recurringEndDate: {
+    type: Date,
+    validate: {
+      validator: function(value) {
+        return !this.isRecurring || (value && value > this.endDate);
+      },
+      message: 'Recurring end date must be after task end date'
+    }
+  }
 }, {
   timestamps: true,
   toJSON: { virtuals: true },
@@ -74,78 +125,109 @@ const taskSchema = new mongoose.Schema({
 });
 
 // Indexes for better performance
-taskSchema.index({ user: 1, startDate: 1 });
-taskSchema.index({ user: 1, status: 1 });
-taskSchema.index({ user: 1, priority: 1 });
-taskSchema.index({ user: 1, isCompleted: 1 });
+TaskSchema.index({ user: 1, startDate: 1 });
+TaskSchema.index({ user: 1, status: 1 });
+TaskSchema.index({ user: 1, priority: 1 });
+TaskSchema.index({ user: 1, endDate: 1 });
 
 // Virtual for task duration in days
-taskSchema.virtual('duration').get(function() {
+TaskSchema.virtual('durationDays').get(function() {
   if (this.startDate && this.endDate) {
     const diffTime = Math.abs(this.endDate - this.startDate);
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    return diffDays + 1;
+    return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
   }
   return 0;
 });
 
-// Virtual for days until due date
-taskSchema.virtual('daysUntilDue').get(function() {
-  if (this.dueDate) {
+// Virtual for days remaining
+TaskSchema.virtual('daysRemaining').get(function() {
+  if (this.endDate) {
     const today = new Date();
-    const diffTime = this.dueDate - today;
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    return diffDays;
+    const diffTime = this.endDate - today;
+    return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
   }
-  return null;
+  return 0;
 });
 
-// Virtual for overdue status
-taskSchema.virtual('isOverdue').get(function() {
-  if (this.dueDate && !this.isCompleted) {
-    return new Date() > this.dueDate;
+// Virtual for completion percentage based on subtasks
+TaskSchema.virtual('completionPercentage').get(function() {
+  if (this.subtasks && this.subtasks.length > 0) {
+    const completedSubtasks = this.subtasks.filter(subtask => subtask.completed).length;
+    return Math.round((completedSubtasks / this.subtasks.length) * 100);
   }
-  return false;
+  return this.progress || 0;
 });
 
-// Pre-save middleware to validate dates
-taskSchema.pre('save', function(next) {
-  if (this.startDate && this.endDate && this.startDate > this.endDate) {
-    next(new Error('End date must be after start date'));
-  }
-  
-  if (this.isCompleted && !this.completedAt) {
+// Pre-save middleware to update progress based on status
+TaskSchema.pre('save', function(next) {
+  if (this.status === 'Completed' && !this.completedAt) {
     this.completedAt = new Date();
+    this.progress = 100;
+  } else if (this.status !== 'Completed' && this.completedAt) {
+    this.completedAt = undefined;
   }
   
-  if (!this.isCompleted && this.completedAt) {
-    this.completedAt = undefined;
+  // Auto-update progress based on subtasks
+  if (this.subtasks && this.subtasks.length > 0) {
+    const completedSubtasks = this.subtasks.filter(subtask => subtask.completed).length;
+    this.progress = Math.round((completedSubtasks / this.subtasks.length) * 100);
+    
+    // Auto-complete task if all subtasks are done
+    if (completedSubtasks === this.subtasks.length && this.status !== 'Completed') {
+      this.status = 'Completed';
+      this.completedAt = new Date();
+    }
   }
   
   next();
 });
 
-// Static method to get user's active tasks
-taskSchema.statics.getActiveTasks = function(userId) {
-  return this.find({
-    user: userId,
-    isCompleted: false
-  }).sort({ priority: -1, startDate: 1 });
+// Static method to get user's task statistics
+TaskSchema.statics.getUserStats = function(userId) {
+  return this.aggregate([
+    { $match: { user: userId } },
+    {
+      $group: {
+        _id: null,
+        total: { $sum: 1 },
+        completed: {
+          $sum: { $cond: [{ $eq: ['$status', 'Completed'] }, 1, 0] }
+        },
+        inProgress: {
+          $sum: { $cond: [{ $eq: ['$status', 'In progress'] }, 1, 0] }
+        },
+        notStarted: {
+          $sum: { $cond: [{ $eq: ['$status', 'Not started'] }, 1, 0] }
+        },
+        overdue: {
+          $sum: {
+            $cond: [
+              {
+                $and: [
+                  { $lt: ['$endDate', new Date()] },
+                  { $ne: ['$status', 'Completed'] }
+                ]
+              },
+              1,
+              0
+            ]
+          }
+        }
+      }
+    }
+  ]);
 };
 
-// Static method to get today's tasks
-taskSchema.statics.getTodaysTasks = function(userId) {
+// Instance method to check if task is overdue
+TaskSchema.methods.isOverdue = function() {
+  return this.endDate < new Date() && this.status !== 'Completed';
+};
+
+// Instance method to get days until due
+TaskSchema.methods.getDaysUntilDue = function() {
   const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const tomorrow = new Date(today);
-  tomorrow.setDate(tomorrow.getDate() + 1);
-  
-  return this.find({
-    user: userId,
-    startDate: { $lte: tomorrow },
-    endDate: { $gte: today },
-    isCompleted: false
-  }).sort({ priority: -1, startDate: 1 });
+  const diffTime = this.endDate - today;
+  return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 };
 
-export default mongoose.model('Task', taskSchema);
+export default mongoose.model('Task', TaskSchema);

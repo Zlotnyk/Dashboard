@@ -1,14 +1,15 @@
 import Task from '../models/Task.js';
 
-// @desc    Get all tasks
+// @desc    Get all tasks for authenticated user
 // @route   GET /api/tasks
 // @access  Private
 export const getTasks = async (req, res) => {
   try {
-    const { page = 1, limit = 50, status, priority, sortBy = 'createdAt', sortOrder = 'desc' } = req.query;
+    const { page = 1, limit = 100, status, priority, sortBy = 'createdAt', sortOrder = 'desc' } = req.query;
 
     // Build query
     const query = { user: req.user.id };
+    
     if (status) query.status = status;
     if (priority) query.priority = priority;
 
@@ -44,8 +45,7 @@ export const getTasks = async (req, res) => {
     console.error('Error getting tasks:', error);
     res.status(500).json({
       success: false,
-      message: 'Server error getting tasks',
-      error: error.message
+      message: 'Server Error'
     });
   }
 };
@@ -75,8 +75,7 @@ export const getTask = async (req, res) => {
     console.error('Error getting task:', error);
     res.status(500).json({
       success: false,
-      message: 'Server error getting task',
-      error: error.message
+      message: 'Server Error'
     });
   }
 };
@@ -92,14 +91,25 @@ export const createTask = async (req, res) => {
     // Add user to request body
     req.body.user = req.user.id;
 
-    // Ensure required fields have defaults
+    // Ensure required fields have defaults and proper date handling
     const taskData = {
       ...req.body,
       title: req.body.title || 'New Task',
       status: req.body.status || 'Not started',
       priority: req.body.priority || 'normal',
-      description: req.body.description || ''
+      description: req.body.description || '',
+      // Ensure dates are properly formatted
+      startDate: req.body.startDate ? new Date(req.body.startDate) : new Date(),
+      endDate: req.body.endDate ? new Date(req.body.endDate) : new Date()
     };
+
+    // Validate dates
+    if (taskData.endDate < taskData.startDate) {
+      return res.status(400).json({
+        success: false,
+        message: 'End date cannot be before start date'
+      });
+    }
 
     const task = await Task.create(taskData);
 
@@ -111,10 +121,19 @@ export const createTask = async (req, res) => {
     });
   } catch (error) {
     console.error('Error creating task:', error);
+    
+    // Handle validation errors
+    if (error.name === 'ValidationError') {
+      const message = Object.values(error.errors).map(val => val.message).join(', ');
+      return res.status(400).json({
+        success: false,
+        message: message
+      });
+    }
+    
     res.status(500).json({
       success: false,
-      message: 'Server error creating task',
-      error: error.message
+      message: 'Server Error'
     });
   }
 };
@@ -139,7 +158,24 @@ export const updateTask = async (req, res) => {
       });
     }
 
-    task = await Task.findByIdAndUpdate(req.params.id, req.body, {
+    // Handle date updates
+    const updateData = { ...req.body };
+    if (updateData.startDate) {
+      updateData.startDate = new Date(updateData.startDate);
+    }
+    if (updateData.endDate) {
+      updateData.endDate = new Date(updateData.endDate);
+    }
+
+    // Validate dates if both are provided
+    if (updateData.startDate && updateData.endDate && updateData.endDate < updateData.startDate) {
+      return res.status(400).json({
+        success: false,
+        message: 'End date cannot be before start date'
+      });
+    }
+
+    task = await Task.findByIdAndUpdate(req.params.id, updateData, {
       new: true,
       runValidators: true
     });
@@ -152,10 +188,19 @@ export const updateTask = async (req, res) => {
     });
   } catch (error) {
     console.error('Error updating task:', error);
+    
+    // Handle validation errors
+    if (error.name === 'ValidationError') {
+      const message = Object.values(error.errors).map(val => val.message).join(', ');
+      return res.status(400).json({
+        success: false,
+        message: message
+      });
+    }
+    
     res.status(500).json({
       success: false,
-      message: 'Server error updating task',
-      error: error.message
+      message: 'Server Error'
     });
   }
 };
@@ -191,8 +236,7 @@ export const deleteTask = async (req, res) => {
     console.error('Error deleting task:', error);
     res.status(500).json({
       success: false,
-      message: 'Server error deleting task',
-      error: error.message
+      message: 'Server Error'
     });
   }
 };
@@ -202,7 +246,19 @@ export const deleteTask = async (req, res) => {
 // @access  Private
 export const getTodaysTasks = async (req, res) => {
   try {
-    const tasks = await Task.getTodaysTasks(req.user.id);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+
+    const tasks = await Task.find({
+      user: req.user.id,
+      $or: [
+        { startDate: { $lte: today }, endDate: { $gte: today } },
+        { startDate: { $gte: today, $lt: tomorrow } }
+      ]
+    }).sort({ startDate: 1 });
 
     res.status(200).json({
       success: true,
@@ -213,18 +269,24 @@ export const getTodaysTasks = async (req, res) => {
     console.error('Error getting today\'s tasks:', error);
     res.status(500).json({
       success: false,
-      message: 'Server error getting today\'s tasks',
-      error: error.message
+      message: 'Server Error'
     });
   }
 };
 
-// @desc    Get active tasks
+// @desc    Get active tasks (tasks that are currently in progress)
 // @route   GET /api/tasks/active
 // @access  Private
 export const getActiveTasks = async (req, res) => {
   try {
-    const tasks = await Task.getActiveTasks(req.user.id);
+    const today = new Date();
+    
+    const tasks = await Task.find({
+      user: req.user.id,
+      startDate: { $lte: today },
+      endDate: { $gte: today },
+      status: { $ne: 'Completed' }
+    }).sort({ startDate: 1 });
 
     res.status(200).json({
       success: true,
@@ -235,18 +297,17 @@ export const getActiveTasks = async (req, res) => {
     console.error('Error getting active tasks:', error);
     res.status(500).json({
       success: false,
-      message: 'Server error getting active tasks',
-      error: error.message
+      message: 'Server Error'
     });
   }
 };
 
-// @desc    Mark task as complete
+// @desc    Mark task as completed
 // @route   PUT /api/tasks/:id/complete
 // @access  Private
 export const completeTask = async (req, res) => {
   try {
-    const task = await Task.findOne({
+    let task = await Task.findOne({
       _id: req.params.id,
       user: req.user.id
     });
@@ -258,10 +319,14 @@ export const completeTask = async (req, res) => {
       });
     }
 
-    task.isCompleted = !task.isCompleted;
-    task.status = task.isCompleted ? 'Completed' : 'Not started';
-    
-    await task.save();
+    task = await Task.findByIdAndUpdate(
+      req.params.id,
+      { 
+        status: 'Completed',
+        completedAt: new Date()
+      },
+      { new: true, runValidators: true }
+    );
 
     res.status(200).json({
       success: true,
@@ -271,8 +336,7 @@ export const completeTask = async (req, res) => {
     console.error('Error completing task:', error);
     res.status(500).json({
       success: false,
-      message: 'Server error completing task',
-      error: error.message
+      message: 'Server Error'
     });
   }
 };
@@ -283,35 +347,36 @@ export const completeTask = async (req, res) => {
 export const getTaskStats = async (req, res) => {
   try {
     const userId = req.user.id;
-
+    
     const stats = await Task.aggregate([
       { $match: { user: userId } },
       {
         $group: {
           _id: null,
           total: { $sum: 1 },
-          completed: { $sum: { $cond: ['$isCompleted', 1, 0] } },
-          urgent: { $sum: { $cond: [{ $eq: ['$priority', 'urgent'] }, 1, 0] } },
-          overdue: {
-            $sum: {
-              $cond: [
-                {
-                  $and: [
-                    { $lt: ['$endDate', new Date()] },
-                    { $eq: ['$isCompleted', false] }
-                  ]
-                },
-                1,
-                0
-              ]
-            }
+          completed: {
+            $sum: { $cond: [{ $eq: ['$status', 'Completed'] }, 1, 0] }
+          },
+          inProgress: {
+            $sum: { $cond: [{ $eq: ['$status', 'In progress'] }, 1, 0] }
+          },
+          notStarted: {
+            $sum: { $cond: [{ $eq: ['$status', 'Not started'] }, 1, 0] }
+          },
+          urgent: {
+            $sum: { $cond: [{ $eq: ['$priority', 'urgent'] }, 1, 0] }
           }
         }
       }
     ]);
 
-    const result = stats[0] || { total: 0, completed: 0, urgent: 0, overdue: 0 };
-    result.completionRate = result.total > 0 ? Math.round((result.completed / result.total) * 100) : 0;
+    const result = stats[0] || {
+      total: 0,
+      completed: 0,
+      inProgress: 0,
+      notStarted: 0,
+      urgent: 0
+    };
 
     res.status(200).json({
       success: true,
@@ -321,8 +386,7 @@ export const getTaskStats = async (req, res) => {
     console.error('Error getting task stats:', error);
     res.status(500).json({
       success: false,
-      message: 'Server error getting task stats',
-      error: error.message
+      message: 'Server Error'
     });
   }
 };
