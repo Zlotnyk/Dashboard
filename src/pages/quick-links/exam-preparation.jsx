@@ -40,6 +40,7 @@ function ExamPreparationPage() {
     { id: 'water', text: 'Water', checked: false },
     { id: 'earplugs', text: 'Earplugs (if study in public)', checked: false }
   ])
+  const [newChecklistItem, setNewChecklistItem] = useState({ dayBefore: '', examDay: '' })
 
   // Editing states for inline editing
   const [editingExam, setEditingExam] = useState(null)
@@ -241,10 +242,41 @@ function ExamPreparationPage() {
   }
 
   const handleEventAdd = (event) => {
-    setEvents(prevEvents => [...prevEvents, event])
+    // If it's an exam event, also add it to the exams list
+    if (event.category === 'exam' && !event.examId) {
+      const newExam = {
+        id: crypto.randomUUID(),
+        exam: event.title,
+        date: new Date(event.date),
+        time: event.time || '',
+        location: event.location || '',
+        targetGrade: '',
+        notes: '',
+        createdAt: new Date().toISOString()
+      }
+      
+      setExams(prev => [...prev, newExam])
+      
+      // Update the event with the exam ID reference
+      const updatedEvent = {
+        ...event,
+        examId: newExam.id
+      }
+      
+      setEvents(prevEvents => [...prevEvents, updatedEvent])
+    } else {
+      setEvents(prevEvents => [...prevEvents, event])
+    }
   }
 
   const handleEventDelete = (eventId) => {
+    const event = events.find(e => e.id === eventId)
+    
+    // If it's an exam event, also delete the exam
+    if (event && event.category === 'exam' && event.examId) {
+      setExams(prev => prev.filter(exam => exam.id !== event.examId))
+    }
+    
     setEvents(prevEvents => prevEvents.filter(event => event.id !== eventId))
   }
 
@@ -264,17 +296,23 @@ function ExamPreparationPage() {
     }
   }
 
-  const addNewChecklistItem = (listType, text = '') => {
+  const addNewChecklistItem = (listType) => {
+    const text = listType === 'dayBefore' ? newChecklistItem.dayBefore : newChecklistItem.examDay
+    
+    if (!text.trim()) return
+    
     const newItem = {
       id: crypto.randomUUID(),
-      text: text || 'New item',
+      text: text,
       checked: false
     }
     
     if (listType === 'dayBefore') {
       setDayBeforeChecklist(prev => [...prev, newItem])
+      setNewChecklistItem(prev => ({ ...prev, dayBefore: '' }))
     } else if (listType === 'examDay') {
       setExamDayChecklist(prev => [...prev, newItem])
+      setNewChecklistItem(prev => ({ ...prev, examDay: '' }))
     }
   }
 
@@ -576,13 +614,13 @@ function ExamPreparationPage() {
                 </div>
 
                 <div className="text-gray-300 text-sm mb-4">
-                  This will help you to prepare properly for the upcoming Exams. To add additional to-do, click <span className="text-accent">+ Add a new to-do</span>.
+                  This will help you to prepare properly for the upcoming Exams.
                 </div>
 
                 {/* Checklists Grid */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {/* The Day Before Exam */}
-                  <div className="bg-[#1a1a1a] rounded-lg p-4 border border-gray-700">
+                  <div className="bg-[#1a1a1a] rounded-lg p-4">
                     <h4 className="text-accent font-[Libre_Baskerville] italic text-lg mb-4">The Day Before Exam</h4>
                     
                     <div className="space-y-3">
@@ -622,22 +660,33 @@ function ExamPreparationPage() {
                         </div>
                       ))}
                       
-                      {/* Add new item button */}
-                      <button
-                        onClick={() => {
-                          const newText = prompt('Enter new checklist item:')
-                          if (newText) addNewChecklistItem('dayBefore', newText)
-                        }}
-                        className="w-full flex items-center justify-center gap-2 py-2 px-3 border border-gray-600 rounded-lg text-gray-400 hover:text-white hover:border-gray-500 transition-colors text-sm mt-4"
-                      >
-                        <Plus size={14} />
-                        <span>Add a new to-do</span>
-                      </button>
+                      {/* Add new item input */}
+                      <div className="flex items-center gap-2 mt-4">
+                        <input
+                          type="text"
+                          value={newChecklistItem.dayBefore}
+                          onChange={(e) => setNewChecklistItem(prev => ({ ...prev, dayBefore: e.target.value }))}
+                          placeholder="Type a text..."
+                          className="flex-1 bg-transparent border-b border-gray-600 focus:border-accent outline-none text-white text-sm py-1"
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter' && newChecklistItem.dayBefore.trim()) {
+                              addNewChecklistItem('dayBefore')
+                            }
+                          }}
+                        />
+                        <button
+                          onClick={() => addNewChecklistItem('dayBefore')}
+                          disabled={!newChecklistItem.dayBefore.trim()}
+                          className="text-gray-400 hover:text-white disabled:opacity-50"
+                        >
+                          <Plus size={16} />
+                        </button>
+                      </div>
                     </div>
                   </div>
 
                   {/* On the Day of Exam */}
-                  <div className="bg-[#1a1a1a] rounded-lg p-4 border border-gray-700">
+                  <div className="bg-[#1a1a1a] rounded-lg p-4">
                     <h4 className="text-accent font-[Libre_Baskerville] italic text-lg mb-4">On the Day of Exam</h4>
                     
                     <div className="space-y-3">
@@ -677,17 +726,28 @@ function ExamPreparationPage() {
                         </div>
                       ))}
                       
-                      {/* Add new item button */}
-                      <button
-                        onClick={() => {
-                          const newText = prompt('Enter new checklist item:')
-                          if (newText) addNewChecklistItem('examDay', newText)
-                        }}
-                        className="w-full flex items-center justify-center gap-2 py-2 px-3 border border-gray-600 rounded-lg text-gray-400 hover:text-white hover:border-gray-500 transition-colors text-sm mt-4"
-                      >
-                        <Plus size={14} />
-                        <span>Add a new to-do</span>
-                      </button>
+                      {/* Add new item input */}
+                      <div className="flex items-center gap-2 mt-4">
+                        <input
+                          type="text"
+                          value={newChecklistItem.examDay}
+                          onChange={(e) => setNewChecklistItem(prev => ({ ...prev, examDay: e.target.value }))}
+                          placeholder="Type a text..."
+                          className="flex-1 bg-transparent border-b border-gray-600 focus:border-accent outline-none text-white text-sm py-1"
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter' && newChecklistItem.examDay.trim()) {
+                              addNewChecklistItem('examDay')
+                            }
+                          }}
+                        />
+                        <button
+                          onClick={() => addNewChecklistItem('examDay')}
+                          disabled={!newChecklistItem.examDay.trim()}
+                          className="text-gray-400 hover:text-white disabled:opacity-50"
+                        >
+                          <Plus size={16} />
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </div>

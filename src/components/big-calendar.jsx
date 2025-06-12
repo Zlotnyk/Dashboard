@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { ChevronLeft, ChevronRight, Plus, X, Calendar, MapPin, Clock, ChevronDown, AlertCircle } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Plus, X, Calendar, MapPin, Clock, ChevronDown, AlertCircle, Filter, Tag } from 'lucide-react'
 import { Dialog, DialogBackdrop, DialogPanel, DialogTitle } from '@headlessui/react'
 
 const BigCalendar = ({ events = [], onAddEvent, onDeleteEvent }) => {
@@ -17,6 +17,18 @@ const BigCalendar = ({ events = [], onAddEvent, onDeleteEvent }) => {
     location: '',
     category: 'meeting'
   })
+  
+  // New state for filtering
+  const [filterOpen, setFilterOpen] = useState(false)
+  const [activeFilters, setActiveFilters] = useState({
+    meeting: true,
+    birthday: true,
+    exam: true,
+    event: true,
+    other: true
+  })
+  const [customCategories, setCustomCategories] = useState([])
+  const [newCategory, setNewCategory] = useState('')
   
   const monthNames = [
     'January', 'February', 'March', 'April', 'May', 'June',
@@ -233,6 +245,42 @@ const BigCalendar = ({ events = [], onAddEvent, onDeleteEvent }) => {
     }
   }
 
+  // Filter events based on active filters
+  const filterEvents = (events) => {
+    return events.filter(event => {
+      // Check if the event's category is in our active filters
+      if (event.category === 'meeting' && activeFilters.meeting) return true
+      if (event.category === 'birthday' || event.isBirthday) return activeFilters.birthday
+      if (event.category === 'exam' && activeFilters.exam) return true
+      if (event.category === 'event' && activeFilters.event) return true
+      if (event.category === 'other' && activeFilters.other) return true
+      
+      // Check custom categories
+      if (customCategories.includes(event.category)) {
+        return activeFilters[event.category] || false
+      }
+      
+      return false
+    })
+  }
+
+  // Add a new custom category
+  const handleAddCustomCategory = () => {
+    if (newCategory && !customCategories.includes(newCategory)) {
+      setCustomCategories(prev => [...prev, newCategory])
+      setActiveFilters(prev => ({ ...prev, [newCategory]: true }))
+      setNewCategory('')
+    }
+  }
+
+  // Toggle a filter
+  const toggleFilter = (category) => {
+    setActiveFilters(prev => ({
+      ...prev,
+      [category]: !prev[category]
+    }))
+  }
+
   // Enhanced function to get events for a day, including recurring birthdays
   const getEventsForDay = (day) => {
     const dayDate = new Date(currentYear, currentMonth, day)
@@ -270,7 +318,32 @@ const BigCalendar = ({ events = [], onAddEvent, onDeleteEvent }) => {
         }
       })
     
-    return [...regularEvents, ...birthdayEvents]
+    // Filter the combined events
+    return filterEvents([...regularEvents, ...birthdayEvents])
+  }
+
+  // Get category color
+  const getCategoryColor = (category) => {
+    switch(category) {
+      case 'meeting': return '#6b7280' // gray
+      case 'birthday': return '#ec4899' // pink
+      case 'exam': return '#ef4444' // red
+      case 'event': return '#8b5cf6' // purple
+      case 'other': return '#3b82f6' // blue
+      default: return 'var(--accent-color, #97e7aa)' // accent color
+    }
+  }
+
+  // Get category icon
+  const getCategoryIcon = (category) => {
+    switch(category) {
+      case 'meeting': return '🤝'
+      case 'birthday': return '🎂'
+      case 'exam': return '📝'
+      case 'event': return '🎉'
+      case 'other': return '📌'
+      default: return '📅'
+    }
   }
 
   return (
@@ -285,6 +358,19 @@ const BigCalendar = ({ events = [], onAddEvent, onDeleteEvent }) => {
           </div>
           
           <div className="flex items-center gap-4">
+            {/* Filter Button */}
+            <button
+              onClick={() => setFilterOpen(!filterOpen)}
+              className="flex items-center gap-2 px-3 py-1 rounded text-white text-sm"
+              style={{ backgroundColor: 'var(--accent-color)' }}
+            >
+              <Filter size={14} />
+              Filter
+              {Object.values(activeFilters).some(v => !v) && (
+                <span className="w-2 h-2 rounded-full bg-white"></span>
+              )}
+            </button>
+            
             {/* Year Navigation */}
             <div className="flex items-center gap-2">
               <button
@@ -376,6 +462,118 @@ const BigCalendar = ({ events = [], onAddEvent, onDeleteEvent }) => {
           </div>
         </div>
 
+        {/* Filter Panel */}
+        {filterOpen && (
+          <div className="mb-4 p-4 bg-[#2a2a2a] rounded-lg border border-gray-700">
+            <div className="flex items-center justify-between mb-3">
+              <h4 className="text-white font-medium">Filter Events</h4>
+              <button 
+                onClick={() => setFilterOpen(false)}
+                className="text-gray-400 hover:text-white"
+              >
+                <X size={16} />
+              </button>
+            </div>
+            
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2 mb-4">
+              {/* Default categories */}
+              <button
+                onClick={() => toggleFilter('meeting')}
+                className={`flex items-center gap-2 px-3 py-2 rounded-lg border ${
+                  activeFilters.meeting 
+                    ? 'bg-gray-600 border-gray-500 text-white' 
+                    : 'bg-transparent border-gray-600 text-gray-400'
+                }`}
+              >
+                <span>🤝</span>
+                <span>Meetings</span>
+              </button>
+              
+              <button
+                onClick={() => toggleFilter('birthday')}
+                className={`flex items-center gap-2 px-3 py-2 rounded-lg border ${
+                  activeFilters.birthday 
+                    ? 'bg-pink-900/50 border-pink-700/50 text-white' 
+                    : 'bg-transparent border-gray-600 text-gray-400'
+                }`}
+              >
+                <span>🎂</span>
+                <span>Birthdays</span>
+              </button>
+              
+              <button
+                onClick={() => toggleFilter('exam')}
+                className={`flex items-center gap-2 px-3 py-2 rounded-lg border ${
+                  activeFilters.exam 
+                    ? 'bg-red-900/50 border-red-700/50 text-white' 
+                    : 'bg-transparent border-gray-600 text-gray-400'
+                }`}
+              >
+                <span>📝</span>
+                <span>Exams</span>
+              </button>
+              
+              <button
+                onClick={() => toggleFilter('event')}
+                className={`flex items-center gap-2 px-3 py-2 rounded-lg border ${
+                  activeFilters.event 
+                    ? 'bg-purple-900/50 border-purple-700/50 text-white' 
+                    : 'bg-transparent border-gray-600 text-gray-400'
+                }`}
+              >
+                <span>🎉</span>
+                <span>Events</span>
+              </button>
+              
+              <button
+                onClick={() => toggleFilter('other')}
+                className={`flex items-center gap-2 px-3 py-2 rounded-lg border ${
+                  activeFilters.other 
+                    ? 'bg-blue-900/50 border-blue-700/50 text-white' 
+                    : 'bg-transparent border-gray-600 text-gray-400'
+                }`}
+              >
+                <span>📌</span>
+                <span>Other</span>
+              </button>
+              
+              {/* Custom categories */}
+              {customCategories.map(category => (
+                <button
+                  key={category}
+                  onClick={() => toggleFilter(category)}
+                  className={`flex items-center gap-2 px-3 py-2 rounded-lg border ${
+                    activeFilters[category] 
+                      ? 'bg-accent/30 border-accent/50 text-white' 
+                      : 'bg-transparent border-gray-600 text-gray-400'
+                  }`}
+                >
+                  <Tag size={14} />
+                  <span>{category}</span>
+                </button>
+              ))}
+            </div>
+            
+            {/* Add custom category */}
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={newCategory}
+                onChange={(e) => setNewCategory(e.target.value)}
+                placeholder="Add custom category..."
+                className="flex-1 px-3 py-2 bg-[#1a1a1a] border border-gray-600 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-accent"
+              />
+              <button
+                onClick={handleAddCustomCategory}
+                disabled={!newCategory}
+                className="px-3 py-2 bg-accent text-white rounded-lg hover:bg-accent-80 transition-colors disabled:opacity-50"
+              >
+                Add
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* Horizontal line under header */}
         <div className="w-full h-px bg-gray-700 mb-4"></div>
 
@@ -422,23 +620,23 @@ const BigCalendar = ({ events = [], onAddEvent, onDeleteEvent }) => {
                   {dayEvents.map(event => {
                     const isBirthday = event.isBirthday || event.category === 'birthday'
                     const eventTitle = event.displayTitle || event.title
+                    const eventCategory = event.category || 'other'
+                    const categoryColor = getCategoryColor(eventCategory)
+                    const categoryIcon = getCategoryIcon(eventCategory)
                     
                     return (
                       <div 
                         key={event.yearlyId || event.id}
-                        className={`w-full h-10 rounded text-xs text-white px-2 flex items-center truncate cursor-pointer transition-colors ${
-                          isBirthday 
-                            ? 'bg-pink-600 hover:bg-pink-500' 
-                            : 'bg-gray-600 hover:bg-gray-500'
-                        }`}
+                        className={`w-full h-10 rounded text-xs text-white px-2 flex items-center truncate cursor-pointer transition-colors hover:opacity-80`}
+                        style={{ backgroundColor: categoryColor }}
                         title={`${eventTitle} ${event.time ? `at ${event.time}` : ''} ${isBirthday ? '🎂' : ''}`}
                         onClick={(e) => handleEventClick(event, e)}
                       >
                         <div className="flex items-center gap-1 w-full">
-                          {isBirthday && <span className="text-xs">🎂</span>}
+                          <span className="text-xs">{categoryIcon}</span>
                           <span className="truncate flex-1">{eventTitle}</span>
-                          {isBirthday && (
-                            <span className="text-xs opacity-75 ml-1">Birthday</span>
+                          {event.time && (
+                            <span className="text-xs opacity-75 ml-1">{event.time}</span>
                           )}
                         </div>
                       </div>
@@ -553,7 +751,7 @@ const BigCalendar = ({ events = [], onAddEvent, onDeleteEvent }) => {
 
                   {/* Category Field */}
                   <div className="flex items-center gap-4">
-                    <Calendar size={20} className="text-gray-400 flex-shrink-0" />
+                    <Tag size={20} className="text-gray-400 flex-shrink-0" />
                     <div className="flex-1">
                       <div className="text-sm text-gray-400 mb-1">Category</div>
                       <select
@@ -563,8 +761,12 @@ const BigCalendar = ({ events = [], onAddEvent, onDeleteEvent }) => {
                       >
                         <option value="meeting" className="bg-[#1a1a1a]">Meeting</option>
                         <option value="birthday" className="bg-[#1a1a1a]">Birthday</option>
+                        <option value="exam" className="bg-[#1a1a1a]">Exam</option>
                         <option value="event" className="bg-[#1a1a1a]">Event</option>
                         <option value="other" className="bg-[#1a1a1a]">Other</option>
+                        {customCategories.map(category => (
+                          <option key={category} value={category} className="bg-[#1a1a1a]">{category}</option>
+                        ))}
                       </select>
                     </div>
                   </div>
@@ -583,6 +785,19 @@ const BigCalendar = ({ events = [], onAddEvent, onDeleteEvent }) => {
                             Age in {currentYear}: {currentYear - new Date(eventForm.date).getFullYear()} years
                           </div>
                         )}
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* Exam Info */}
+                  {eventForm.category === 'exam' && (
+                    <div className="bg-red-900/20 border border-red-700/30 rounded-lg p-4">
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className="text-red-400">📝</span>
+                        <span className="text-red-400 font-medium">Exam Event</span>
+                      </div>
+                      <div className="text-sm text-gray-300">
+                        This event will be synchronized with your Exam Preparation section.
                       </div>
                     </div>
                   )}

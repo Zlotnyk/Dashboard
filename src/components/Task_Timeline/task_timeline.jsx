@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react'
-import { ChevronLeft, ChevronRight, Calendar, Plus } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Calendar, Plus, Filter, Tag } from 'lucide-react'
 import TaskDrawer from './task_drawer'
 import { useAuth } from '../../hooks/useAuth'
 import { tasksAPI } from '../../services/api'
@@ -12,6 +12,17 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false)
   const [drawerTask, setDrawerTask] = useState(null)
   const [loading, setLoading] = useState(false)
+  
+  // Filter state
+  const [filterOpen, setFilterOpen] = useState(false)
+  const [activeFilters, setActiveFilters] = useState({
+    normal: true,
+    urgent: true,
+    'Not started': true,
+    'In progress': true,
+    'Completed': true,
+    'On hold': true
+  })
   
   // SIMPLIFIED DRAG STATE
   const [dragState, setDragState] = useState({
@@ -415,16 +426,31 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
     }
   }, [dragState, dayWidth, onUpdateTask, isAuthenticated])
 
+  // Filter tasks based on active filters
+  const filterTasks = (tasks) => {
+    return tasks.filter(task => {
+      // Check priority filter
+      const priorityMatch = activeFilters[task.priority] || false
+      
+      // Check status filter
+      const statusMatch = activeFilters[task.status] || false
+      
+      return priorityMatch && statusMatch
+    })
+  }
+
   const getVisibleTasks = () => {
     const visibleStart = daysToShow[0]
     const visibleEnd = daysToShow[daysToShow.length - 1]
     
-    return tasks.filter(task => {
+    const visibleTasks = tasks.filter(task => {
       const taskStart = new Date(task.start)
       const taskEnd = new Date(task.end)
       
       return taskStart <= visibleEnd && taskEnd >= visibleStart
     })
+    
+    return filterTasks(visibleTasks)
   }
 
   const visibleTasks = getVisibleTasks()
@@ -537,6 +563,14 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
 
   const monthLabels = viewMode === 'Month' ? getMonthLabels() : []
 
+  // Toggle a filter
+  const toggleFilter = (category) => {
+    setActiveFilters(prev => ({
+      ...prev,
+      [category]: !prev[category]
+    }))
+  }
+
   return (
     <>
       <div className="w-full bg-[#1a1a1a] rounded-lg h-[400px] flex flex-col">
@@ -548,6 +582,19 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
           </div>
 
           <div className="flex items-center gap-4">
+            {/* Filter Button */}
+            <button
+              onClick={() => setFilterOpen(!filterOpen)}
+              className="flex items-center gap-2 px-3 py-1 rounded text-white text-sm"
+              style={{ backgroundColor: 'var(--accent-color)' }}
+            >
+              <Filter size={14} />
+              Filter
+              {Object.values(activeFilters).some(v => !v) && (
+                <span className="w-2 h-2 rounded-full bg-white"></span>
+              )}
+            </button>
+            
             <div className="flex items-center gap-2">
               <button
                 onClick={() => navigateTime(-1)}
@@ -612,6 +659,85 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
             </div>
           </div>
         </div>
+
+        {/* Filter Panel */}
+        {filterOpen && (
+          <div className="mx-4 mb-2 p-3 bg-[#2a2a2a] rounded-lg border border-gray-700">
+            <div className="grid grid-cols-2 gap-2 mb-2">
+              <div>
+                <h4 className="text-white text-sm font-medium mb-2">Priority</h4>
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    onClick={() => toggleFilter('normal')}
+                    className={`px-2 py-1 text-xs rounded ${
+                      activeFilters.normal 
+                        ? 'bg-blue-900/50 border border-blue-700/50 text-white' 
+                        : 'bg-transparent border border-gray-600 text-gray-400'
+                    }`}
+                  >
+                    Normal
+                  </button>
+                  <button
+                    onClick={() => toggleFilter('urgent')}
+                    className={`px-2 py-1 text-xs rounded ${
+                      activeFilters.urgent 
+                        ? 'bg-red-900/50 border border-red-700/50 text-white' 
+                        : 'bg-transparent border border-gray-600 text-gray-400'
+                    }`}
+                  >
+                    🔥 Urgent
+                  </button>
+                </div>
+              </div>
+              
+              <div>
+                <h4 className="text-white text-sm font-medium mb-2">Status</h4>
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    onClick={() => toggleFilter('Not started')}
+                    className={`px-2 py-1 text-xs rounded ${
+                      activeFilters['Not started'] 
+                        ? 'bg-gray-700 border border-gray-600 text-white' 
+                        : 'bg-transparent border border-gray-600 text-gray-400'
+                    }`}
+                  >
+                    Not started
+                  </button>
+                  <button
+                    onClick={() => toggleFilter('In progress')}
+                    className={`px-2 py-1 text-xs rounded ${
+                      activeFilters['In progress'] 
+                        ? 'bg-blue-900/50 border border-blue-700/50 text-white' 
+                        : 'bg-transparent border border-gray-600 text-gray-400'
+                    }`}
+                  >
+                    In progress
+                  </button>
+                  <button
+                    onClick={() => toggleFilter('Completed')}
+                    className={`px-2 py-1 text-xs rounded ${
+                      activeFilters['Completed'] 
+                        ? 'bg-green-900/50 border border-green-700/50 text-white' 
+                        : 'bg-transparent border border-gray-600 text-gray-400'
+                    }`}
+                  >
+                    Completed
+                  </button>
+                  <button
+                    onClick={() => toggleFilter('On hold')}
+                    className={`px-2 py-1 text-xs rounded ${
+                      activeFilters['On hold'] 
+                        ? 'bg-yellow-900/50 border border-yellow-700/50 text-white' 
+                        : 'bg-transparent border border-gray-600 text-gray-400'
+                    }`}
+                  >
+                    On hold
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Calendar Grid with Horizontal Scroll */}
         <div className="relative flex-1 overflow-hidden">
@@ -753,6 +879,9 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
                         {isUrgent && <span className="mr-1">🔥</span>}
                         <span className="truncate">
                           {task.title}
+                        </span>
+                        <span className="ml-2 text-xs opacity-75">
+                          {task.status}
                         </span>
                       </div>
                     </div>
