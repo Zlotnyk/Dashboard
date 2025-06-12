@@ -5,7 +5,6 @@ import { X } from 'lucide-react'
 import { useAuth } from '../hooks/useAuth'
 import LoginModal from './auth/LoginModal'
 import RegisterModal from './auth/RegisterModal'
-import { Notification } from './ui/notification'
 
 const Navbar = () => {
   const { user, isAuthenticated, logout } = useAuth()
@@ -20,7 +19,6 @@ const Navbar = () => {
     examReminders: true,
     assignmentReminders: true
   })
-  const [notification, setNotification] = useState(null)
 
   const colorOptions = [
     { name: 'Green', value: '#97e7aa', gif: 'Green.gif' },
@@ -45,7 +43,6 @@ const Navbar = () => {
     if (selectedOption) {
       setAccentColor(color)
       setBackgroundGif(selectedOption.gif)
-      showNotification('success', `Theme changed to ${selectedOption.name}`)
     }
   }
 
@@ -56,7 +53,6 @@ const Navbar = () => {
     localStorage.setItem('language', language)
     localStorage.setItem('notifications', JSON.stringify(notifications))
     setIsSettingsOpen(false)
-    showNotification('success', 'Settings saved successfully')
   }
 
   // Load settings from localStorage on component mount
@@ -82,7 +78,6 @@ const Navbar = () => {
   const handleLogout = async () => {
     await logout()
     setIsUserMenuOpen(false)
-    showNotification('info', 'You have been logged out')
   }
 
   const switchToRegister = () => {
@@ -108,14 +103,6 @@ const Navbar = () => {
       document.removeEventListener('mousedown', handleClickOutside)
     }
   }, [isUserMenuOpen])
-
-  // Show notification
-  const showNotification = (type, message) => {
-    setNotification({ type, message })
-    setTimeout(() => {
-      setNotification(null)
-    }, 3000)
-  }
 
   return (
     <>
@@ -348,23 +335,12 @@ const Navbar = () => {
         isOpen={isLoginOpen} 
         onClose={() => setIsLoginOpen(false)}
         onSwitchToRegister={switchToRegister}
-        showNotification={showNotification}
       />
       <RegisterModal 
         isOpen={isRegisterOpen} 
         onClose={() => setIsRegisterOpen(false)}
         onSwitchToLogin={switchToLogin}
-        showNotification={showNotification}
       />
-
-      {/* Notification */}
-      {notification && (
-        <Notification 
-          type={notification.type} 
-          message={notification.message} 
-          onClose={() => setNotification(null)}
-        />
-      )}
     </>
   )
 }

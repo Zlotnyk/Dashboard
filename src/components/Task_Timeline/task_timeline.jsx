@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react'
-import { ChevronLeft, ChevronRight, Calendar, Plus } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Calendar, Plus, Filter, Tag } from 'lucide-react'
 import TaskDrawer from './task_drawer'
 import { useAuth } from '../../hooks/useAuth'
 import { tasksAPI } from '../../services/api'
@@ -12,6 +12,17 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false)
   const [drawerTask, setDrawerTask] = useState(null)
   const [loading, setLoading] = useState(false)
+  
+  // Filter state
+  const [filterOpen, setFilterOpen] = useState(false)
+  const [activeFilters, setActiveFilters] = useState({
+    normal: true,
+    urgent: true,
+    'Not started': true,
+    'In progress': true,
+    'Completed': true,
+    'On hold': true
+  })
   
   // SIMPLIFIED DRAG STATE
   const [dragState, setDragState] = useState({
@@ -26,7 +37,6 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
   
   const timelineRef = useRef(null)
   const scrollRef = useRef(null)
-  const timelineContentRef = useRef(null) // New ref for the scrollable content
 
   const monthNames = [
     'January', 'February', 'March', 'April', 'May', 'June',
@@ -231,46 +241,33 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
     }
   }
 
-  // COMPLETELY REWRITTEN: More accurate timeline click handler
+  // FIXED: Completely rewritten timeline click handler with proper date calculation
   const handleTimelineClick = async (e) => {
     // Don't create task if we just finished dragging
     if (dragState.isDragging || dragState.hasMoved) return
     
-    // Only proceed if clicked on the timeline background
-    if (e.target === timelineContentRef.current || e.target.closest('.timeline-background')) {
-      // Get the scroll container's bounds
-      const scrollContainer = scrollRef.current
-      if (!scrollContainer) return
+    if (e.target === timelineRef.current || e.target.closest('.timeline-background')) {
+      const rect = timelineRef.current.getBoundingClientRect()
       
-      const containerRect = scrollContainer.getBoundingClientRect()
+      // FIXED: Get exact click position relative to timeline
+      const clickX = e.clientX - rect.left + (scrollRef.current?.scrollLeft || 0)
       
-      // Calculate the actual click position within the scrolled content
-      const relativeClickX = e.clientX - containerRect.left
-      const scrollLeft = scrollContainer.scrollLeft
-      const absoluteClickX = relativeClickX + scrollLeft
+      // FIXED: Calculate which day was clicked with proper rounding
+      const dayIndex = Math.floor(clickX / dayWidth)
       
-      // Calculate which day was clicked
-      const dayIndex = Math.floor(absoluteClickX / dayWidth)
-      
-      console.log('FIXED Timeline click debug:', {
-        relativeClickX,
-        scrollLeft,
-        absoluteClickX,
+      console.log('Timeline click debug:', {
+        clickX,
         dayWidth,
         dayIndex,
         totalDays: daysToShow.length,
-        clickedDate: dayIndex >= 0 && dayIndex < daysToShow.length ? daysToShow[dayIndex].toDateString() : 'Invalid'
+        scrollLeft: scrollRef.current?.scrollLeft || 0
       })
       
-      // Ensure dayIndex is within valid range
+      // FIXED: Ensure dayIndex is within valid range
       if (dayIndex >= 0 && dayIndex < daysToShow.length) {
         const clickDay = new Date(daysToShow[dayIndex])
-        // Ensure we're working with a clean date (no time component issues)
-        clickDay.setHours(0, 0, 0, 0)
-        
         const endDay = new Date(clickDay)
         endDay.setDate(clickDay.getDate() + 1)
-        endDay.setHours(23, 59, 59, 999)
         
         console.log('Creating task for date:', clickDay.toDateString())
         
@@ -324,7 +321,7 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
           setIsDrawerOpen(true)
         }
       } else {
-        console.warn('Click outside valid day range:', dayIndex, 'Total days:', daysToShow.length)
+        console.warn('Click outside valid day range:', dayIndex)
       }
     }
   }
@@ -429,16 +426,31 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
     }
   }, [dragState, dayWidth, onUpdateTask, isAuthenticated])
 
+  // Filter tasks based on active filters
+  const filterTasks = (tasks) => {
+    return tasks.filter(task => {
+      // Check priority filter
+      const priorityMatch = activeFilters[task.priority] || false
+      
+      // Check status filter
+      const statusMatch = activeFilters[task.status] || false
+      
+      return priorityMatch && statusMatch
+    })
+  }
+
   const getVisibleTasks = () => {
     const visibleStart = daysToShow[0]
     const visibleEnd = daysToShow[daysToShow.length - 1]
     
-    return tasks.filter(task => {
+    const visibleTasks = tasks.filter(task => {
       const taskStart = new Date(task.start)
       const taskEnd = new Date(task.end)
       
       return taskStart <= visibleEnd && taskEnd >= visibleStart
     })
+    
+    return filterTasks(visibleTasks)
   }
 
   const visibleTasks = getVisibleTasks()
@@ -551,6 +563,14 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
 
   const monthLabels = viewMode === 'Month' ? getMonthLabels() : []
 
+  // Toggle a filter
+  const toggleFilter = (category) => {
+    setActiveFilters(prev => ({
+      ...prev,
+      [category]: !prev[category]
+    }))
+  }
+
   return (
     <>
       <div className="w-full bg-[#1a1a1a] rounded-lg h-[400px] flex flex-col">
@@ -562,6 +582,19 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
           </div>
 
           <div className="flex items-center gap-4">
+            {/* Filter Button */}
+            <button
+              onClick={() => setFilterOpen(!filterOpen)}
+              className="flex items-center gap-2 px-3 py-1 rounded text-white text-sm"
+              style={{ backgroundColor: 'var(--accent-color)' }}
+            >
+              <Filter size={14} />
+              Filter
+              {Object.values(activeFilters).some(v => !v) && (
+                <span className="w-2 h-2 rounded-full bg-white"></span>
+              )}
+            </button>
+            
             <div className="flex items-center gap-2">
               <button
                 onClick={() => navigateTime(-1)}
@@ -627,6 +660,85 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
           </div>
         </div>
 
+        {/* Filter Panel */}
+        {filterOpen && (
+          <div className="mx-4 mb-2 p-3 bg-[#2a2a2a] rounded-lg border border-gray-700">
+            <div className="grid grid-cols-2 gap-2 mb-2">
+              <div>
+                <h4 className="text-white text-sm font-medium mb-2">Priority</h4>
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    onClick={() => toggleFilter('normal')}
+                    className={`px-2 py-1 text-xs rounded ${
+                      activeFilters.normal 
+                        ? 'bg-blue-900/50 border border-blue-700/50 text-white' 
+                        : 'bg-transparent border border-gray-600 text-gray-400'
+                    }`}
+                  >
+                    Normal
+                  </button>
+                  <button
+                    onClick={() => toggleFilter('urgent')}
+                    className={`px-2 py-1 text-xs rounded ${
+                      activeFilters.urgent 
+                        ? 'bg-red-900/50 border border-red-700/50 text-white' 
+                        : 'bg-transparent border border-gray-600 text-gray-400'
+                    }`}
+                  >
+                    🔥 Urgent
+                  </button>
+                </div>
+              </div>
+              
+              <div>
+                <h4 className="text-white text-sm font-medium mb-2">Status</h4>
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    onClick={() => toggleFilter('Not started')}
+                    className={`px-2 py-1 text-xs rounded ${
+                      activeFilters['Not started'] 
+                        ? 'bg-gray-700 border border-gray-600 text-white' 
+                        : 'bg-transparent border border-gray-600 text-gray-400'
+                    }`}
+                  >
+                    Not started
+                  </button>
+                  <button
+                    onClick={() => toggleFilter('In progress')}
+                    className={`px-2 py-1 text-xs rounded ${
+                      activeFilters['In progress'] 
+                        ? 'bg-blue-900/50 border border-blue-700/50 text-white' 
+                        : 'bg-transparent border border-gray-600 text-gray-400'
+                    }`}
+                  >
+                    In progress
+                  </button>
+                  <button
+                    onClick={() => toggleFilter('Completed')}
+                    className={`px-2 py-1 text-xs rounded ${
+                      activeFilters['Completed'] 
+                        ? 'bg-green-900/50 border border-green-700/50 text-white' 
+                        : 'bg-transparent border border-gray-600 text-gray-400'
+                    }`}
+                  >
+                    Completed
+                  </button>
+                  <button
+                    onClick={() => toggleFilter('On hold')}
+                    className={`px-2 py-1 text-xs rounded ${
+                      activeFilters['On hold'] 
+                        ? 'bg-yellow-900/50 border border-yellow-700/50 text-white' 
+                        : 'bg-transparent border border-gray-600 text-gray-400'
+                    }`}
+                  >
+                    On hold
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Calendar Grid with Horizontal Scroll */}
         <div className="relative flex-1 overflow-hidden">
           <div 
@@ -634,7 +746,7 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
             className="h-full overflow-x-auto overflow-y-hidden custom-scrollbar"
           >
             <div 
-              ref={timelineContentRef}
+              ref={timelineRef}
               className="relative h-full timeline-background cursor-pointer select-none"
               style={{ width: `${totalWidth}px` }}
               onClick={handleTimelineClick}
@@ -767,6 +879,9 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
                         {isUrgent && <span className="mr-1">🔥</span>}
                         <span className="truncate">
                           {task.title}
+                        </span>
+                        <span className="ml-2 text-xs opacity-75">
+                          {task.status}
                         </span>
                       </div>
                     </div>
