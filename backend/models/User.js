@@ -89,7 +89,7 @@ const userSchema = new mongoose.Schema({
   toObject: { virtuals: true }
 });
 
-// Index for better performance
+// Remove duplicate indexes - only keep one definition per field
 userSchema.index({ email: 1 });
 userSchema.index({ googleId: 1 });
 userSchema.index({ createdAt: -1 });
