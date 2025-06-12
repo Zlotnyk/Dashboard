@@ -8,18 +8,21 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
   const { isAuthenticated } = useAuth()
   const [currentDate, setCurrentDate] = useState(new Date())
   const [selectedTask, setSelectedTask] = useState(null)
-  const [draggedTask, setDraggedTask] = useState(null)
-  const [dragMode, setDragMode] = useState(null)
   const [viewMode, setViewMode] = useState('Month')
   const [isDrawerOpen, setIsDrawerOpen] = useState(false)
   const [drawerTask, setDrawerTask] = useState(null)
-  const [isDragging, setIsDragging] = useState(false)
-  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 })
-  const [originalTaskData, setOriginalTaskData] = useState(null)
   const [loading, setLoading] = useState(false)
-  const [dragStartPosition, setDragStartPosition] = useState({ x: 0, y: 0 })
-  const [dragThreshold] = useState(10) // Increased threshold
-  const [hasDragStarted, setHasDragStarted] = useState(false)
+  
+  // SIMPLIFIED DRAG STATE
+  const [dragState, setDragState] = useState({
+    isDragging: false,
+    draggedTask: null,
+    dragMode: null, // 'move', 'resize-left', 'resize-right'
+    startX: 0,
+    originalStart: null,
+    originalEnd: null
+  })
+  
   const timelineRef = useRef(null)
   const scrollRef = useRef(null)
 
@@ -31,28 +34,26 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
   const currentMonth = currentDate.getMonth()
   const currentYear = currentDate.getFullYear()
   
-  // Improved days calculation with better scaling
+  // Improved days calculation
   const getDaysToShow = () => {
     if (viewMode === 'Week') {
-      // Week view: Show 3 weeks with current week in center
       const startOfWeek = new Date(currentDate)
       const day = startOfWeek.getDay()
-      startOfWeek.setDate(startOfWeek.getDate() - day - 7) // Start 1 week earlier
+      startOfWeek.setDate(startOfWeek.getDate() - day - 7)
       
       const days = []
-      for (let i = 0; i < 21; i++) { // 3 weeks = 21 days
+      for (let i = 0; i < 21; i++) {
         const date = new Date(startOfWeek)
         date.setDate(startOfWeek.getDate() + i)
         days.push(date)
       }
       return days
     } else {
-      // Month view: Show current month + 15 days on each side for better context
       const startDate = new Date(currentYear, currentMonth, 1)
-      startDate.setDate(startDate.getDate() - 15) // 15 days before month start
+      startDate.setDate(startDate.getDate() - 15)
       
       const endDate = new Date(currentYear, currentMonth + 1, 0)
-      endDate.setDate(endDate.getDate() + 15) // 15 days after month end
+      endDate.setDate(endDate.getDate() + 15)
       
       const days = []
       const currentDay = new Date(startDate)
@@ -68,8 +69,6 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
 
   const daysToShow = getDaysToShow()
   const today = new Date()
-  
-  // Larger day width for better precision
   const dayWidth = viewMode === 'Week' ? 120 : 40
   const totalWidth = daysToShow.length * dayWidth
 
@@ -117,7 +116,6 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
       return Math.max(dayWidth, (endIndex - startIndex + 1) * dayWidth)
     }
     
-    // Handle tasks that extend beyond visible range
     const taskStart = new Date(task.start)
     const taskEnd = new Date(task.end)
     const visibleStart = daysToShow[0]
@@ -138,9 +136,39 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
     return dayWidth
   }
 
+  // COMPLETELY NEW DRAG SYSTEM
+  const handleTaskMouseDown = (e, task) => {
+    e.preventDefault()
+    e.stopPropagation()
+    
+    const rect = e.currentTarget.getBoundingClientRect()
+    const clickX = e.clientX - rect.left
+    const taskWidth = rect.width
+    
+    // Determine drag mode based on click position
+    let mode = 'move'
+    if (clickX < 20) {
+      mode = 'resize-left'
+    } else if (clickX > taskWidth - 20) {
+      mode = 'resize-right'
+    }
+    
+    setDragState({
+      isDragging: true,
+      draggedTask: task,
+      dragMode: mode,
+      startX: e.clientX,
+      originalStart: new Date(task.start),
+      originalEnd: new Date(task.end)
+    })
+    
+    // Prevent text selection during drag
+    document.body.style.userSelect = 'none'
+  }
+
   const handleTaskClick = (task, e) => {
     e.stopPropagation()
-    if (!hasDragStarted) {
+    if (!dragState.isDragging) {
       setDrawerTask(task)
       setIsDrawerOpen(true)
     }
@@ -198,52 +226,20 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
     }
   }
 
-  // COMPLETELY REWRITTEN DRAG HANDLING
-  const handleMouseDown = (e, task) => {
-    e.preventDefault()
-    e.stopPropagation()
-    
-    const rect = e.currentTarget.getBoundingClientRect()
-    const clickX = e.clientX - rect.left
-    const taskWidth = rect.width
-    
-    // Store initial mouse position
-    setDragStartPosition({ x: e.clientX, y: e.clientY })
-    setHasDragStarted(false)
-    
-    setOriginalTaskData({
-      start: new Date(task.start),
-      end: new Date(task.end)
-    })
-    
-    // Fixed resize zones (15px from each edge for better usability)
-    const resizeZoneWidth = 15
-    
-    if (clickX < resizeZoneWidth) {
-      setDragMode('resize-start')
-    } else if (clickX > taskWidth - resizeZoneWidth) {
-      setDragMode('resize-end')
-    } else {
-      setDragMode('move')
-    }
-    
-    setDraggedTask(task)
-    setIsDragging(true)
-  }
-
-  // IMPROVED TIMELINE CLICK - SNAP TO GRID
   const handleTimelineClick = async (e) => {
-    if (!isDragging && !hasDragStarted && (e.target === timelineRef.current || e.target.closest('.timeline-background'))) {
+    if (dragState.isDragging) return
+    
+    if (e.target === timelineRef.current || e.target.closest('.timeline-background')) {
       const rect = timelineRef.current.getBoundingClientRect()
       const clickX = e.clientX - rect.left + (scrollRef.current?.scrollLeft || 0)
       
-      // SNAP TO DAY GRID - this is what you requested
+      // SNAP TO DAY GRID
       const dayIndex = Math.floor(clickX / dayWidth)
       
       if (dayIndex >= 0 && dayIndex < daysToShow.length) {
         const clickDay = daysToShow[dayIndex]
         const endDay = new Date(clickDay)
-        endDay.setDate(clickDay.getDate() + 1) // Default 1 day duration
+        endDay.setDate(clickDay.getDate() + 1)
         
         const newTask = {
           title: 'New Task',
@@ -298,109 +294,87 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
     }
   }
 
-  const handleMouseMove = (e) => {
-    if (timelineRef.current) {
-      const rect = timelineRef.current.getBoundingClientRect()
-      setMousePosition({
-        x: e.clientX - rect.left,
-        y: e.clientY - rect.top
-      })
-    }
-  }
-
-  // COMPLETELY REWRITTEN DRAG HANDLING WITH PROPER THRESHOLD AND PRECISION
+  // GLOBAL MOUSE HANDLERS
   useEffect(() => {
-    const handleMouseMoveGlobal = (e) => {
-      if (!draggedTask || !timelineRef.current || !originalTaskData) return
-
-      // Check if we've moved enough to start dragging
-      if (!hasDragStarted) {
-        const deltaX = Math.abs(e.clientX - dragStartPosition.x)
-        const deltaY = Math.abs(e.clientY - dragStartPosition.y)
-        
-        if (deltaX > dragThreshold || deltaY > dragThreshold) {
-          setHasDragStarted(true)
-        } else {
-          return // Don't start dragging yet
-        }
-      }
-
-      const rect = timelineRef.current.getBoundingClientRect()
-      const x = e.clientX - rect.left + (scrollRef.current?.scrollLeft || 0)
+    const handleMouseMove = (e) => {
+      if (!dragState.isDragging || !dragState.draggedTask) return
       
-      // IMPROVED SNAP-TO-GRID WITH BETTER PRECISION
-      const exactDayIndex = x / dayWidth
-      const dayIndex = Math.max(0, Math.min(daysToShow.length - 1, Math.round(exactDayIndex)))
+      const deltaX = e.clientX - dragState.startX
+      const daysDelta = Math.round(deltaX / dayWidth)
       
-      let updatedTask = { ...draggedTask }
-
+      if (daysDelta === 0) return // No change
+      
+      const { draggedTask, dragMode, originalStart, originalEnd } = dragState
+      let newStart = new Date(originalStart)
+      let newEnd = new Date(originalEnd)
+      
       if (dragMode === 'move') {
-        const originalDuration = Math.ceil((originalTaskData.end - originalTaskData.start) / (1000 * 60 * 60 * 24))
-        const newStartDay = daysToShow[dayIndex]
-        const newEndDay = new Date(newStartDay)
-        newEndDay.setDate(newStartDay.getDate() + originalDuration - 1)
-        
-        updatedTask.start = new Date(newStartDay)
-        updatedTask.end = newEndDay
-        
-      } else if (dragMode === 'resize-start') {
-        const newStartDay = daysToShow[dayIndex]
-        const originalEnd = new Date(originalTaskData.end)
-        
-        if (newStartDay <= originalEnd) {
-          updatedTask.start = new Date(newStartDay)
-          updatedTask.end = originalEnd
+        // Move entire task
+        newStart.setDate(originalStart.getDate() + daysDelta)
+        newEnd.setDate(originalEnd.getDate() + daysDelta)
+      } else if (dragMode === 'resize-left') {
+        // Resize from left (change start date)
+        newStart.setDate(originalStart.getDate() + daysDelta)
+        if (newStart >= originalEnd) {
+          newStart = new Date(originalEnd)
+          newStart.setDate(newStart.getDate() - 1)
         }
-        
-      } else if (dragMode === 'resize-end') {
-        const newEndDay = daysToShow[dayIndex]
-        const originalStart = new Date(originalTaskData.start)
-        
-        if (newEndDay >= originalStart) {
-          updatedTask.start = originalStart
-          updatedTask.end = new Date(newEndDay)
+      } else if (dragMode === 'resize-right') {
+        // Resize from right (change end date)
+        newEnd.setDate(originalEnd.getDate() + daysDelta)
+        if (newEnd <= originalStart) {
+          newEnd = new Date(originalStart)
+          newEnd.setDate(newEnd.getDate() + 1)
         }
       }
-
+      
+      // Update task immediately for visual feedback
+      const updatedTask = {
+        ...draggedTask,
+        start: newStart,
+        end: newEnd
+      }
+      
       onUpdateTask(updatedTask)
     }
-
+    
     const handleMouseUp = async () => {
-      if (draggedTask && isAuthenticated && originalTaskData && hasDragStarted) {
+      if (dragState.isDragging && dragState.draggedTask && isAuthenticated) {
         try {
-          const taskId = draggedTask.id || draggedTask._id
+          const taskId = dragState.draggedTask.id || dragState.draggedTask._id
           await tasksAPI.updateTask(taskId, {
-            startDate: draggedTask.start,
-            endDate: draggedTask.end
+            startDate: dragState.draggedTask.start,
+            endDate: dragState.draggedTask.end
           })
-          console.log('Task updated via drag & drop')
         } catch (error) {
-          console.error('Error updating task during drag:', error)
+          console.error('Error updating task:', error)
         }
       }
       
-      setDraggedTask(null)
-      setDragMode(null)
-      setOriginalTaskData(null)
-      setDragStartPosition({ x: 0, y: 0 })
+      // Reset drag state
+      setDragState({
+        isDragging: false,
+        draggedTask: null,
+        dragMode: null,
+        startX: 0,
+        originalStart: null,
+        originalEnd: null
+      })
       
-      // Reset drag state after a delay to prevent accidental clicks
-      setTimeout(() => {
-        setIsDragging(false)
-        setHasDragStarted(false)
-      }, 200) // Increased delay for better stability
+      // Re-enable text selection
+      document.body.style.userSelect = ''
     }
-
-    if (draggedTask) {
-      document.addEventListener('mousemove', handleMouseMoveGlobal)
+    
+    if (dragState.isDragging) {
+      document.addEventListener('mousemove', handleMouseMove)
       document.addEventListener('mouseup', handleMouseUp)
     }
-
+    
     return () => {
-      document.removeEventListener('mousemove', handleMouseMoveGlobal)
+      document.removeEventListener('mousemove', handleMouseMove)
       document.removeEventListener('mouseup', handleMouseUp)
     }
-  }, [draggedTask, dragMode, daysToShow, onUpdateTask, dayWidth, originalTaskData, isAuthenticated, dragStartPosition, hasDragStarted, dragThreshold])
+  }, [dragState, dayWidth, onUpdateTask, isAuthenticated])
 
   const getVisibleTasks = () => {
     const visibleStart = daysToShow[0]
@@ -511,7 +485,6 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
       }
     })
     
-    // Add the last month
     if (currentMonthLabel) {
       labels.push({
         label: currentMonthLabel,
@@ -612,7 +585,6 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
               className="relative h-full timeline-background cursor-pointer select-none"
               style={{ width: `${totalWidth}px` }}
               onClick={handleTimelineClick}
-              onMouseMove={handleMouseMove}
             >
               {/* Month Labels (only for month view) */}
               {viewMode === 'Month' && (
@@ -699,20 +671,6 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
                 return null
               })()}
 
-              {/* Grid hover indicator - SNAP TO GRID */}
-              {!isDragging && !hasDragStarted && mousePosition.y > (viewMode === 'Month' ? 72 : 40) && (
-                <div
-                  className="absolute w-8 h-8 rounded-full flex items-center justify-center z-30 pointer-events-none opacity-60"
-                  style={{
-                    left: `${Math.floor(mousePosition.x / dayWidth) * dayWidth + dayWidth / 2 - 16}px`,
-                    top: `${mousePosition.y - 16}px`,
-                    backgroundColor: 'var(--accent-color, #97e7aa)'
-                  }}
-                >
-                  <Plus size={16} className="text-white" />
-                </div>
-              )}
-
               {/* Tasks Area */}
               <div 
                 className="relative h-full pt-4 pb-4 overflow-y-auto custom-scrollbar z-10"
@@ -723,15 +681,13 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
                   const taskColor = isUrgent ? '#ff6b35' : 'var(--accent-color, #97e7aa)'
                   const taskWidth = getTaskWidth(task)
                   const taskId = task.id || task._id
-                  
-                  // Fixed resize zone width for better precision
-                  const resizeZoneWidth = 15
+                  const isDraggedTask = dragState.draggedTask && (dragState.draggedTask.id === taskId || dragState.draggedTask._id === taskId)
                   
                   return (
                     <div
                       key={taskId}
                       className={`absolute h-10 rounded cursor-pointer transition-all duration-200 group z-20 select-none ${
-                        draggedTask?.id === taskId || draggedTask?._id === taskId ? 'opacity-80 shadow-lg z-30' : ''
+                        isDraggedTask ? 'opacity-80 shadow-lg z-30' : ''
                       }`}
                       style={{
                         left: `${getDayPosition(task.start)}px`,
@@ -740,18 +696,16 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
                         backgroundColor: taskColor
                       }}
                       onClick={(e) => handleTaskClick(task, e)}
-                      onMouseDown={(e) => handleMouseDown(e, task)}
+                      onMouseDown={(e) => handleTaskMouseDown(e, task)}
                     >
-                      {/* IMPROVED RESIZE HANDLES */}
+                      {/* SIMPLE RESIZE INDICATORS */}
                       <div 
-                        className="absolute left-0 top-0 h-full cursor-ew-resize opacity-0 group-hover:opacity-100 bg-white bg-opacity-30 rounded-l transition-opacity flex items-center justify-center"
-                        style={{ width: `${resizeZoneWidth}px` }}
+                        className="absolute left-0 top-0 h-full w-5 cursor-ew-resize opacity-0 group-hover:opacity-100 bg-white bg-opacity-20 rounded-l transition-opacity flex items-center justify-center"
                       >
                         <div className="w-1 h-4 bg-white opacity-80 rounded"></div>
                       </div>
                       <div 
-                        className="absolute right-0 top-0 h-full cursor-ew-resize opacity-0 group-hover:opacity-100 bg-white bg-opacity-30 rounded-r transition-opacity flex items-center justify-center"
-                        style={{ width: `${resizeZoneWidth}px` }}
+                        className="absolute right-0 top-0 h-full w-5 cursor-ew-resize opacity-0 group-hover:opacity-100 bg-white bg-opacity-20 rounded-r transition-opacity flex items-center justify-center"
                       >
                         <div className="w-1 h-4 bg-white opacity-80 rounded"></div>
                       </div>
