@@ -42,26 +42,47 @@ function App() {
 	const loadUserData = async () => {
 		try {
 			setLoading(true)
+			console.log('Loading user data from backend...')
 			
 			// Load tasks from backend
 			const tasksResponse = await tasksAPI.getTasks()
-			const backendTasks = tasksResponse.data.data.map(task => ({
-				...task,
-				id: task._id,
-				start: new Date(task.startDate),
-				end: new Date(task.endDate),
-				color: 'var(--accent-color, #97e7aa)'
-			}))
-			setTasks(backendTasks)
+			console.log('Backend tasks response:', tasksResponse.data)
+			
+			if (tasksResponse.data && tasksResponse.data.data) {
+				const backendTasks = tasksResponse.data.data.map(task => {
+					console.log('Processing task:', task)
+					return {
+						...task,
+						id: task._id, // Map _id to id
+						start: new Date(task.startDate),
+						end: new Date(task.endDate),
+						color: task.color || 'var(--accent-color, #97e7aa)',
+						// Ensure all required fields are present
+						title: task.title || 'Untitled Task',
+						status: task.status || 'Not started',
+						priority: task.priority || 'normal',
+						description: task.description || ''
+					}
+				})
+				console.log('Processed tasks:', backendTasks)
+				setTasks(backendTasks)
+			} else {
+				console.log('No tasks data in response')
+				setTasks([])
+			}
 
 			// Load events from backend
 			const eventsResponse = await eventsAPI.getEvents()
-			const backendEvents = eventsResponse.data.data.map(event => ({
-				...event,
-				id: event._id,
-				date: new Date(event.date)
-			}))
-			setEvents(backendEvents)
+			if (eventsResponse.data && eventsResponse.data.data) {
+				const backendEvents = eventsResponse.data.data.map(event => ({
+					...event,
+					id: event._id,
+					date: new Date(event.date)
+				}))
+				setEvents(backendEvents)
+			} else {
+				setEvents([])
+			}
 
 		} catch (error) {
 			console.error('Error loading user data:', error)
@@ -73,6 +94,8 @@ function App() {
 	}
 
 	const loadLocalData = () => {
+		console.log('Loading data from localStorage...')
+		
 		// Load tasks from localStorage
 		const savedTasks = localStorage.getItem('tasks')
 		if (savedTasks) {
@@ -82,12 +105,14 @@ function App() {
 					start: new Date(task.start),
 					end: new Date(task.end)
 				}))
+				console.log('Loaded tasks from localStorage:', parsedTasks)
 				setTasks(parsedTasks)
 			} catch (error) {
 				console.error('Error parsing saved tasks:', error)
 				setTasks(generateMockTasks())
 			}
 		} else {
+			console.log('No saved tasks, using mock data')
 			setTasks(generateMockTasks())
 		}
 
@@ -111,43 +136,65 @@ function App() {
 
 	// Save to localStorage for non-authenticated users
 	useEffect(() => {
-		if (!isAuthenticated) {
+		if (!isAuthenticated && tasks.length > 0) {
+			console.log('Saving tasks to localStorage:', tasks)
 			localStorage.setItem('tasks', JSON.stringify(tasks))
 		}
 	}, [tasks, isAuthenticated])
 
 	useEffect(() => {
-		if (!isAuthenticated) {
+		if (!isAuthenticated && events.length > 0) {
 			localStorage.setItem('events', JSON.stringify(events))
 		}
 	}, [events, isAuthenticated])
 
 	const handleTaskAdd = async (task) => {
+		console.log('Adding task:', task)
+		
 		if (isAuthenticated) {
-			// Task creation is handled in the component
-			setTasks(prevTasks => [...prevTasks, task])
+			// For authenticated users, the task should already be created via API
+			// Just add it to the state
+			setTasks(prevTasks => {
+				const newTasks = [...prevTasks, task]
+				console.log('Updated tasks state:', newTasks)
+				return newTasks
+			})
 		} else {
 			// For non-authenticated users, add locally
-			const newTask = { ...task, id: crypto.randomUUID() }
-			setTasks(prevTasks => [...prevTasks, newTask])
+			const newTask = { ...task, id: task.id || crypto.randomUUID() }
+			setTasks(prevTasks => {
+				const newTasks = [...prevTasks, newTask]
+				console.log('Updated tasks state (local):', newTasks)
+				return newTasks
+			})
 		}
 	}
 
 	const handleTaskUpdate = (updatedTask) => {
-		setTasks(prevTasks =>
-			prevTasks.map(task => {
+		console.log('Updating task:', updatedTask)
+		
+		setTasks(prevTasks => {
+			const newTasks = prevTasks.map(task => {
 				const taskId = task.id || task._id
 				const updatedTaskId = updatedTask.id || updatedTask._id
 				return taskId === updatedTaskId ? updatedTask : task
 			})
-		)
+			console.log('Updated tasks state after update:', newTasks)
+			return newTasks
+		})
 	}
 
 	const handleTaskDelete = (taskId) => {
-		setTasks(prevTasks => prevTasks.filter(task => {
-			const currentTaskId = task.id || task._id
-			return currentTaskId !== taskId
-		}))
+		console.log('Deleting task with ID:', taskId)
+		
+		setTasks(prevTasks => {
+			const newTasks = prevTasks.filter(task => {
+				const currentTaskId = task.id || task._id
+				return currentTaskId !== taskId
+			})
+			console.log('Updated tasks state after delete:', newTasks)
+			return newTasks
+		})
 	}
 
 	const handleEventAdd = async (event) => {
