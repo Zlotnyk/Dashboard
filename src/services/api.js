@@ -32,7 +32,7 @@ api.interceptors.response.use(
     if (error.response?.status === 401) {
       // Якщо токен недійсний, видаляємо його
       localStorage.removeItem('token');
-      window.location.href = '/';
+      // Не перенаправляємо автоматично, щоб не порушити UX
     }
     return Promise.reject(error);
   }

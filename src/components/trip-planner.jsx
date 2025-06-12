@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { Plus, Calendar, MapPin, Clock, X, Edit, Trash2, Plane, AlertCircle, Camera, Upload } from 'lucide-react'
 import { Dialog, DialogBackdrop, DialogPanel, DialogTitle } from '@headlessui/react'
 import { useAuth } from '../hooks/useAuth'
+import { tripsAPI } from '../services/api'
 
 const TripPlanner = () => {
   const { isAuthenticated, user } = useAuth()
@@ -9,6 +10,7 @@ const TripPlanner = () => {
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [selectedTrip, setSelectedTrip] = useState(null)
   const [validationErrors, setValidationErrors] = useState({})
+  const [loading, setLoading] = useState(false)
   const [tripForm, setTripForm] = useState({
     title: '',
     destination: '',
@@ -28,24 +30,41 @@ const TripPlanner = () => {
     { value: 'Cancelled', label: 'Cancelled', color: '#ef4444' }
   ]
 
-  // Load trips from localStorage on component mount
+  // Load trips from backend when user is authenticated
   useEffect(() => {
-    const savedTrips = JSON.parse(localStorage.getItem('trips') || '[]')
-    const tripsWithDates = savedTrips.map(trip => ({
-      ...trip,
-      startDate: new Date(trip.startDate),
-      endDate: new Date(trip.endDate),
-      photos: trip.photos || []
-    }))
-    setTrips(tripsWithDates)
+    if (isAuthenticated && user) {
+      loadTrips()
+    } else {
+      setTrips([])
+    }
   }, [isAuthenticated, user])
 
-  // Save trips to localStorage whenever trips change
-  useEffect(() => {
-    if (isAuthenticated) {
-      localStorage.setItem('trips', JSON.stringify(trips))
+  const loadTrips = async () => {
+    try {
+      setLoading(true)
+      const response = await tripsAPI.getTrips()
+      const tripsWithDates = response.data.data.map(trip => ({
+        ...trip,
+        startDate: new Date(trip.startDate),
+        endDate: new Date(trip.endDate),
+        photos: trip.photos || []
+      }))
+      setTrips(tripsWithDates)
+    } catch (error) {
+      console.error('Error loading trips:', error)
+      // Fallback to localStorage if backend fails
+      const savedTrips = JSON.parse(localStorage.getItem('trips') || '[]')
+      const tripsWithDates = savedTrips.map(trip => ({
+        ...trip,
+        startDate: new Date(trip.startDate),
+        endDate: new Date(trip.endDate),
+        photos: trip.photos || []
+      }))
+      setTrips(tripsWithDates)
+    } finally {
+      setLoading(false)
     }
-  }, [trips, isAuthenticated])
+  }
 
   const calculateDuration = (startDate, endDate) => {
     if (!startDate || !endDate) return 0
@@ -141,7 +160,7 @@ const TripPlanner = () => {
     setIsModalOpen(true)
   }
 
-  const handleSaveTrip = () => {
+  const handleSaveTrip = async () => {
     if (!validateForm()) {
       return
     }
@@ -157,20 +176,42 @@ const TripPlanner = () => {
       photos: tripForm.photos
     }
 
-    if (selectedTrip) {
-      // Update existing trip
-      setTrips(prev => prev.map(trip => 
-        trip.id === selectedTrip.id 
-          ? { ...trip, ...tripData }
-          : trip
-      ))
-    } else {
-      // Add new trip
-      const newTrip = {
-        id: crypto.randomUUID(),
-        ...tripData
+    try {
+      setLoading(true)
+      
+      if (selectedTrip) {
+        // Update existing trip
+        await tripsAPI.updateTrip(selectedTrip._id, tripData)
+      } else {
+        // Add new trip
+        await tripsAPI.createTrip(tripData)
       }
-      setTrips(prev => [...prev, newTrip])
+      
+      // Reload trips from backend
+      await loadTrips()
+      
+    } catch (error) {
+      console.error('Error saving trip:', error)
+      
+      // Fallback to localStorage
+      if (selectedTrip) {
+        setTrips(prev => prev.map(trip => 
+          trip.id === selectedTrip.id 
+            ? { ...trip, ...tripData }
+            : trip
+        ))
+      } else {
+        const newTrip = {
+          id: crypto.randomUUID(),
+          ...tripData
+        }
+        setTrips(prev => [...prev, newTrip])
+      }
+      
+      // Save to localStorage as backup
+      localStorage.setItem('trips', JSON.stringify(trips))
+    } finally {
+      setLoading(false)
     }
 
     setIsModalOpen(false)
@@ -188,9 +229,20 @@ const TripPlanner = () => {
     setSelectedTrip(null)
   }
 
-  const handleDeleteTrip = () => {
+  const handleDeleteTrip = async () => {
     if (selectedTrip) {
-      setTrips(prev => prev.filter(trip => trip.id !== selectedTrip.id))
+      try {
+        setLoading(true)
+        await tripsAPI.deleteTrip(selectedTrip._id)
+        await loadTrips()
+      } catch (error) {
+        console.error('Error deleting trip:', error)
+        // Fallback to local deletion
+        setTrips(prev => prev.filter(trip => trip.id !== selectedTrip.id))
+      } finally {
+        setLoading(false)
+      }
+      
       setIsModalOpen(false)
       setSelectedTrip(null)
     }
@@ -246,6 +298,14 @@ const TripPlanner = () => {
 
   const sortedTrips = trips.sort((a, b) => new Date(a.startDate) - new Date(b.startDate))
 
+  if (loading) {
+    return (
+      <div className="w-full h-full bg-[#1a1a1a] rounded-lg p-4 flex items-center justify-center">
+        <div className="text-white">Loading trips...</div>
+      </div>
+    )
+  }
+
   return (
     <>
       <div className="w-full h-full bg-[#1a1a1a] rounded-lg p-4">
@@ -271,7 +331,7 @@ const TripPlanner = () => {
             
             return (
               <div 
-                key={trip.id}
+                key={trip._id || trip.id}
                 className="bg-[#2a2a2a] rounded-lg overflow-hidden hover:bg-[#333333] transition-colors cursor-pointer group"
                 onClick={() => handleEditTrip(trip)}
               >
@@ -618,9 +678,10 @@ const TripPlanner = () => {
                   {selectedTrip && (
                     <button
                       onClick={handleDeleteTrip}
-                      className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm"
+                      disabled={loading}
+                      className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm disabled:opacity-50"
                     >
-                      Delete
+                      {loading ? 'Deleting...' : 'Delete'}
                     </button>
                   )}
                   <div className="flex-1"></div>
@@ -632,9 +693,10 @@ const TripPlanner = () => {
                   </button>
                   <button
                     onClick={handleSaveTrip}
-                    className="px-4 py-2 bg-accent text-white rounded-lg hover:bg-accent-80 transition-colors text-sm"
+                    disabled={loading}
+                    className="px-4 py-2 bg-accent text-white rounded-lg hover:bg-accent-80 transition-colors text-sm disabled:opacity-50"
                   >
-                    Save
+                    {loading ? 'Saving...' : 'Save'}
                   </button>
                 </div>
               </div>
