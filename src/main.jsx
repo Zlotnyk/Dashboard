@@ -34,7 +34,7 @@ import LifestyleDreamTrackerPage from './pages/quick-links/lifestyle-dream-track
 import LifestyleBucketListPage from './pages/quick-links/lifestyle-bucket-list.jsx'
 import NotFoundPage from './pages/not-found.jsx'
 import GoogleAuthSuccess from './components/auth/GoogleAuthSuccess.jsx'
-import { AuthProvider } from './hooks/useAuth.js'
+import { AuthProvider } from './hooks/useAuth.jsx'
 
 createRoot(document.getElementById('root')).render(
 	<StrictMode>
