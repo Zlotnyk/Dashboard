@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Settings, User, LogOut } from 'lucide-react'
+import { Settings, User, LogOut, ChevronDown } from 'lucide-react'
 import { Dialog, DialogBackdrop, DialogPanel, DialogTitle } from '@headlessui/react'
 import { X } from 'lucide-react'
 import { useAuth } from '../hooks/useAuth'
@@ -11,6 +11,7 @@ const Navbar = () => {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false)
   const [isLoginOpen, setIsLoginOpen] = useState(false)
   const [isRegisterOpen, setIsRegisterOpen] = useState(false)
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false)
   const [accentColor, setAccentColor] = useState('#97e7aa')
   const [backgroundGif, setBackgroundGif] = useState('Green.gif')
   const [language, setLanguage] = useState('English')
@@ -76,6 +77,7 @@ const Navbar = () => {
 
   const handleLogout = async () => {
     await logout()
+    setIsUserMenuOpen(false)
   }
 
   const switchToRegister = () => {
@@ -88,6 +90,20 @@ const Navbar = () => {
     setIsLoginOpen(true)
   }
 
+  // Close user menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (isUserMenuOpen && !event.target.closest('.user-menu-container')) {
+        setIsUserMenuOpen(false)
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [isUserMenuOpen])
+
   return (
     <>
       <nav className="w-full bg-[#1a1a1a] py-1 px-8 flex items-center justify-between">
@@ -96,45 +112,55 @@ const Navbar = () => {
           DOOIT
         </div>
         
-        {/* Right side - Settings icon and buttons */}
+        {/* Right side - Auth buttons or user menu */}
         <div className="flex items-center gap-3">
-          <button 
-            onClick={() => setIsSettingsOpen(true)}
-            className="text-gray-400 hover:text-white transition-colors p-2"
-          >
-            <Settings size={20} />
-          </button>
-          
           {isAuthenticated ? (
-            <div className="flex items-center gap-3">
-              <div className="flex items-center gap-2 text-white">
-                <User size={16} />
-                <span className="text-sm">{user?.name}</span>
+            <div className="flex items-center gap-3 user-menu-container">
+              {/* User Menu */}
+              <div className="relative">
+                <button 
+                  onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
+                  className="flex items-center gap-2 px-4 py-2 text-white hover:bg-gray-700 rounded-lg transition-colors"
+                >
+                  <User size={16} />
+                  <span className="text-sm">{user?.name}</span>
+                  <ChevronDown size={14} className={`transition-transform ${isUserMenuOpen ? 'rotate-180' : ''}`} />
+                </button>
+                
+                {/* Dropdown Menu */}
+                {isUserMenuOpen && (
+                  <div className="absolute right-0 top-full mt-2 w-48 bg-[#2a2a2a] border border-gray-600 rounded-lg shadow-lg z-50">
+                    <div className="py-1">
+                      <button
+                        onClick={() => {
+                          setIsSettingsOpen(true)
+                          setIsUserMenuOpen(false)
+                        }}
+                        className="w-full flex items-center gap-3 px-4 py-2 text-gray-300 hover:text-white hover:bg-gray-700 transition-colors text-left"
+                      >
+                        <Settings size={16} />
+                        Settings
+                      </button>
+                      <div className="border-t border-gray-600 my-1"></div>
+                      <button
+                        onClick={handleLogout}
+                        className="w-full flex items-center gap-3 px-4 py-2 text-gray-300 hover:text-white hover:bg-gray-700 transition-colors text-left"
+                      >
+                        <LogOut size={16} />
+                        Sign out
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
-              <button 
-                onClick={handleLogout}
-                className="flex items-center gap-2 px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors text-sm font-medium"
-              >
-                <LogOut size={16} />
-                Sign out
-              </button>
             </div>
           ) : (
-            <>
-              <button 
-                onClick={() => setIsRegisterOpen(true)}
-                className="px-4 py-2 text-white rounded-lg hover:opacity-80 transition-colors text-sm font-medium"
-                style={{ backgroundColor: 'var(--accent-color)' }}
-              >
-                Get started
-              </button>
-              <button 
-                onClick={() => setIsLoginOpen(true)}
-                className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors text-sm font-medium"
-              >
-                Sign in
-              </button>
-            </>
+            <button 
+              onClick={() => setIsLoginOpen(true)}
+              className="px-6 py-2 bg-transparent border border-gray-600 text-white rounded-lg hover:border-gray-400 hover:bg-gray-800/30 transition-colors text-sm font-medium"
+            >
+              Sign in
+            </button>
           )}
         </div>
       </nav>

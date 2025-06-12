@@ -85,9 +85,13 @@ export const AuthProvider = ({ children }) => {
     } catch (error) {
       console.error('Logout error:', error);
     } finally {
+      // НЕ очищуємо localStorage повністю, тільки токен
       localStorage.removeItem('token');
       setUser(null);
       setIsAuthenticated(false);
+      
+      // Зберігаємо всі інші дані в localStorage
+      // Вони залишаться доступними після виходу
     }
   };
 
