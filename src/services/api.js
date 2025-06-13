@@ -172,7 +172,7 @@ export const remindersAPI = {
 // Notes API
 export const notesAPI = {
   // Отримати всі нотатки
-  getNotes: (params = {}) => api.get('/notes', { params }),
+  getNotes: () => api.get('/notes'),
   
   // Створити нотатку
   createNote: (noteData) => api.post('/notes', noteData),
@@ -187,13 +187,7 @@ export const notesAPI = {
   getTodaysNotes: () => api.get('/notes/today'),
   
   // Пошук нотаток
-  searchNotes: (query) => api.get('/notes/search', { params: { q: query } }),
-  
-  // Отримати закріплені нотатки
-  getPinnedNotes: () => api.get('/notes/pinned'),
-  
-  // Отримати нотатки за категорією
-  getNotesByCategory: (category) => api.get(`/notes/category/${category}`)
+  searchNotes: (query) => api.get('/notes/search', { params: { q: query } })
 };
 
 // Users API
@@ -204,20 +198,20 @@ export const usersAPI = {
   // Оновити налаштування користувача
   updatePreferences: (preferences) => api.put('/users/preferences', preferences),
   
-  // Отримати статистику користувача
-  getUserStats: () => api.get('/users/stats'),
-  
-  // Видалити акаунт
-  deleteAccount: () => api.delete('/users/account'),
-  
-  // Upload avatar
+  // Завантажити аватар
   uploadAvatar: (formData) => {
     return api.post('/users/avatar', formData, {
       headers: {
         'Content-Type': 'multipart/form-data'
       }
     });
-  }
+  },
+  
+  // Отримати статистику користувача
+  getUserStats: () => api.get('/users/stats'),
+  
+  // Видалити акаунт
+  deleteAccount: () => api.delete('/users/account')
 };
 
 export default api;

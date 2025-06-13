@@ -4,6 +4,13 @@ import Event from '../models/Event.js';
 import Trip from '../models/Trip.js';
 import Note from '../models/Note.js';
 import Reminder from '../models/Reminder.js';
+import path from 'path';
+import fs from 'fs';
+import { fileURLToPath } from 'url';
+
+// Get __dirname equivalent in ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // @desc    Get user preferences
 // @route   GET /api/users/preferences
@@ -66,13 +73,62 @@ export const updatePreferences = async (req, res) => {
 // @access  Private
 export const uploadAvatar = async (req, res) => {
   try {
-    // Here you would implement file upload logic
-    // For now, just return success
-    res.status(200).json({
-      success: true,
-      message: 'Avatar upload functionality to be implemented'
+    // Check if file exists
+    if (!req.files || Object.keys(req.files).length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'No files were uploaded'
+      });
+    }
+
+    const avatar = req.files.avatar;
+
+    // Make sure the image is a photo
+    if (!avatar.mimetype.startsWith('image')) {
+      return res.status(400).json({
+        success: false,
+        message: 'Please upload an image file'
+      });
+    }
+
+    // Check file size (max 5MB)
+    if (avatar.size > 5 * 1024 * 1024) {
+      return res.status(400).json({
+        success: false,
+        message: 'Image must be less than 5MB'
+      });
+    }
+
+    // Create uploads directory if it doesn't exist
+    const uploadsDir = path.join(__dirname, '..', 'public', 'uploads');
+    if (!fs.existsSync(uploadsDir)) {
+      fs.mkdirSync(uploadsDir, { recursive: true });
+    }
+
+    // Create custom filename
+    const fileName = `avatar_${req.user.id}${path.extname(avatar.name)}`;
+
+    // Move file to uploads folder
+    avatar.mv(path.join(uploadsDir, fileName), async err => {
+      if (err) {
+        console.error(err);
+        return res.status(500).json({
+          success: false,
+          message: 'Problem with file upload'
+        });
+      }
+
+      // Update user avatar in database
+      const avatarUrl = `/uploads/${fileName}`;
+      await User.findByIdAndUpdate(req.user.id, { avatar: avatarUrl });
+
+      res.status(200).json({
+        success: true,
+        avatarUrl
+      });
     });
   } catch (error) {
+    console.error('Error uploading avatar:', error);
     res.status(500).json({
       success: false,
       message: 'Server error uploading avatar',

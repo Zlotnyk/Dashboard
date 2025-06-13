@@ -1,179 +1,151 @@
 import React, { useState, useEffect } from 'react'
-import { useAuth } from '../hooks/useAuth'
 import { notesAPI } from '../services/api'
+import { useAuth } from '../hooks/useAuth'
 
 export default function Notes() {
 	const { isAuthenticated, user } = useAuth()
 	const [notes, setNotes] = useState([])
 	const [loading, setLoading] = useState(false)
-	const [error, setError] = useState(null)
 
-	// Load notes when component mounts or authentication state changes
+	// Load notes when component mounts
 	useEffect(() => {
 		if (isAuthenticated && user) {
-			loadNotesFromBackend()
+			loadNotes()
 		} else {
-			loadNotesFromLocalStorage()
+			// For non-authenticated users, load from localStorage
+			loadLocalNotes()
 		}
 	}, [isAuthenticated, user])
 
-	// Load notes from backend for authenticated users
-	const loadNotesFromBackend = async () => {
+	// Load notes from backend
+	const loadNotes = async () => {
 		try {
 			setLoading(true)
-			setError(null)
 			const response = await notesAPI.getTodaysNotes()
 			
 			if (response.data && response.data.data) {
-				// Map backend notes to the format used in the component
+				// Convert backend notes to the format we use
 				const backendNotes = response.data.data.map(note => ({
 					id: note._id,
 					content: note.content
 				}))
+				
 				setNotes(backendNotes)
 			} else {
-				// If no notes found, initialize with empty array
-				setNotes([])
+				// If no notes found, initialize with empty notes
+				setNotes(Array.from({ length: 5 }, () => ({
+					id: crypto.randomUUID(),
+					content: 'Note',
+				})))
 			}
 		} catch (error) {
-			console.error('Error loading notes from backend:', error)
-			setError('Failed to load notes. Please try again.')
-			// Fallback to localStorage if backend fails
-			loadNotesFromLocalStorage()
+			console.error('Error loading notes:', error)
+			// Fallback to local notes
+			loadLocalNotes()
 		} finally {
 			setLoading(false)
 		}
 	}
 
-	// Load notes from localStorage for non-authenticated users
-	const loadNotesFromLocalStorage = () => {
+	// Load notes from localStorage
+	const loadLocalNotes = () => {
 		const savedNotes = localStorage.getItem('todaysNotes')
+		
 		if (savedNotes) {
 			try {
 				setNotes(JSON.parse(savedNotes))
 			} catch (error) {
 				console.error('Error parsing saved notes:', error)
-				setNotes([])
+				setNotes(Array.from({ length: 5 }, () => ({
+					id: crypto.randomUUID(),
+					content: 'Note',
+				})))
 			}
 		} else {
-			// Initialize with 5 empty notes if nothing is saved
-			const initialNotes = Array.from({ length: 5 }, () => ({
+			// Initialize with empty notes
+			setNotes(Array.from({ length: 5 }, () => ({
 				id: crypto.randomUUID(),
 				content: 'Note',
-			}))
-			setNotes(initialNotes)
+			})))
 		}
 	}
 
-	// Save notes to backend for authenticated users
-	const saveNotesToBackend = async (updatedNotes) => {
-		if (!isAuthenticated) return
-
-		try {
-			// First, get existing notes to determine what needs to be created/updated/deleted
-			const response = await notesAPI.getTodaysNotes()
-			const existingNotes = response.data.data || []
-			
-			// Map existing notes by ID for easier lookup
-			const existingNotesMap = existingNotes.reduce((map, note) => {
-				map[note._id] = note
-				return map
-			}, {})
-			
-			// Process each note in the updated list
-			for (const note of updatedNotes) {
-				if (note.id && existingNotesMap[note.id]) {
-					// Update existing note
-					await notesAPI.updateNote(note.id, {
-						content: note.content,
-						category: 'daily'
-					})
-				} else {
-					// Create new note
-					const response = await notesAPI.createNote({
-						content: note.content,
-						category: 'daily',
-						date: new Date()
-					})
-					
-					// Update the note ID with the one from the backend
-					note.id = response.data.data._id
+	// Save notes to backend or localStorage
+	const saveNotes = async (updatedNotes) => {
+		if (isAuthenticated) {
+			try {
+				// For each note, either create or update
+				for (const note of updatedNotes) {
+					if (note.id.length < 24) {
+						// This is a new note (not from MongoDB)
+						await notesAPI.createNote({
+							content: note.content,
+							category: 'daily'
+						})
+					} else {
+						// This is an existing note
+						await notesAPI.updateNote(note.id, {
+							content: note.content
+						})
+					}
 				}
+			} catch (error) {
+				console.error('Error saving notes to backend:', error)
 			}
-			
-			// Delete notes that exist in backend but not in updated list
-			const updatedNoteIds = updatedNotes.map(note => note.id).filter(Boolean)
-			for (const existingNote of existingNotes) {
-				if (!updatedNoteIds.includes(existingNote._id)) {
-					await notesAPI.deleteNote(existingNote._id)
-				}
-			}
-		} catch (error) {
-			console.error('Error saving notes to backend:', error)
-			// Fallback to localStorage if backend fails
+		} else {
+			// For non-authenticated users, save to localStorage
 			localStorage.setItem('todaysNotes', JSON.stringify(updatedNotes))
 		}
-	}
-
-	// Save notes to localStorage for non-authenticated users
-	const saveNotesToLocalStorage = (updatedNotes) => {
-		localStorage.setItem('todaysNotes', JSON.stringify(updatedNotes))
 	}
 
 	// Adds one note
 	const addNote = async () => {
 		const newNote = {
-			id: crypto.randomUUID(), // Temporary ID for new notes
+			id: crypto.randomUUID(),
 			content: 'Note',
 		}
 		
 		const updatedNotes = [...notes, newNote]
 		setNotes(updatedNotes)
 		
-		// Save to appropriate storage
-		if (isAuthenticated) {
-			try {
-				const response = await notesAPI.createNote({
-					content: newNote.content,
-					category: 'daily',
-					date: new Date()
-				})
-				
-				// Update the note with the ID from the backend
-				setNotes(prev => prev.map(note => 
-					note.id === newNote.id ? { ...note, id: response.data.data._id } : note
-				))
-			} catch (error) {
-				console.error('Error creating note:', error)
-				saveNotesToLocalStorage(updatedNotes)
-			}
-		} else {
-			saveNotesToLocalStorage(updatedNotes)
-		}
+		// Save to backend or localStorage
+		await saveNotes(updatedNotes)
 	}
 
 	const handleContentChange = async (id, value) => {
 		const updatedNotes = notes.map(note => 
 			note.id === id ? { ...note, content: value } : note
 		)
+		
 		setNotes(updatedNotes)
 		
 		// Debounce saving to reduce API calls
 		if (isAuthenticated) {
-			// For authenticated users, update in backend
 			const noteToUpdate = updatedNotes.find(note => note.id === id)
 			try {
-				await notesAPI.updateNote(id, {
-					content: noteToUpdate.content,
-					category: 'daily'
-				})
+				if (noteToUpdate.id.length < 24) {
+					// This is a new note (not from MongoDB)
+					const response = await notesAPI.createNote({
+						content: noteToUpdate.content,
+						category: 'daily'
+					})
+					
+					// Update the ID to the MongoDB ID
+					setNotes(prev => prev.map(note => 
+						note.id === id ? { ...note, id: response.data.data._id } : note
+					))
+				} else {
+					// This is an existing note
+					await notesAPI.updateNote(id, {
+						content: noteToUpdate.content
+					})
+				}
 			} catch (error) {
 				console.error('Error updating note:', error)
-				saveNotesToLocalStorage(updatedNotes)
 			}
 		} else {
 			// For non-authenticated users, save to localStorage
-			saveNotesToLocalStorage(updatedNotes)
+			localStorage.setItem('todaysNotes', JSON.stringify(updatedNotes))
 		}
 	}
 
@@ -181,18 +153,20 @@ export default function Notes() {
 		if (e.key === 'Backspace' && content.trim() === '') {
 			const updatedNotes = notes.filter(note => note.id !== id)
 			setNotes(updatedNotes)
-			e.preventDefault()
 			
-			if (isAuthenticated) {
+			// Delete from backend if authenticated
+			if (isAuthenticated && id.length === 24) {
 				try {
 					await notesAPI.deleteNote(id)
 				} catch (error) {
 					console.error('Error deleting note:', error)
-					saveNotesToLocalStorage(updatedNotes)
 				}
 			} else {
-				saveNotesToLocalStorage(updatedNotes)
+				// For non-authenticated users, save to localStorage
+				localStorage.setItem('todaysNotes', JSON.stringify(updatedNotes))
 			}
+			
+			e.preventDefault()
 		}
 	}
 
@@ -200,20 +174,6 @@ export default function Notes() {
 		return (
 			<div className='w-full min-h-[400px] rounded-lg p-5 flex items-center justify-center'>
 				<div className="text-white">Loading notes...</div>
-			</div>
-		)
-	}
-
-	if (error) {
-		return (
-			<div className='w-full min-h-[400px] rounded-lg p-5'>
-				<div className="text-red-400 mb-4">{error}</div>
-				<button 
-					onClick={loadNotesFromBackend}
-					className='px-3 py-1 bg-accent text-white rounded hover:bg-accent-80 text-sm'
-				>
-					Try Again
-				</button>
 			</div>
 		)
 	}

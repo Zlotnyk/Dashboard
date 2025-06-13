@@ -1,5 +1,5 @@
 import { useState, useEffect, createContext, useContext } from 'react';
-import { authAPI } from '../services/api';
+import { authAPI, usersAPI } from '../services/api';
 
 // Створюємо контекст для аутентифікації
 const AuthContext = createContext();
@@ -26,7 +26,8 @@ const clearAllLocalData = () => {
     'accentColor',
     'backgroundGif',
     'language',
-    'notifications'
+    'notifications',
+    'todaysNotes'
   ];
   
   keysToRemove.forEach(key => {
@@ -53,7 +54,8 @@ const saveUserData = (userId) => {
   const keysToSave = [
     'trips',
     'manualBirthdays',
-    'timetableSchedule'
+    'timetableSchedule',
+    'todaysNotes'
   ];
   
   keysToSave.forEach(key => {
@@ -75,7 +77,8 @@ const loadUserData = (userId) => {
   const keysToLoad = [
     'trips',
     'manualBirthdays',
-    'timetableSchedule'
+    'timetableSchedule',
+    'todaysNotes'
   ];
   
   keysToLoad.forEach(key => {
@@ -102,6 +105,9 @@ const loadUserData = (userId) => {
             Saturday: [],
             Sunday: []
           }));
+          break;
+        case 'todaysNotes':
+          localStorage.setItem(key, JSON.stringify([]));
           break;
         default:
           localStorage.setItem(key, JSON.stringify([]));
@@ -212,14 +218,17 @@ export const AuthProvider = ({ children }) => {
 
   const updateProfile = async (profileData) => {
     try {
-      if (profileData) {
-        const response = await authAPI.updateProfile(profileData);
-        setUser(response.data.data);
-      } else {
-        // If no profile data provided, just refresh the user data
-        const response = await authAPI.getMe();
-        setUser(response.data.data);
+      // If there's an avatar in the form data, it's handled separately
+      if (profileData.avatar && profileData.avatar instanceof File) {
+        const formData = new FormData();
+        formData.append('avatar', profileData.avatar);
+        
+        const avatarResponse = await usersAPI.uploadAvatar(formData);
+        profileData.avatar = avatarResponse.data.avatarUrl;
       }
+      
+      const response = await authAPI.updateProfile(profileData);
+      setUser(response.data.data);
       return { success: true };
     } catch (error) {
       console.error('Profile update failed:', error);

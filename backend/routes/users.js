@@ -9,6 +9,7 @@ import {
 } from '../controllers/userController.js';
 import { protect } from '../middleware/auth.js';
 import { validate } from '../middleware/validation.js';
+import fileUpload from 'express-fileupload';
 
 const router = express.Router();
 
@@ -53,7 +54,13 @@ router.put('/preferences', [
 // @route   POST /api/users/avatar
 // @desc    Upload user avatar
 // @access  Private
-router.post('/avatar', uploadAvatar);
+router.post('/avatar', fileUpload({
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB max
+  abortOnLimit: true,
+  createParentPath: true,
+  useTempFiles: true,
+  tempFileDir: '/tmp/'
+}), uploadAvatar);
 
 // @route   GET /api/users/stats
 // @desc    Get user statistics

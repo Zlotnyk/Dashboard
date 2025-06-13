@@ -35,6 +35,11 @@ const userSchema = new mongoose.Schema({
     type: String,
     default: null
   },
+  title: {
+    type: String,
+    trim: true,
+    maxlength: [100, 'Title cannot be more than 100 characters']
+  },
   preferences: {
     theme: {
       accentColor: {
@@ -98,6 +103,7 @@ userSchema.virtual('profile').get(function() {
     name: this.name,
     email: this.email,
     avatar: this.avatar,
+    title: this.title,
     preferences: this.preferences,
     isEmailVerified: this.isEmailVerified,
     lastLogin: this.lastLogin,

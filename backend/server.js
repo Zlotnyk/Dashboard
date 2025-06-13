@@ -8,6 +8,9 @@ import compression from 'compression'
 import morgan from 'morgan'
 import session from 'express-session'
 import passport from './config/passport.js'
+import fileUpload from 'express-fileupload'
+import path from 'path'
+import { fileURLToPath } from 'url'
 
 // Import routes
 import authRoutes from './routes/auth.js'
@@ -29,6 +32,10 @@ dotenv.config()
 
 const app = express()
 const PORT = process.env.PORT || 5000
+
+// Get __dirname equivalent in ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // Security middleware
 app.use(helmet())
@@ -62,6 +69,17 @@ app.use(cors(corsOptions))
 // Body parsing middleware
 app.use(express.json({ limit: '10mb' }))
 app.use(express.urlencoded({ extended: true, limit: '10mb' }))
+
+// File upload middleware
+app.use(fileUpload({
+  useTempFiles: true,
+  tempFileDir: '/tmp/',
+  createParentPath: true,
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB max
+}));
+
+// Serve static files from the public directory
+app.use(express.static(path.join(__dirname, 'public')));
 
 // Session configuration for Passport
 app.use(

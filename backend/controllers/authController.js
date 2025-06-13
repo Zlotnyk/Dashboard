@@ -146,7 +146,8 @@ export const updateProfile = async (req, res, next) => {
   try {
     const fieldsToUpdate = {
       name: req.body.name,
-      email: req.body.email
+      title: req.body.title,
+      avatar: req.body.avatar
     };
 
     // Remove undefined fields
