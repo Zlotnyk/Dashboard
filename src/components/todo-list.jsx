@@ -3,6 +3,7 @@ import { Plus, FileText, Pencil } from 'lucide-react'
 import TaskDrawer from './Task_Timeline/task_drawer'
 import { useAuth } from '../hooks/useAuth'
 import { tasksAPI } from '../services/api'
+import { formatDateToYYYYMMDD, parseYYYYMMDDToDate } from './Task_Timeline/timeline_utils'
 
 export default function TodoList({
 	onAddTask,
@@ -41,8 +42,8 @@ export default function TodoList({
 		const taskId = task.id || task._id
 		setEditingId(taskId)
 		setEditingText(task.title)
-		setEditingStart(task.start.toISOString().split('T')[0])
-		setEditingEnd(task.end.toISOString().split('T')[0])
+		setEditingStart(formatDateToYYYYMMDD(task.start))
+		setEditingEnd(formatDateToYYYYMMDD(task.end))
 	}
 
 	const finishEditing = async () => {
@@ -57,8 +58,8 @@ export default function TodoList({
 			const updatedTask = {
 				...taskToUpdate,
 				title: editingText,
-				start: new Date(editingStart),
-				end: new Date(editingEnd),
+				start: parseYYYYMMDDToDate(editingStart),
+				end: parseYYYYMMDDToDate(editingEnd),
 			}
 
 			if (isAuthenticated) {
@@ -66,8 +67,8 @@ export default function TodoList({
 					setLoading(true)
 					const response = await tasksAPI.updateTask(editingId, {
 						title: updatedTask.title,
-						startDate: updatedTask.start,
-						endDate: updatedTask.end
+						startDate: formatDateToYYYYMMDD(updatedTask.start),
+						endDate: formatDateToYYYYMMDD(updatedTask.end)
 					})
 					
 					const backendTask = {
@@ -110,8 +111,8 @@ export default function TodoList({
 					const response = await tasksAPI.createTask({
 						title: updatedTask.title,
 						description: updatedTask.description,
-						startDate: updatedTask.start,
-						endDate: updatedTask.end,
+						startDate: formatDateToYYYYMMDD(updatedTask.start),
+						endDate: formatDateToYYYYMMDD(updatedTask.end),
 						status: updatedTask.status,
 						priority: updatedTask.priority
 					})
@@ -145,8 +146,8 @@ export default function TodoList({
 					const response = await tasksAPI.updateTask(taskId, {
 						title: updatedTask.title,
 						description: updatedTask.description,
-						startDate: updatedTask.start,
-						endDate: updatedTask.end,
+						startDate: formatDateToYYYYMMDD(updatedTask.start),
+						endDate: formatDateToYYYYMMDD(updatedTask.end),
 						status: updatedTask.status,
 						priority: updatedTask.priority
 					})

@@ -3,6 +3,7 @@ import { Plus, FileText, Pencil } from 'lucide-react'
 import TaskDrawer from './Task_Timeline/task_drawer'
 import { useAuth } from '../hooks/useAuth'
 import { tasksAPI } from '../services/api'
+import { formatDateToYYYYMMDD, parseYYYYMMDDToDate } from './Task_Timeline/timeline_utils'
 
 const TodayTasks = ({ tasks = [], onAddTask, onUpdateTask, onDeleteTask }) => {
   const { isAuthenticated } = useAuth()
@@ -47,8 +48,8 @@ const TodayTasks = ({ tasks = [], onAddTask, onUpdateTask, onDeleteTask }) => {
         setLoading(true)
         const response = await tasksAPI.createTask({
           title: newTodo.title,
-          startDate: newTodo.start,
-          endDate: newTodo.end,
+          startDate: formatDateToYYYYMMDD(newTodo.start),
+          endDate: formatDateToYYYYMMDD(newTodo.end),
           status: newTodo.status,
           priority: newTodo.priority,
           description: newTodo.description
@@ -80,8 +81,8 @@ const TodayTasks = ({ tasks = [], onAddTask, onUpdateTask, onDeleteTask }) => {
     const taskId = task.id || task._id
     setEditingId(taskId)
     setEditingText(task.title)
-    setEditingStart(task.start.toISOString().split('T')[0])
-    setEditingEnd(task.end.toISOString().split('T')[0])
+    setEditingStart(formatDateToYYYYMMDD(task.start))
+    setEditingEnd(formatDateToYYYYMMDD(task.end))
   }
 
   const finishEditing = async () => {
@@ -96,8 +97,8 @@ const TodayTasks = ({ tasks = [], onAddTask, onUpdateTask, onDeleteTask }) => {
       const updatedTask = {
         ...taskToUpdate,
         title: editingText,
-        start: new Date(editingStart),
-        end: new Date(editingEnd),
+        start: parseYYYYMMDDToDate(editingStart),
+        end: parseYYYYMMDDToDate(editingEnd),
       }
 
       if (isAuthenticated) {
@@ -105,8 +106,8 @@ const TodayTasks = ({ tasks = [], onAddTask, onUpdateTask, onDeleteTask }) => {
           setLoading(true)
           const response = await tasksAPI.updateTask(editingId, {
             title: updatedTask.title,
-            startDate: updatedTask.start,
-            endDate: updatedTask.end
+            startDate: formatDateToYYYYMMDD(updatedTask.start),
+            endDate: formatDateToYYYYMMDD(updatedTask.end)
           })
           
           const backendTask = {
@@ -149,8 +150,8 @@ const TodayTasks = ({ tasks = [], onAddTask, onUpdateTask, onDeleteTask }) => {
         const response = await tasksAPI.updateTask(taskId, {
           title: updatedTask.title,
           description: updatedTask.description,
-          startDate: updatedTask.start,
-          endDate: updatedTask.end,
+          startDate: formatDateToYYYYMMDD(updatedTask.start),
+          endDate: formatDateToYYYYMMDD(updatedTask.end),
           status: updatedTask.status,
           priority: updatedTask.priority
         })

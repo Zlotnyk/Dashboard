@@ -177,10 +177,12 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask, height = '
     document.body.style.userSelect = 'none'
   }
 
-  const handleTaskClick = (task, e) => {
+  // Replace onClick with onDoubleClick for task editing
+  const handleTaskDoubleClick = (task, e) => {
     e.stopPropagation()
     
-    if (!dragState.isDragging && !dragState.hasMoved) {
+    // Only open drawer if not currently dragging
+    if (!dragState.isDragging) {
       setDrawerTask(task)
       setIsDrawerOpen(true)
     }
@@ -395,7 +397,7 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask, height = '
       onUpdateTask(updatedTask)
     }
     
-    const handleMouseUp = async () => {
+    const handleMouseUp = async (e) => {
       if (dragState.isDragging && dragState.draggedTask && isAuthenticated) {
         try {
           const taskId = dragState.draggedTask.id || dragState.draggedTask._id
@@ -408,7 +410,9 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask, height = '
         }
       }
       
-      const hadMoved = dragState.hasMoved
+      // Determine if an actual drag occurred by checking if the mouse moved significantly
+      const wasActuallyDragged = dragState.hasMoved && 
+        Math.abs(e.clientX - dragState.startX) > 5
       
       setDragState({
         isDragging: false,
@@ -417,10 +421,11 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask, height = '
         startX: 0,
         originalStart: null,
         originalEnd: null,
-        hasMoved: hadMoved
+        hasMoved: wasActuallyDragged
       })
       
-      if (hadMoved) {
+      // Only set a timeout to reset hasMoved if there was an actual drag
+      if (wasActuallyDragged) {
         setTimeout(() => {
           setDragState(prev => ({ ...prev, hasMoved: false }))
         }, 100)
@@ -892,7 +897,7 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask, height = '
                         top: `${index * 44 + 8}px`,
                         backgroundColor: taskColor
                       }}
-                      onClick={(e) => handleTaskClick(task, e)}
+                      onDoubleClick={(e) => handleTaskDoubleClick(task, e)}
                       onMouseDown={(e) => handleTaskMouseDown(e, task)}
                     >
                       {/* Resize indicators */}

@@ -66,7 +66,7 @@ const TaskDrawer = ({ isOpen, task, onSave, onClose, onDelete }) => {
     <Dialog open={isOpen} onClose={onClose} className="relative z-50">
       <DialogBackdrop
         transition
-        className="fixed inset-0 bg-black/60 transition-opacity duration-300 ease-in-out data-[closed]:opacity-0"
+        className="fixed inset-0 bg-black/60 backdrop-blur-sm transition-opacity duration-300 ease-in-out data-[closed]:opacity-0"
       />
 
       <div className="fixed inset-0 overflow-hidden">
