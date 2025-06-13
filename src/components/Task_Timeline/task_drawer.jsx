@@ -12,6 +12,13 @@ const TaskDrawer = ({ isOpen, task, onSave, onClose, onDelete }) => {
     priority: 'normal',
   });
 
+  // Scroll to top when drawer opens
+  useEffect(() => {
+    if (isOpen) {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  }, [isOpen]);
+
   // Update form data when task changes
   useEffect(() => {
     if (task) {
