@@ -12,6 +12,7 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false)
   const [drawerTask, setDrawerTask] = useState(null)
   const [loading, setLoading] = useState(false)
+  const [timelineHeight, setTimelineHeight] = useState(400) // Default height
   
   // Enhanced filter state
   const [filterOpen, setFilterOpen] = useState(false)
@@ -34,6 +35,7 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
   const timelineRef = useRef(null)
   const scrollRef = useRef(null)
   const timelineContentRef = useRef(null)
+  const containerRef = useRef(null)
 
   const monthNames = [
     'January', 'February', 'March', 'April', 'May', 'June',
@@ -42,6 +44,41 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
 
   const currentMonth = currentDate.getMonth()
   const currentYear = currentDate.getFullYear()
+  
+  // Calculate adaptive height based on container size and number of tasks
+  useEffect(() => {
+    const updateHeight = () => {
+      if (containerRef.current) {
+        // Get the container's height
+        const containerHeight = containerRef.current.clientHeight;
+        
+        // Get the number of visible tasks
+        const visibleTasks = getVisibleTasks();
+        
+        // Calculate minimum height needed for tasks (44px per task + padding)
+        const minTasksHeight = visibleTasks.length * 44 + 80;
+        
+        // Calculate available height (container height minus header height)
+        const headerHeight = 120; // Approximate header height including filters
+        const availableHeight = Math.max(300, containerHeight - headerHeight);
+        
+        // Set height to either the minimum needed for tasks or the available height
+        const newHeight = Math.max(300, Math.min(minTasksHeight, availableHeight));
+        
+        setTimelineHeight(newHeight);
+      }
+    };
+
+    // Update height on mount and when tasks or container size changes
+    updateHeight();
+    
+    // Add resize listener
+    window.addEventListener('resize', updateHeight);
+    
+    return () => {
+      window.removeEventListener('resize', updateHeight);
+    };
+  }, [tasks, containerRef.current, viewMode, currentDate]);
   
   // Improved days calculation
   const getDaysToShow = () => {
@@ -583,7 +620,7 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
 
   return (
     <>
-      <div className="w-full bg-[#1a1a1a] rounded-lg h-[400px] flex flex-col">
+      <div ref={containerRef} className="w-full bg-[#1a1a1a] rounded-lg flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-3 flex-shrink-0">
           <div className="flex items-center gap-3">
@@ -750,7 +787,7 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
         )}
 
         {/* Calendar Grid with Horizontal Scroll */}
-        <div className="relative flex-1 overflow-hidden">
+        <div className="relative flex-1 overflow-hidden" style={{ height: `${timelineHeight}px` }}>
           <div 
             ref={scrollRef}
             className="h-full overflow-x-auto overflow-y-hidden custom-scrollbar"
@@ -823,7 +860,8 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
                   className="absolute bottom-0 w-px bg-gray-800 z-0"
                   style={{ 
                     left: `${(i + 1) * dayWidth}px`,
-                    top: viewMode === 'Month' ? '72px' : '40px'
+                    top: viewMode === 'Month' ? '72px' : '40px',
+                    height: `calc(100% - ${viewMode === 'Month' ? '72px' : '40px'})`
                   }}
                 />
               ))}
@@ -838,6 +876,7 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
                       style={{ 
                         left: `${todayPosition + dayWidth / 2}px`,
                         top: viewMode === 'Month' ? '72px' : '40px',
+                        height: `calc(100% - ${viewMode === 'Month' ? '72px' : '40px'})`,
                         backgroundColor: 'var(--accent-color, #97e7aa)'
                       }}
                     />
@@ -849,7 +888,10 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
               {/* Tasks Area */}
               <div 
                 className="relative h-full pt-4 pb-4 overflow-y-auto custom-scrollbar z-10"
-                style={{ marginTop: viewMode === 'Month' ? '32px' : '0px' }}
+                style={{ 
+                  marginTop: viewMode === 'Month' ? '32px' : '0px',
+                  height: `calc(100% - ${viewMode === 'Month' ? '32px' : '0px'})`
+                }}
               >
                 {visibleTasks.map((task, index) => {
                   const isUrgent = task.priority === 'urgent'

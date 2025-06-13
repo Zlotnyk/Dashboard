@@ -28,6 +28,19 @@ function App() {
 		center: 65,
 		right: 15,
 	})
+	const [containerHeight, setContainerHeight] = useState(window.innerHeight)
+
+	// Update container height on window resize
+	useEffect(() => {
+		const handleResize = () => {
+			setContainerHeight(window.innerHeight)
+		}
+		
+		window.addEventListener('resize', handleResize)
+		return () => {
+			window.removeEventListener('resize', handleResize)
+		}
+	}, [])
 
 	// Load tasks and events when user authentication changes
 	useEffect(() => {
@@ -246,6 +259,21 @@ function App() {
 		} else {
 			setEvents(prevEvents => prevEvents.filter(event => event.id !== eventId))
 		}
+	}
+
+	// Calculate available height for the task timeline
+	const calculateTimelineHeight = () => {
+		// Approximate heights of other components
+		const navbarHeight = 60;
+		const headerHeight = 200;
+		const todoNotesHeight = 400;
+		const padding = 40;
+		
+		// Calculate available height
+		const availableHeight = containerHeight - navbarHeight - headerHeight - todoNotesHeight - padding;
+		
+		// Return a reasonable height (minimum 300px)
+		return Math.max(300, availableHeight * 0.4); // 40% of available space
 	}
 
 	if (loading) {
