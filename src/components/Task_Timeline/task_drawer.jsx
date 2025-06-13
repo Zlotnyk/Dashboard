@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react'
-import { Dialog, DialogBackdrop, DialogPanel, DialogTitle, TransitionChild } from '@headlessui/react'
-import { X, Calendar, FileText, Flag, Clock } from 'lucide-react'
+
+import React, { useState, useEffect } from 'react';
+import { Dialog, DialogBackdrop, DialogPanel, DialogTitle, TransitionChild } from '@headlessui/react';
+import { X, Calendar, FileText, Flag, Clock } from 'lucide-react';
 
 const TaskDrawer = ({ isOpen, task, onSave, onClose, onDelete }) => {
   const [formData, setFormData] = useState({
@@ -9,28 +10,49 @@ const TaskDrawer = ({ isOpen, task, onSave, onClose, onDelete }) => {
     start: '',
     end: '',
     status: 'Not started',
-    priority: 'normal'
-  })
+    priority: 'normal',
+  });
+
+  // Збереження позиції прокручування
+  useEffect(() => {
+    if (isOpen) {
+      // Зберігаємо поточну позицію прокручування
+      const scrollY = window.scrollY;
+      // Блокуємо прокручування сторінки
+      document.body.style.overflow = 'hidden';
+      document.body.style.position = 'fixed';
+      document.body.style.top = `-${scrollY}px`;
+      document.body.style.width = '100%';
+
+      // Відновлюємо прокручування при закритті
+      return () => {
+        const scrollY = document.body.style.top;
+        document.body.style.overflow = '';
+        document.body.style.position = '';
+        document.body.style.top = '';
+        document.body.style.width = '';
+        window.scrollTo(0, parseInt(scrollY || '0') * -1);
+      };
+    }
+  }, [isOpen]);
 
   useEffect(() => {
     if (task) {
-      // Use the actual dates from the task without modification
       setFormData({
         title: task.title || '',
         description: task.description || '',
         start: task.start ? task.start.toISOString().split('T')[0] : '',
         end: task.end ? task.end.toISOString().split('T')[0] : '',
         status: task.status || 'Not started',
-        priority: task.priority || 'normal'
-      })
+        priority: task.priority || 'normal',
+      });
     }
-  }, [task])
+  }, [task]);
 
   const handleSubmit = (e) => {
-    e.preventDefault()
-    if (!task) return
+    e.preventDefault();
+    if (!task) return;
 
-    // Use the dates exactly as entered in the form
     const updatedTask = {
       ...task,
       title: formData.title,
@@ -38,18 +60,18 @@ const TaskDrawer = ({ isOpen, task, onSave, onClose, onDelete }) => {
       start: new Date(formData.start),
       end: new Date(formData.end),
       status: formData.status,
-      priority: formData.priority
-    }
+      priority: formData.priority,
+    };
 
-    onSave(updatedTask)
-  }
+    onSave(updatedTask);
+  };
 
   const handleChange = (field, value) => {
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [field]: value
-    }))
-  }
+      [field]: value,
+    }));
+  };
 
   return (
     <Dialog open={isOpen} onClose={onClose} className="relative z-50">
@@ -229,7 +251,7 @@ const TaskDrawer = ({ isOpen, task, onSave, onClose, onDelete }) => {
         </div>
       </div>
     </Dialog>
-  )
-}
+  );
+};
 
-export default TaskDrawer
+export default TaskDrawer;
