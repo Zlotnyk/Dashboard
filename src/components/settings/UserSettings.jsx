@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Dialog, DialogBackdrop, DialogPanel, DialogTitle } from '@headlessui/react';
-import { X, Camera, Upload, Check, AlertCircle } from 'lucide-react';
+import { X, Upload, Check, AlertCircle } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { usersAPI } from '../../services/api';
 
@@ -226,107 +226,103 @@ const UserSettings = ({ isOpen, onClose }) => {
                         </div>
                       )}
                       
-                      <form onSubmit={handleSubmit} className="space-y-6">
-                        {/* Avatar */}
-                        <div className="flex items-center gap-6">
-                          <div 
-                            className="relative w-20 h-20 rounded-full overflow-hidden bg-gray-700 cursor-pointer group"
-                            onClick={handleAvatarClick}
-                          >
-                            {previewUrl ? (
-                              <img 
-                                src={previewUrl} 
-                                alt="Avatar" 
-                                className="w-full h-full object-cover"
-                              />
-                            ) : (
-                              <div className="w-full h-full flex items-center justify-center text-gray-400">
-                                <User size={32} />
+                      <form onSubmit={handleSubmit}>
+                        <div className="space-y-6">
+                          <div>
+                            <h4 className="text-white font-medium mb-4">Profile Picture</h4>
+                            <div className="flex items-center gap-4">
+                              <div 
+                                className="relative w-20 h-20 rounded-full overflow-hidden bg-gray-700 cursor-pointer"
+                                onClick={handleAvatarClick}
+                              >
+                                {previewUrl ? (
+                                  <img 
+                                    src={previewUrl} 
+                                    alt="Avatar" 
+                                    className="w-full h-full object-cover"
+                                  />
+                                ) : (
+                                  <div className="w-full h-full flex items-center justify-center text-gray-400">
+                                    <User size={32} />
+                                  </div>
+                                )}
                               </div>
-                            )}
-                            <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                              <Camera size={20} className="text-white" />
+                              
+                              <div>
+                                <p className="text-gray-400 text-sm mb-2">
+                                  JPG, PNG or GIF. Max size 5MB.
+                                </p>
+                                <button
+                                  type="button"
+                                  onClick={handleAvatarClick}
+                                  className="flex items-center gap-2 px-3 py-1 bg-gray-700 text-white rounded hover:bg-gray-600 transition-colors text-sm"
+                                >
+                                  <Upload size={14} />
+                                  Upload
+                                </button>
+                                <input 
+                                  type="file"
+                                  ref={fileInputRef}
+                                  className="hidden"
+                                  accept="image/*"
+                                  onChange={handleFileChange}
+                                />
+                              </div>
                             </div>
-                            <input 
-                              type="file"
-                              ref={fileInputRef}
-                              className="hidden"
-                              accept="image/*"
-                              onChange={handleFileChange}
+                          </div>
+                          
+                          <div>
+                            <label className="block text-sm text-gray-300 mb-2">
+                              Full Name
+                            </label>
+                            <input
+                              type="text"
+                              name="name"
+                              value={formData.name}
+                              onChange={handleChange}
+                              className="w-full px-3 py-2 bg-[#2a2a2a] border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent"
                             />
                           </div>
                           
                           <div>
-                            <h4 className="text-white font-medium mb-1">Profile Picture</h4>
-                            <p className="text-gray-400 text-sm mb-2">
-                              JPG, PNG or GIF. Max size 5MB.
+                            <label className="block text-sm text-gray-300 mb-2">
+                              Email Address
+                            </label>
+                            <input
+                              type="email"
+                              name="email"
+                              value={formData.email}
+                              readOnly
+                              className="w-full px-3 py-2 bg-[#2a2a2a] border border-gray-600 rounded-lg text-gray-400 focus:outline-none cursor-not-allowed"
+                            />
+                            <p className="text-gray-500 text-xs mt-1">
+                              Email cannot be changed
                             </p>
+                          </div>
+                          
+                          <div>
+                            <label className="block text-sm text-gray-300 mb-2">
+                              Title
+                            </label>
+                            <input
+                              type="text"
+                              name="title"
+                              value={formData.title}
+                              onChange={handleChange}
+                              placeholder="e.g. Student, Teacher, Developer"
+                              className="w-full px-3 py-2 bg-[#2a2a2a] border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent"
+                            />
+                          </div>
+                          
+                          <div className="pt-4">
                             <button
-                              type="button"
-                              onClick={handleAvatarClick}
-                              className="flex items-center gap-2 px-3 py-1 bg-gray-700 text-white rounded hover:bg-gray-600 transition-colors text-sm"
+                              type="submit"
+                              disabled={loading}
+                              className="px-4 py-2 bg-accent text-white rounded-lg hover:bg-accent-80 transition-colors disabled:opacity-50"
                             >
-                              <Upload size={14} />
-                              Upload
+                              {loading ? 'Saving...' : 'Save Changes'}
                             </button>
                           </div>
-                        </div>
-                        
-                        {/* Name */}
-                        <div>
-                          <label className="block text-sm text-gray-300 mb-2">
-                            Full Name
-                          </label>
-                          <input
-                            type="text"
-                            name="name"
-                            value={formData.name}
-                            onChange={handleChange}
-                            className="w-full px-3 py-2 bg-[#2a2a2a] border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent"
-                          />
-                        </div>
-                        
-                        {/* Email (read-only) */}
-                        <div>
-                          <label className="block text-sm text-gray-300 mb-2">
-                            Email Address
-                          </label>
-                          <input
-                            type="email"
-                            name="email"
-                            value={formData.email}
-                            readOnly
-                            className="w-full px-3 py-2 bg-[#2a2a2a] border border-gray-600 rounded-lg text-gray-400 focus:outline-none cursor-not-allowed"
-                          />
-                          <p className="text-gray-500 text-xs mt-1">
-                            Email cannot be changed
-                          </p>
-                        </div>
-                        
-                        {/* Title */}
-                        <div>
-                          <label className="block text-sm text-gray-300 mb-2">
-                            Title
-                          </label>
-                          <input
-                            type="text"
-                            name="title"
-                            value={formData.title}
-                            onChange={handleChange}
-                            placeholder="e.g. Student, Teacher, Developer"
-                            className="w-full px-3 py-2 bg-[#2a2a2a] border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent"
-                          />
-                        </div>
-                        
-                        {/* Submit Button */}
-                        <div className="pt-4">
-                          <button
-                            type="submit"
-                            disabled={loading}
-                            className="px-4 py-2 bg-accent text-white rounded-lg hover:bg-accent-80 transition-colors disabled:opacity-50"
-                          >
-                            {loading ? 'Saving...' : 'Save Changes'}
-                          </button>
                         </div>
                       </form>
                     </div>
