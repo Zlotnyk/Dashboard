@@ -325,6 +325,7 @@ function App() {
 								onAddTask={handleTaskAdd}
 								onUpdateTask={handleTaskUpdate}
 								onDeleteTask={handleTaskDelete}
+                height={`${calculateTimelineHeight()}px`}
 							/>
 							<BigCalendar
 								events={events}

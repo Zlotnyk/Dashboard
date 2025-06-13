@@ -280,7 +280,7 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask, height = '
         const newTask = {
           title: 'New Task',
           start: clickDay,
-          end: endDay,
+          end: clickDay, // Set end date same as start date for single-day tasks
           progress: 0,
           status: 'Not started',
           priority: 'normal',

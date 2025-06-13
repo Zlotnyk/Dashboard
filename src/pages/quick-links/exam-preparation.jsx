@@ -720,23 +720,6 @@ function ExamPreparationPage() {
                               {item.text}
                             </div>
                           </div>
-                          <div className="flex items-center gap-1">
-                            <button
-                              onClick={() => {
-                                const newText = prompt('Edit checklist item:', item.text)
-                                if (newText) handleChecklistItemEdit('dayBefore', item.id, newText)
-                              }}
-                              className="p-1 text-gray-500 hover:text-blue-400 transition-colors"
-                            >
-                              <Edit size={12} />
-                            </button>
-                            <button
-                              onClick={() => handleChecklistItemDelete('dayBefore', item.id)}
-                              className="p-1 text-gray-500 hover:text-red-400 transition-colors"
-                            >
-                              <Trash2 size={12} />
-                            </button>
-                          </div>
                         </div>
                       ))}
                       
@@ -785,23 +768,6 @@ function ExamPreparationPage() {
                             <div className={`text-sm ${item.checked ? 'line-through text-gray-500' : 'text-gray-300'}`}>
                               {item.text}
                             </div>
-                          </div>
-                          <div className="flex items-center gap-1">
-                            <button
-                              onClick={() => {
-                                const newText = prompt('Edit checklist item:', item.text)
-                                if (newText) handleChecklistItemEdit('examDay', item.id, newText)
-                              }}
-                              className="p-1 text-gray-500 hover:text-blue-400 transition-colors"
-                            >
-                              <Edit size={12} />
-                            </button>
-                            <button
-                              onClick={() => handleChecklistItemDelete('examDay', item.id)}
-                              className="p-1 text-gray-500 hover:text-red-400 transition-colors"
-                            >
-                              <Trash2 size={12} />
-                            </button>
                           </div>
                         </div>
                       ))}
