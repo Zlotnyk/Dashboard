@@ -185,10 +185,14 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask, height = '
   }
 
   const handleAddTask = async () => {
+    // For single-day tasks, set both start and end to the same date
+    const today = new Date()
+    today.setHours(0, 0, 0, 0)
+    
     const newTask = {
       title: 'New Task',
-      start: new Date(),
-      end: new Date(),
+      start: today,
+      end: today, // Same day for new tasks
       progress: 0,
       status: 'Not started',
       priority: 'normal',
