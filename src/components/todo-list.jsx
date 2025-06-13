@@ -65,8 +65,7 @@ export default function TodoList({
 			if (isAuthenticated) {
 				try {
 					setLoading(true)
-					const taskId = editingId
-					const response = await tasksAPI.updateTask(taskId, {
+					const response = await tasksAPI.updateTask(editingId, {
 						title: updatedTask.title,
 						startDate: formatDateToYYYYMMDD(updatedTask.start),
 						endDate: formatDateToYYYYMMDD(updatedTask.end)
@@ -77,13 +76,12 @@ export default function TodoList({
 						id: response.data.data._id,
 						start: new Date(response.data.data.startDate),
 						end: new Date(response.data.data.endDate),
-						color: updatedTask.color || 'var(--accent-color, #97e7aa)'
+						color: updatedTask.color
 					}
 					
 					onUpdateTask(backendTask)
 				} catch (error) {
 					console.error('Error updating task:', error)
-					// Fallback to local update
 					onUpdateTask(updatedTask)
 				} finally {
 					setLoading(false)
@@ -124,7 +122,7 @@ export default function TodoList({
 						id: response.data.data._id,
 						start: new Date(response.data.data.startDate),
 						end: new Date(response.data.data.endDate),
-						color: updatedTask.color || 'var(--accent-color, #97e7aa)'
+						color: updatedTask.color
 					}
 					
 					onAddTask(backendTask)
@@ -159,7 +157,7 @@ export default function TodoList({
 						id: response.data.data._id,
 						start: new Date(response.data.data.startDate),
 						end: new Date(response.data.data.endDate),
-						color: updatedTask.color || 'var(--accent-color, #97e7aa)'
+						color: updatedTask.color
 					}
 					
 					onUpdateTask(backendTask)

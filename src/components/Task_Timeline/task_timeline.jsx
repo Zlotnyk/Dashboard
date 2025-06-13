@@ -516,7 +516,7 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask, height = '
           id: response.data.data._id,
           start: new Date(response.data.data.startDate),
           end: new Date(response.data.data.endDate),
-          color: updatedTask.color || 'var(--accent-color, #97e7aa)'
+          color: updatedTask.color
         }
         
         onUpdateTask(backendTask)
