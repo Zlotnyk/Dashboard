@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogBackdrop, DialogPanel, DialogTitle, TransitionChild } from '@headlessui/react';
 import { X, Calendar, FileText, Flag, Clock } from 'lucide-react';
@@ -74,10 +73,10 @@ const TaskDrawer = ({ isOpen, task, onSave, onClose, onDelete }) => {
 
   return (
     <Dialog open={isOpen} onClose={onClose} className="relative z-50">
-      {/* Прозорий фон без розмиття */}
+      {/* Напівпрозорий фон з розмиттям */}
       <DialogBackdrop
         transition
-        className="fixed inset-0 bg-transparent transition-opacity duration-300 ease-in-out data-[closed]:opacity-0"
+        className="fixed inset-0 bg-black/60 backdrop-blur-sm transition-opacity duration-300 ease-in-out data-[closed]:opacity-0"
       />
 
       <div className="fixed inset-0 overflow-hidden">
@@ -85,7 +84,7 @@ const TaskDrawer = ({ isOpen, task, onSave, onClose, onDelete }) => {
           <div className="pointer-events-none fixed inset-y-0 right-0 flex max-w-full pl-10 sm:pl-16">
             <DialogPanel
               transition
-              className="pointer-events-auto relative w-screen max-w-md transform transition duration-300 ease-in-out data-[closed]:translate-x-full bg-[#1a1a1a] border-l-2 border-gray-500 shadow-[0_0_15px_rgba(0,0,0,0.5)]"
+              className="pointer-events-auto relative w-screen max-w-md transform transition duration-300 ease-in-out data-[closed]:translate-x-full"
             >
               <TransitionChild>
                 <div className="absolute top-0 left-0 -ml-8 flex pt-4 pr-2 duration-300 ease-in-out data-[closed]:opacity-0 sm:-ml-10 sm:pr-4">
@@ -101,7 +100,7 @@ const TaskDrawer = ({ isOpen, task, onSave, onClose, onDelete }) => {
                 </div>
               </TransitionChild>
 
-              <div className="flex h-full flex-col overflow-y-scroll">
+              <div className="flex h-full flex-col overflow-y-scroll bg-[#1a1a1a] border-l border-gray-700 shadow-2xl">
                 <div className="px-4 sm:px-6 py-6 border-b border-gray-700">
                   <DialogTitle className="text-lg font-semibold text-white">Task Details</DialogTitle>
                 </div>
