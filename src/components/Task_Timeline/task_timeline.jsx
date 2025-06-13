@@ -185,10 +185,14 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
   }
 
   const handleAddTask = async () => {
+    const today = new Date()
+    const startDate = new Date(today.getFullYear(), today.getMonth(), today.getDate())
+    const endDate = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 2) // 3 days duration
+    
     const newTask = {
       title: 'New Task',
-      start: new Date(),
-      end: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
+      start: startDate,
+      end: endDate,
       progress: 0,
       status: 'Not started',
       priority: 'normal',
@@ -236,7 +240,7 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
     }
   }
 
-  // FIXED: Accurate timeline click handler
+  // FIXED: Accurate timeline click handler with proper date creation
   const handleTimelineClick = async (e) => {
     if (dragState.isDragging || dragState.hasMoved) return
     
@@ -264,23 +268,20 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
       if (dayIndex >= 0 && dayIndex < daysToShow.length) {
         const selectedDate = daysToShow[dayIndex]
         
-        // FIXED: Create date more explicitly to avoid timezone issues
-        const clickDay = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), selectedDate.getDate())
-        clickDay.setHours(0, 0, 0, 0)
+        // FIXED: Create dates properly to avoid timezone issues
+        const startDate = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), selectedDate.getDate())
+        const endDate = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), selectedDate.getDate() + 2) // 3 days duration
         
-        const endDay = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), selectedDate.getDate())
-        endDay.setHours(23, 59, 59, 999)
-        
-        console.log('Creating task for date:', {
+        console.log('Creating task for date range:', {
           selectedDate: selectedDate.toDateString(),
-          clickDay: clickDay.toDateString(),
-          endDay: endDay.toDateString()
+          startDate: startDate.toDateString(),
+          endDate: endDate.toDateString()
         })
         
         const newTask = {
           title: 'New Task',
-          start: clickDay,
-          end: endDay,
+          start: startDate,
+          end: endDate,
           progress: 0,
           status: 'Not started',
           priority: 'normal',
