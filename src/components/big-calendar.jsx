@@ -144,13 +144,13 @@ const BigCalendar = ({ events = [], onAddEvent, onDeleteEvent }) => {
   }
 
   const handlePlusClick = (day) => {
-    // FIXED: Create proper date object for the clicked day
+    // Create proper date object for the clicked day
     const selectedDate = new Date(currentYear, currentMonth, day)
     setSelectedDay(day)
     setSelectedEvent(null)
     setValidationErrors({})
     
-    // FIXED: Format date correctly to avoid timezone issues
+    // Format date correctly to avoid timezone issues
     const year = selectedDate.getFullYear()
     const month = String(selectedDate.getMonth() + 1).padStart(2, '0')
     const dayStr = String(selectedDate.getDate()).padStart(2, '0')
@@ -171,7 +171,7 @@ const BigCalendar = ({ events = [], onAddEvent, onDeleteEvent }) => {
     setSelectedEvent(event)
     setValidationErrors({})
     
-    // FIXED: Format date correctly for editing
+    // Format date correctly for editing
     const eventDate = new Date(event.date)
     const year = eventDate.getFullYear()
     const month = String(eventDate.getMonth() + 1).padStart(2, '0')

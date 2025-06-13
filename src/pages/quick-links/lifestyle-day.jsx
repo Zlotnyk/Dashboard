@@ -19,6 +19,7 @@ function LifestyleDayPage() {
   const [notes, setNotes] = useState("")
   const [reflection, setReflection] = useState("")
   const [brainDump, setBrainDump] = useState([])
+  const [randomThoughts, setRandomThoughts] = useState("")
   const [newTask, setNewTask] = useState("")
   const [newGoal, setNewGoal] = useState("")
   const [newPriority, setNewPriority] = useState("")
@@ -46,6 +47,7 @@ function LifestyleDayPage() {
         setNotes(parsedData.notes || "")
         setReflection(parsedData.reflection || "")
         setBrainDump(parsedData.brainDump || [])
+        setRandomThoughts(parsedData.randomThoughts || "")
       } catch (error) {
         console.error('Error parsing day planner data:', error)
       }
@@ -58,6 +60,7 @@ function LifestyleDayPage() {
       setNotes("")
       setReflection("")
       setBrainDump([])
+      setRandomThoughts("")
     }
   }, [currentDate])
   
@@ -71,11 +74,12 @@ function LifestyleDayPage() {
       priorities,
       notes,
       reflection,
-      brainDump
+      brainDump,
+      randomThoughts
     }
     
     localStorage.setItem(`dayPlanner_${dateKey}`, JSON.stringify(dataToSave))
-  }, [currentDate, scheduleItems, tasks, goals, priorities, notes, reflection, brainDump])
+  }, [currentDate, scheduleItems, tasks, goals, priorities, notes, reflection, brainDump, randomThoughts])
   
   const handleDateChange = (date) => {
     setCurrentDate(date)
@@ -515,6 +519,8 @@ function LifestyleDayPage() {
                   </h3>
                   
                   <textarea
+                    value={randomThoughts}
+                    onChange={(e) => setRandomThoughts(e.target.value)}
                     placeholder="Type something..."
                     className="w-full h-32 bg-[#2a2a2a] border border-gray-700 rounded-lg p-3 text-white resize-none focus:outline-none focus:border-accent"
                   />
