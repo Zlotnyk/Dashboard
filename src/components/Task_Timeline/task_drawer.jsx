@@ -14,11 +14,18 @@ const TaskDrawer = ({ isOpen, task, onSave, onClose, onDelete }) => {
 
   useEffect(() => {
     if (task) {
+      // Display dates one day forward from actual task dates
+      const displayStartDate = new Date(task.start)
+      displayStartDate.setDate(displayStartDate.getDate() + 1)
+      
+      const displayEndDate = new Date(task.end)
+      displayEndDate.setDate(displayEndDate.getDate() + 1)
+      
       setFormData({
         title: task.title || '',
         description: task.description || '',
-        start: task.start ? task.start.toISOString().split('T')[0] : '',
-        end: task.end ? task.end.toISOString().split('T')[0] : '',
+        start: displayStartDate.toISOString().split('T')[0],
+        end: displayEndDate.toISOString().split('T')[0],
         status: task.status || 'Not started',
         priority: task.priority || 'normal'
       })
@@ -29,12 +36,19 @@ const TaskDrawer = ({ isOpen, task, onSave, onClose, onDelete }) => {
     e.preventDefault()
     if (!task) return
 
+    // Convert displayed dates back to actual dates (one day back)
+    const actualStartDate = new Date(formData.start)
+    actualStartDate.setDate(actualStartDate.getDate() - 1)
+    
+    const actualEndDate = new Date(formData.end)
+    actualEndDate.setDate(actualEndDate.getDate() - 1)
+
     const updatedTask = {
       ...task,
       title: formData.title,
       description: formData.description,
-      start: new Date(formData.start),
-      end: new Date(formData.end),
+      start: actualStartDate,
+      end: actualEndDate,
       status: formData.status,
       priority: formData.priority
     }
