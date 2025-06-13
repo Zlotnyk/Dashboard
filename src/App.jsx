@@ -15,13 +15,14 @@ import './App.css'
 import TaskTimeline from './components/Task_Timeline/task_timeline'
 import { generateMockTasks } from './components/Task_Timeline/timeline_utils'
 import { useAuth } from './hooks/useAuth'
-import { tasksAPI, eventsAPI } from './services/api'
+import { tasksAPI, eventsAPI, notesAPI } from './services/api'
 
 function App() {
 	const { isAuthenticated, user } = useAuth()
 	const [selectedDate, setSelectedDate] = useState(new Date())
 	const [tasks, setTasks] = useState([])
 	const [events, setEvents] = useState([])
+	const [notes, setNotes] = useState([])
 	const [loading, setLoading] = useState(false)
 	const [widths, setWidths] = useState({
 		left: 20,
@@ -280,6 +281,26 @@ function App() {
 		return Math.max(300, availableHeight * 0.4); // 40% of available space
 	}
 
+	// Notes handling
+	const handleAddNote = async () => {
+		const newNote = {
+			id: crypto.randomUUID(),
+			content: 'Note',
+		}
+		
+		setNotes(prev => [...prev, newNote])
+	}
+
+	const handleUpdateNote = async (id, content) => {
+		setNotes(prev => prev.map(note => 
+			note.id === id ? { ...note, content } : note
+		))
+	}
+
+	const handleDeleteNote = async (id) => {
+		setNotes(prev => prev.filter(note => note.id !== id))
+	}
+
 	if (loading) {
 		return (
 			<div className="min-h-screen bg-[#1a1a1a] flex items-center justify-center">
@@ -319,8 +340,10 @@ function App() {
 								selectedDate={selectedDate}
 							/>
 							<Notes
-								selectedDate={selectedDate}
-								onDateSelect={setSelectedDate}
+								notes={notes}
+								onAddNote={handleAddNote}
+								onUpdateNote={handleUpdateNote}
+								onDeleteNote={handleDeleteNote}
 							/>
 						</section>
 						<section className='flex flex-col gap-4 mb-4'>
