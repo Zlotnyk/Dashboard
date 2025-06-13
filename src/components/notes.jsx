@@ -1,7 +1,17 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 
 export default function Notes({ notes = [], onAddNote, onUpdateNote, onDeleteNote }) {
 	const [loading, setLoading] = useState(false)
+
+	// Initialize with empty notes if none provided
+	useEffect(() => {
+		if (notes.length === 0) {
+			// Create 5 empty notes
+			for (let i = 0; i < 5; i++) {
+				onAddNote()
+			}
+		}
+	}, [])
 
 	const handleContentChange = async (id, value) => {
 		onUpdateNote(id, value)

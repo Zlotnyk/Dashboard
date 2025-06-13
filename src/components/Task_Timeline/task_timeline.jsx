@@ -204,53 +204,12 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask, height = '
       color: 'var(--accent-color, #97e7aa)'
     }
 
-    if (isAuthenticated) {
-      try {
-        setLoading(true)
-        const response = await tasksAPI.createTask({
-          title: newTask.title,
-          startDate: formatDateToYYYYMMDD(newTask.start),
-          endDate: formatDateToYYYYMMDD(newTask.end),
-          status: newTask.status,
-          priority: newTask.priority,
-          description: newTask.description
-        })
-        
-        const createdTask = {
-          ...response.data.data,
-          id: response.data.data._id,
-          start: new Date(response.data.data.startDate),
-          end: new Date(response.data.data.endDate),
-          color: newTask.color
-        }
-        
-        onAddTask(createdTask)
-        setDrawerTask(createdTask)
-        setIsDrawerOpen(true)
-        
-        // Update timeline height when adding a new task
-        updateTimelineHeight()
-      } catch (error) {
-        console.error('Error creating task:', error)
-        const localTask = { ...newTask, id: crypto.randomUUID() }
-        onAddTask(localTask)
-        setDrawerTask(localTask)
-        setIsDrawerOpen(true)
-        
-        // Update timeline height when adding a new task
-        updateTimelineHeight()
-      } finally {
-        setLoading(false)
-      }
-    } else {
-      const localTask = { ...newTask, id: crypto.randomUUID() }
-      onAddTask(localTask)
-      setDrawerTask(localTask)
-      setIsDrawerOpen(true)
-      
-      // Update timeline height when adding a new task
-      updateTimelineHeight()
-    }
+    onAddTask(newTask)
+    setDrawerTask(newTask)
+    setIsDrawerOpen(true)
+    
+    // Update timeline height when adding a new task
+    updateTimelineHeight()
   }
 
   // FIXED: Accurate timeline click handler
@@ -286,53 +245,12 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask, height = '
           color: 'var(--accent-color, #97e7aa)'
         }
 
-        if (isAuthenticated) {
-          try {
-            setLoading(true)
-            const response = await tasksAPI.createTask({
-              title: newTask.title,
-              startDate: formatDateToYYYYMMDD(newTask.start),
-              endDate: formatDateToYYYYMMDD(newTask.end),
-              status: newTask.status,
-              priority: newTask.priority,
-              description: newTask.description
-            })
-            
-            const createdTask = {
-              ...response.data.data,
-              id: response.data.data._id,
-              start: new Date(response.data.data.startDate),
-              end: new Date(response.data.data.endDate),
-              color: newTask.color
-            }
-            
-            onAddTask(createdTask)
-            setDrawerTask(createdTask)
-            setIsDrawerOpen(true)
-            
-            // Update timeline height when adding a new task
-            updateTimelineHeight()
-          } catch (error) {
-            console.error('Error creating task:', error)
-            const localTask = { ...newTask, id: crypto.randomUUID() }
-            onAddTask(localTask)
-            setDrawerTask(localTask)
-            setIsDrawerOpen(true)
-            
-            // Update timeline height when adding a new task
-            updateTimelineHeight()
-          } finally {
-            setLoading(false)
-          }
-        } else {
-          const localTask = { ...newTask, id: crypto.randomUUID() }
-          onAddTask(localTask)
-          setDrawerTask(localTask)
-          setIsDrawerOpen(true)
-          
-          // Update timeline height when adding a new task
-          updateTimelineHeight()
-        }
+        onAddTask(newTask)
+        setDrawerTask(newTask)
+        setIsDrawerOpen(true)
+        
+        // Update timeline height when adding a new task
+        updateTimelineHeight()
       }
     }
   }
@@ -498,38 +416,7 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask, height = '
   }, [tasks, viewMode, currentDate])
 
   const handleDrawerSave = async (updatedTask) => {
-    if (isAuthenticated) {
-      try {
-        setLoading(true)
-        const taskId = updatedTask.id || updatedTask._id
-        const response = await tasksAPI.updateTask(taskId, {
-          title: updatedTask.title,
-          description: updatedTask.description,
-          startDate: formatDateToYYYYMMDD(updatedTask.start),
-          endDate: formatDateToYYYYMMDD(updatedTask.end),
-          status: updatedTask.status,
-          priority: updatedTask.priority
-        })
-        
-        const backendTask = {
-          ...response.data.data,
-          id: response.data.data._id,
-          start: new Date(response.data.data.startDate),
-          end: new Date(response.data.data.endDate),
-          color: updatedTask.color
-        }
-        
-        onUpdateTask(backendTask)
-      } catch (error) {
-        console.error('Error updating task:', error)
-        onUpdateTask(updatedTask)
-      } finally {
-        setLoading(false)
-      }
-    } else {
-      onUpdateTask(updatedTask)
-    }
-    
+    onUpdateTask(updatedTask)
     setIsDrawerOpen(false)
     setDrawerTask(null)
   }

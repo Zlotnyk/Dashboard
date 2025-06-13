@@ -15,7 +15,7 @@ import './App.css'
 import TaskTimeline from './components/Task_Timeline/task_timeline'
 import { generateMockTasks } from './components/Task_Timeline/timeline_utils'
 import { useAuth } from './hooks/useAuth'
-import { tasksAPI, eventsAPI } from './services/api'
+import { tasksAPI, eventsAPI, notesAPI } from './services/api'
 
 function App() {
 	const { isAuthenticated, user } = useAuth()
@@ -43,7 +43,7 @@ function App() {
 		}
 	}, [])
 
-	// Load tasks, events, and notes when user authentication changes
+	// Load tasks and events when user authentication changes
 	useEffect(() => {
 		if (isAuthenticated && user) {
 			loadUserData()
@@ -97,10 +97,22 @@ function App() {
 			} else {
 				setEvents([])
 			}
-
-			// Load notes from backend (placeholder - assuming notesAPI exists)
-			// For now, initialize with empty notes
-			initializeNotes()
+			
+			// Load notes from backend
+			const notesResponse = await notesAPI.getTodaysNotes()
+			if (notesResponse.data && notesResponse.data.data) {
+				const backendNotes = notesResponse.data.data.map(note => ({
+					id: note._id,
+					content: note.content
+				}))
+				setNotes(backendNotes)
+			} else {
+				// Initialize with empty notes if none found
+				setNotes(Array.from({ length: 5 }, () => ({
+					id: crypto.randomUUID(),
+					content: 'Note',
+				})))
+			}
 
 		} catch (error) {
 			console.error('Error loading user data:', error)
@@ -150,29 +162,26 @@ function App() {
 		} else {
 			setEvents([])
 		}
-
+		
 		// Load notes from localStorage
-		const savedNotes = localStorage.getItem('notes')
+		const savedNotes = localStorage.getItem('todaysNotes')
 		if (savedNotes) {
 			try {
-				const parsedNotes = JSON.parse(savedNotes)
-				setNotes(parsedNotes)
+				setNotes(JSON.parse(savedNotes))
 			} catch (error) {
 				console.error('Error parsing saved notes:', error)
-				initializeNotes()
+				setNotes(Array.from({ length: 5 }, () => ({
+					id: crypto.randomUUID(),
+					content: 'Note',
+				})))
 			}
 		} else {
-			initializeNotes()
+			// Initialize with empty notes
+			setNotes(Array.from({ length: 5 }, () => ({
+				id: crypto.randomUUID(),
+				content: 'Note',
+			})))
 		}
-	}
-
-	const initializeNotes = () => {
-		// Create 5 empty notes
-		const initialNotes = Array.from({ length: 5 }, (_, index) => ({
-			id: crypto.randomUUID(),
-			content: ''
-		}))
-		setNotes(initialNotes)
 	}
 
 	// Save to localStorage for non-authenticated users
@@ -188,10 +197,10 @@ function App() {
 			localStorage.setItem('events', JSON.stringify(events))
 		}
 	}, [events, isAuthenticated])
-
+	
 	useEffect(() => {
 		if (!isAuthenticated && notes.length > 0) {
-			localStorage.setItem('notes', JSON.stringify(notes))
+			localStorage.setItem('todaysNotes', JSON.stringify(notes))
 		}
 	}, [notes, isAuthenticated])
 
@@ -199,13 +208,46 @@ function App() {
 		console.log('Adding task:', task)
 		
 		if (isAuthenticated) {
-			// For authenticated users, the task should already be created via API
-			// Just add it to the state
-			setTasks(prevTasks => {
-				const newTasks = [...prevTasks, task]
-				console.log('Updated tasks state:', newTasks)
-				return newTasks
-			})
+			try {
+				setLoading(true)
+				// For authenticated users, create task via API
+				const taskData = {
+					title: task.title,
+					description: task.description || '',
+					startDate: task.start.toISOString(),
+					endDate: task.end.toISOString(),
+					status: task.status || 'Not started',
+					priority: task.priority || 'normal'
+				}
+				
+				const response = await tasksAPI.createTask(taskData)
+				
+				// Add the created task to state
+				const createdTask = {
+					...response.data.data,
+					id: response.data.data._id,
+					start: new Date(response.data.data.startDate),
+					end: new Date(response.data.data.endDate),
+					color: task.color || 'var(--accent-color, #97e7aa)'
+				}
+				
+				setTasks(prevTasks => {
+					const newTasks = [...prevTasks, createdTask]
+					console.log('Updated tasks state after API create:', newTasks)
+					return newTasks
+				})
+			} catch (error) {
+				console.error('Error creating task via API:', error)
+				// Fallback to local add
+				const newTask = { ...task, id: task.id || crypto.randomUUID() }
+				setTasks(prevTasks => {
+					const newTasks = [...prevTasks, newTask]
+					console.log('Updated tasks state (local fallback):', newTasks)
+					return newTasks
+				})
+			} finally {
+				setLoading(false)
+			}
 		} else {
 			// For non-authenticated users, add locally
 			const newTask = { ...task, id: task.id || crypto.randomUUID() }
@@ -220,28 +262,101 @@ function App() {
 	const handleTaskUpdate = async (updatedTask) => {
 		console.log('Updating task:', updatedTask)
 		
-		setTasks(prevTasks => {
-			const newTasks = prevTasks.map(task => {
-				const taskId = task.id || task._id
-				const updatedTaskId = updatedTask.id || updatedTask._id
-				return taskId === updatedTaskId ? updatedTask : task
+		if (isAuthenticated) {
+			try {
+				setLoading(true)
+				// For authenticated users, update task via API
+				const taskId = updatedTask.id || updatedTask._id
+				const taskData = {
+					title: updatedTask.title,
+					description: updatedTask.description || '',
+					startDate: updatedTask.start.toISOString(),
+					endDate: updatedTask.end.toISOString(),
+					status: updatedTask.status || 'Not started',
+					priority: updatedTask.priority || 'normal'
+				}
+				
+				await tasksAPI.updateTask(taskId, taskData)
+				
+				// Update the task in state
+				setTasks(prevTasks => {
+					const newTasks = prevTasks.map(task => {
+						const taskId = task.id || task._id
+						const updatedTaskId = updatedTask.id || updatedTask._id
+						return taskId === updatedTaskId ? updatedTask : task
+					})
+					console.log('Updated tasks state after API update:', newTasks)
+					return newTasks
+				})
+			} catch (error) {
+				console.error('Error updating task via API:', error)
+				// Fallback to local update
+				setTasks(prevTasks => {
+					const newTasks = prevTasks.map(task => {
+						const taskId = task.id || task._id
+						const updatedTaskId = updatedTask.id || updatedTask._id
+						return taskId === updatedTaskId ? updatedTask : task
+					})
+					console.log('Updated tasks state (local fallback):', newTasks)
+					return newTasks
+				})
+			} finally {
+				setLoading(false)
+			}
+		} else {
+			// For non-authenticated users, update locally
+			setTasks(prevTasks => {
+				const newTasks = prevTasks.map(task => {
+					const taskId = task.id || task._id
+					const updatedTaskId = updatedTask.id || updatedTask._id
+					return taskId === updatedTaskId ? updatedTask : task
+				})
+				console.log('Updated tasks state (local):', newTasks)
+				return newTasks
 			})
-			console.log('Updated tasks state after update:', newTasks)
-			return newTasks
-		})
+		}
 	}
 
-	const handleTaskDelete = (taskId) => {
+	const handleTaskDelete = async (taskId) => {
 		console.log('Deleting task with ID:', taskId)
 		
-		setTasks(prevTasks => {
-			const newTasks = prevTasks.filter(task => {
-				const currentTaskId = task.id || task._id
-				return currentTaskId !== taskId
+		if (isAuthenticated) {
+			try {
+				setLoading(true)
+				// For authenticated users, delete task via API
+				await tasksAPI.deleteTask(taskId)
+				
+				// Remove the task from state
+				setTasks(prevTasks => {
+					const newTasks = prevTasks.filter(task => {
+						const currentTaskId = task.id || task._id
+						return currentTaskId !== taskId
+					})
+					console.log('Updated tasks state after API delete:', newTasks)
+					return newTasks
+				})
+			} catch (error) {
+				console.error('Error deleting task via API:', error)
+				// Fallback to local delete
+				setTasks(prevTasks => {
+					const newTasks = prevTasks.filter(task => {
+						const currentTaskId = task.id || task._id
+						return currentTaskId !== taskId
+					})
+					console.log('Updated tasks state (local fallback):', newTasks)
+					return newTasks
+				})
+			} finally {
+				setLoading(false)
+			}
+		} else {
+			// For non-authenticated users, delete locally
+			setTasks(prevTasks => {
+				const newTasks = prevTasks.filter(task => task.id !== taskId)
+				console.log('Updated tasks state (local):', newTasks)
+				return newTasks
 			})
-			console.log('Updated tasks state after delete:', newTasks)
-			return newTasks
-		})
+		}
 	}
 
 	const handleEventAdd = async (event) => {
@@ -294,25 +409,90 @@ function App() {
 			setEvents(prevEvents => prevEvents.filter(event => event.id !== eventId))
 		}
 	}
-
-	const handleNoteAdd = () => {
+	
+	// Notes handlers
+	const handleNoteAdd = async () => {
 		const newNote = {
 			id: crypto.randomUUID(),
-			content: ''
+			content: 'Note',
 		}
-		setNotes(prevNotes => [...prevNotes, newNote])
+		
+		if (isAuthenticated) {
+			try {
+				const response = await notesAPI.createNote({
+					content: newNote.content,
+					category: 'daily'
+				})
+				
+				const createdNote = {
+					id: response.data.data._id,
+					content: response.data.data.content
+				}
+				
+				setNotes(prevNotes => [...prevNotes, createdNote])
+			} catch (error) {
+				console.error('Error creating note:', error)
+				// Fallback to local storage
+				setNotes(prevNotes => [...prevNotes, newNote])
+			}
+		} else {
+			setNotes(prevNotes => [...prevNotes, newNote])
+		}
 	}
-
-	const handleNoteUpdate = (noteId, content) => {
-		setNotes(prevNotes => 
-			prevNotes.map(note => 
-				note.id === noteId ? { ...note, content } : note
-			)
-		)
+	
+	const handleNoteUpdate = async (id, content) => {
+		if (isAuthenticated) {
+			try {
+				// Check if this is a new note (not from MongoDB)
+				if (id.length < 24) {
+					// Create a new note in the backend
+					const response = await notesAPI.createNote({
+						content: content,
+						category: 'daily'
+					})
+					
+					// Replace the temporary note with the one from the backend
+					setNotes(prevNotes => prevNotes.map(note => 
+						note.id === id ? { id: response.data.data._id, content } : note
+					))
+				} else {
+					// Update existing note
+					await notesAPI.updateNote(id, { content })
+					
+					// Update in state
+					setNotes(prevNotes => prevNotes.map(note => 
+						note.id === id ? { ...note, content } : note
+					))
+				}
+			} catch (error) {
+				console.error('Error updating note:', error)
+				// Fallback to local update
+				setNotes(prevNotes => prevNotes.map(note => 
+					note.id === id ? { ...note, content } : note
+				))
+			}
+		} else {
+			// For non-authenticated users, update locally
+			setNotes(prevNotes => prevNotes.map(note => 
+				note.id === id ? { ...note, content } : note
+			))
+		}
 	}
-
-	const handleNoteDelete = (noteId) => {
-		setNotes(prevNotes => prevNotes.filter(note => note.id !== noteId))
+	
+	const handleNoteDelete = async (id) => {
+		if (isAuthenticated && id.length === 24) {
+			try {
+				await notesAPI.deleteNote(id)
+				setNotes(prevNotes => prevNotes.filter(note => note.id !== id))
+			} catch (error) {
+				console.error('Error deleting note:', error)
+				// Fallback to local delete
+				setNotes(prevNotes => prevNotes.filter(note => note.id !== id))
+			}
+		} else {
+			// For non-authenticated users or temporary notes, delete locally
+			setNotes(prevNotes => prevNotes.filter(note => note.id !== id))
+		}
 	}
 
 	// Calculate available height for the task timeline
