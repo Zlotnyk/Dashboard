@@ -24,6 +24,15 @@ function LifestyleDayPage() {
   const [newGoal, setNewGoal] = useState("")
   const [newPriority, setNewPriority] = useState("")
   const [newBrainDumpItem, setNewBrainDumpItem] = useState("")
+  const [toDo, setToDo] = useState([])
+  const [toResearch, setToResearch] = useState([])
+  const [toCall, setToCall] = useState([])
+  const [toEmail, setToEmail] = useState([])
+  const [meals, setMeals] = useState("")
+  const [newToDo, setNewToDo] = useState("")
+  const [newToResearch, setNewToResearch] = useState("")
+  const [newToCall, setNewToCall] = useState("")
+  const [newToEmail, setNewToEmail] = useState("")
   
   // Time slots for the schedule
   const timeSlots = [
@@ -48,6 +57,11 @@ function LifestyleDayPage() {
         setReflection(parsedData.reflection || "")
         setBrainDump(parsedData.brainDump || [])
         setRandomThoughts(parsedData.randomThoughts || "")
+        setToDo(parsedData.toDo || [])
+        setToResearch(parsedData.toResearch || [])
+        setToCall(parsedData.toCall || [])
+        setToEmail(parsedData.toEmail || [])
+        setMeals(parsedData.meals || "")
       } catch (error) {
         console.error('Error parsing day planner data:', error)
       }
@@ -61,6 +75,11 @@ function LifestyleDayPage() {
       setReflection("")
       setBrainDump([])
       setRandomThoughts("")
+      setToDo([])
+      setToResearch([])
+      setToCall([])
+      setToEmail([])
+      setMeals("")
     }
   }, [currentDate])
   
@@ -75,11 +94,16 @@ function LifestyleDayPage() {
       notes,
       reflection,
       brainDump,
-      randomThoughts
+      randomThoughts,
+      toDo,
+      toResearch,
+      toCall,
+      toEmail,
+      meals
     }
     
     localStorage.setItem(`dayPlanner_${dateKey}`, JSON.stringify(dataToSave))
-  }, [currentDate, scheduleItems, tasks, goals, priorities, notes, reflection, brainDump, randomThoughts])
+  }, [currentDate, scheduleItems, tasks, goals, priorities, notes, reflection, brainDump, randomThoughts, toDo, toResearch, toCall, toEmail, meals])
   
   const handleDateChange = (date) => {
     setCurrentDate(date)
@@ -122,9 +146,61 @@ function LifestyleDayPage() {
     }
   }
   
+  const handleAddToDo = () => {
+    if (newToDo.trim()) {
+      setToDo([...toDo, { id: crypto.randomUUID(), text: newToDo, completed: false }])
+      setNewToDo("")
+    }
+  }
+  
+  const handleAddToResearch = () => {
+    if (newToResearch.trim()) {
+      setToResearch([...toResearch, { id: crypto.randomUUID(), text: newToResearch, completed: false }])
+      setNewToResearch("")
+    }
+  }
+  
+  const handleAddToCall = () => {
+    if (newToCall.trim()) {
+      setToCall([...toCall, { id: crypto.randomUUID(), text: newToCall, completed: false }])
+      setNewToCall("")
+    }
+  }
+  
+  const handleAddToEmail = () => {
+    if (newToEmail.trim()) {
+      setToEmail([...toEmail, { id: crypto.randomUUID(), text: newToEmail, completed: false }])
+      setNewToEmail("")
+    }
+  }
+  
   const handleToggleTask = (id) => {
     setTasks(tasks.map(task => 
       task.id === id ? { ...task, completed: !task.completed } : task
+    ))
+  }
+  
+  const handleToggleToDo = (id) => {
+    setToDo(toDo.map(item => 
+      item.id === id ? { ...item, completed: !item.completed } : item
+    ))
+  }
+  
+  const handleToggleToResearch = (id) => {
+    setToResearch(toResearch.map(item => 
+      item.id === id ? { ...item, completed: !item.completed } : item
+    ))
+  }
+  
+  const handleToggleToCall = (id) => {
+    setToCall(toCall.map(item => 
+      item.id === id ? { ...item, completed: !item.completed } : item
+    ))
+  }
+  
+  const handleToggleToEmail = (id) => {
+    setToEmail(toEmail.map(item => 
+      item.id === id ? { ...item, completed: !item.completed } : item
     ))
   }
   
@@ -142,6 +218,22 @@ function LifestyleDayPage() {
   
   const handleDeleteBrainDumpItem = (id) => {
     setBrainDump(brainDump.filter(item => item.id !== id))
+  }
+  
+  const handleDeleteToDo = (id) => {
+    setToDo(toDo.filter(item => item.id !== id))
+  }
+  
+  const handleDeleteToResearch = (id) => {
+    setToResearch(toResearch.filter(item => item.id !== id))
+  }
+  
+  const handleDeleteToCall = (id) => {
+    setToCall(toCall.filter(item => item.id !== id))
+  }
+  
+  const handleDeleteToEmail = (id) => {
+    setToEmail(toEmail.filter(item => item.id !== id))
   }
   
   const handleScheduleItemChange = (timeSlot, value) => {
@@ -237,7 +329,7 @@ function LifestyleDayPage() {
               <div className="space-y-6">
                 {/* Daily Brain Dump */}
                 <div className="bg-[#1a1a1a] rounded-lg p-4">
-                  <h3 className="text-lg font-[Libre_Baskerville] italic text-accent mb-4">
+                  <h3 className="text-lg font-[Libre_Baskerville] italic text-white mb-4">
                     Daily Brain Dump
                   </h3>
                   
@@ -288,10 +380,231 @@ function LifestyleDayPage() {
                   </div>
                 </div>
                 
+                {/* To Do */}
+                <div className="bg-[#1a1a1a] rounded-lg p-4">
+                  <h3 className="text-lg font-[Libre_Baskerville] italic text-white mb-4">
+                    To Do
+                  </h3>
+                  
+                  <div className="space-y-2 mb-4">
+                    {toDo.map(item => (
+                      <div key={item.id} className="flex items-center gap-2 group">
+                        <input
+                          type="checkbox"
+                          checked={item.completed}
+                          onChange={() => handleToggleToDo(item.id)}
+                          className="w-4 h-4 rounded"
+                          style={{ accentColor: 'var(--accent-color)' }}
+                        />
+                        <div className={`text-gray-300 flex-1 ${item.completed ? 'line-through text-gray-500' : ''}`}>
+                          {item.text}
+                        </div>
+                        <button 
+                          onClick={() => handleDeleteToDo(item.id)}
+                          className="opacity-0 group-hover:opacity-100 text-gray-500 hover:text-red-400 transition-opacity"
+                        >
+                          <X size={14} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                  
+                  <div className="flex items-center gap-2">
+                    <button 
+                      className="flex items-center justify-center w-6 h-6 rounded-full bg-gray-700 text-white hover:bg-accent transition-colors"
+                      onClick={handleAddToDo}
+                    >
+                      <Plus size={14} />
+                    </button>
+                    <input
+                      type="text"
+                      value={newToDo}
+                      onChange={(e) => setNewToDo(e.target.value)}
+                      placeholder="Add a new to-do"
+                      className="flex-1 bg-transparent border-b border-gray-600 focus:border-accent outline-none text-white py-1"
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' && newToDo.trim()) {
+                          handleAddToDo()
+                        }
+                      }}
+                    />
+                  </div>
+                </div>
+                
+                {/* To Research */}
+                <div className="bg-[#1a1a1a] rounded-lg p-4">
+                  <h3 className="text-lg font-[Libre_Baskerville] italic text-white mb-4">
+                    To Research
+                  </h3>
+                  
+                  <div className="space-y-2 mb-4">
+                    {toResearch.map(item => (
+                      <div key={item.id} className="flex items-center gap-2 group">
+                        <input
+                          type="checkbox"
+                          checked={item.completed}
+                          onChange={() => handleToggleToResearch(item.id)}
+                          className="w-4 h-4 rounded"
+                          style={{ accentColor: 'var(--accent-color)' }}
+                        />
+                        <div className={`text-gray-300 flex-1 ${item.completed ? 'line-through text-gray-500' : ''}`}>
+                          {item.text}
+                        </div>
+                        <button 
+                          onClick={() => handleDeleteToResearch(item.id)}
+                          className="opacity-0 group-hover:opacity-100 text-gray-500 hover:text-red-400 transition-opacity"
+                        >
+                          <X size={14} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                  
+                  <div className="flex items-center gap-2">
+                    <button 
+                      className="flex items-center justify-center w-6 h-6 rounded-full bg-gray-700 text-white hover:bg-accent transition-colors"
+                      onClick={handleAddToResearch}
+                    >
+                      <Plus size={14} />
+                    </button>
+                    <input
+                      type="text"
+                      value={newToResearch}
+                      onChange={(e) => setNewToResearch(e.target.value)}
+                      placeholder="Add a new research item"
+                      className="flex-1 bg-transparent border-b border-gray-600 focus:border-accent outline-none text-white py-1"
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' && newToResearch.trim()) {
+                          handleAddToResearch()
+                        }
+                      }}
+                    />
+                  </div>
+                </div>
+                
+                {/* To Call */}
+                <div className="bg-[#1a1a1a] rounded-lg p-4">
+                  <h3 className="text-lg font-[Libre_Baskerville] italic text-white mb-4">
+                    To Call
+                  </h3>
+                  
+                  <div className="space-y-2 mb-4">
+                    {toCall.map(item => (
+                      <div key={item.id} className="flex items-center gap-2 group">
+                        <input
+                          type="checkbox"
+                          checked={item.completed}
+                          onChange={() => handleToggleToCall(item.id)}
+                          className="w-4 h-4 rounded"
+                          style={{ accentColor: 'var(--accent-color)' }}
+                        />
+                        <div className={`text-gray-300 flex-1 ${item.completed ? 'line-through text-gray-500' : ''}`}>
+                          {item.text}
+                        </div>
+                        <button 
+                          onClick={() => handleDeleteToCall(item.id)}
+                          className="opacity-0 group-hover:opacity-100 text-gray-500 hover:text-red-400 transition-opacity"
+                        >
+                          <X size={14} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                  
+                  <div className="flex items-center gap-2">
+                    <button 
+                      className="flex items-center justify-center w-6 h-6 rounded-full bg-gray-700 text-white hover:bg-accent transition-colors"
+                      onClick={handleAddToCall}
+                    >
+                      <Plus size={14} />
+                    </button>
+                    <input
+                      type="text"
+                      value={newToCall}
+                      onChange={(e) => setNewToCall(e.target.value)}
+                      placeholder="Add a new call to make"
+                      className="flex-1 bg-transparent border-b border-gray-600 focus:border-accent outline-none text-white py-1"
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' && newToCall.trim()) {
+                          handleAddToCall()
+                        }
+                      }}
+                    />
+                  </div>
+                </div>
+                
+                {/* Meals */}
+                <div className="bg-[#1a1a1a] rounded-lg p-4">
+                  <h3 className="text-lg font-[Libre_Baskerville] italic text-white mb-4">
+                    Meals
+                  </h3>
+                  
+                  <textarea
+                    value={meals}
+                    onChange={(e) => setMeals(e.target.value)}
+                    placeholder="Type something..."
+                    className="w-full h-32 bg-[#2a2a2a] border border-gray-700 rounded-lg p-3 text-white resize-none focus:outline-none focus:border-accent"
+                  />
+                </div>
+              </div>
+              
+              {/* Right Column */}
+              <div className="space-y-6">
+                {/* To Email */}
+                <div className="bg-[#1a1a1a] rounded-lg p-4">
+                  <h3 className="text-lg font-[Libre_Baskerville] italic text-white mb-4">
+                    To Email
+                  </h3>
+                  
+                  <div className="space-y-2 mb-4">
+                    {toEmail.map(item => (
+                      <div key={item.id} className="flex items-center gap-2 group">
+                        <input
+                          type="checkbox"
+                          checked={item.completed}
+                          onChange={() => handleToggleToEmail(item.id)}
+                          className="w-4 h-4 rounded"
+                          style={{ accentColor: 'var(--accent-color)' }}
+                        />
+                        <div className={`text-gray-300 flex-1 ${item.completed ? 'line-through text-gray-500' : ''}`}>
+                          {item.text}
+                        </div>
+                        <button 
+                          onClick={() => handleDeleteToEmail(item.id)}
+                          className="opacity-0 group-hover:opacity-100 text-gray-500 hover:text-red-400 transition-opacity"
+                        >
+                          <X size={14} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                  
+                  <div className="flex items-center gap-2">
+                    <button 
+                      className="flex items-center justify-center w-6 h-6 rounded-full bg-gray-700 text-white hover:bg-accent transition-colors"
+                      onClick={handleAddToEmail}
+                    >
+                      <Plus size={14} />
+                    </button>
+                    <input
+                      type="text"
+                      value={newToEmail}
+                      onChange={(e) => setNewToEmail(e.target.value)}
+                      placeholder="Add a new email to send"
+                      className="flex-1 bg-transparent border-b border-gray-600 focus:border-accent outline-none text-white py-1"
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' && newToEmail.trim()) {
+                          handleAddToEmail()
+                        }
+                      }}
+                    />
+                  </div>
+                </div>
+                
                 {/* Today's Tasks */}
                 <div className="bg-[#1a1a1a] rounded-lg p-4">
                   <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-lg font-[Libre_Baskerville] italic text-accent">
+                    <h3 className="text-lg font-[Libre_Baskerville] italic text-white">
                       Today's Tasks
                     </h3>
                     <div className="flex items-center gap-2">
@@ -348,7 +661,7 @@ function LifestyleDayPage() {
                 
                 {/* Today's Goals */}
                 <div className="bg-[#1a1a1a] rounded-lg p-4">
-                  <h3 className="text-lg font-[Libre_Baskerville] italic text-accent mb-4">
+                  <h3 className="text-lg font-[Libre_Baskerville] italic text-white mb-4">
                     Today's Goals
                   </h3>
                   
@@ -391,7 +704,7 @@ function LifestyleDayPage() {
                 
                 {/* Priorities */}
                 <div className="bg-[#1a1a1a] rounded-lg p-4">
-                  <h3 className="text-lg font-[Libre_Baskerville] italic text-accent mb-4">
+                  <h3 className="text-lg font-[Libre_Baskerville] italic text-white mb-4">
                     Priorities
                   </h3>
                   
@@ -431,14 +744,11 @@ function LifestyleDayPage() {
                     />
                   </div>
                 </div>
-              </div>
-              
-              {/* Right Column */}
-              <div className="space-y-6">
+                
                 {/* Schedule */}
                 <div className="bg-[#1a1a1a] rounded-lg p-4">
                   <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-lg font-[Libre_Baskerville] italic text-accent">
+                    <h3 className="text-lg font-[Libre_Baskerville] italic text-white">
                       Schedule
                     </h3>
                     <div className="flex items-center gap-2">
@@ -471,14 +781,6 @@ function LifestyleDayPage() {
                             </td>
                           </tr>
                         ))}
-                        <tr>
-                          <td colSpan="2" className="p-2">
-                            <button className="flex items-center gap-2 text-gray-400 hover:text-white">
-                              <Plus size={14} />
-                              <span className="text-sm">New page</span>
-                            </button>
-                          </td>
-                        </tr>
                       </tbody>
                     </table>
                   </div>
@@ -486,7 +788,7 @@ function LifestyleDayPage() {
                 
                 {/* Notes */}
                 <div className="bg-[#1a1a1a] rounded-lg p-4">
-                  <h3 className="text-lg font-[Libre_Baskerville] italic text-accent mb-4">
+                  <h3 className="text-lg font-[Libre_Baskerville] italic text-white mb-4">
                     Notes
                   </h3>
                   
@@ -500,7 +802,7 @@ function LifestyleDayPage() {
                 
                 {/* Today's Reflection */}
                 <div className="bg-[#1a1a1a] rounded-lg p-4">
-                  <h3 className="text-lg font-[Libre_Baskerville] italic text-accent mb-4">
+                  <h3 className="text-lg font-[Libre_Baskerville] italic text-white mb-4">
                     Today's Reflection
                   </h3>
                   
@@ -514,7 +816,7 @@ function LifestyleDayPage() {
                 
                 {/* Random Thoughts */}
                 <div className="bg-[#1a1a1a] rounded-lg p-4">
-                  <h3 className="text-lg font-[Libre_Baskerville] italic text-accent mb-4">
+                  <h3 className="text-lg font-[Libre_Baskerville] italic text-white mb-4">
                     Random Thoughts
                   </h3>
                   

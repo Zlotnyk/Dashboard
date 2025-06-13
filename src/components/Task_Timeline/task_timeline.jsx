@@ -265,27 +265,12 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask, height = '
       
       const dayIndex = Math.floor(absoluteClickX / dayWidth)
       
-      console.log('Timeline click debug:', {
-        relativeClickX,
-        scrollLeft,
-        absoluteClickX,
-        dayWidth,
-        dayIndex,
-        totalDays: daysToShow.length,
-        clickedDate: dayIndex >= 0 && dayIndex < daysToShow.length ? daysToShow[dayIndex].toDateString() : 'Invalid'
-      })
-      
       if (dayIndex >= 0 && dayIndex < daysToShow.length) {
-        const selectedDate = daysToShow[dayIndex]
+        const selectedDate = new Date(daysToShow[dayIndex])
         
-        // FIXED: Create date more explicitly to avoid timezone issues
+        // Create a new date object to avoid timezone issues
         const clickDay = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), selectedDate.getDate())
         clickDay.setHours(0, 0, 0, 0)
-        
-        console.log('Creating task for date:', {
-          selectedDate: selectedDate.toDateString(),
-          clickDay: clickDay.toDateString()
-        })
         
         const newTask = {
           title: 'New Task',
@@ -345,8 +330,6 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask, height = '
           // Update timeline height when adding a new task
           updateTimelineHeight()
         }
-      } else {
-        console.warn('Click outside valid day range:', dayIndex, 'Total days:', daysToShow.length)
       }
     }
   }
