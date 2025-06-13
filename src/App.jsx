@@ -22,6 +22,7 @@ function App() {
 	const [selectedDate, setSelectedDate] = useState(new Date())
 	const [tasks, setTasks] = useState([])
 	const [events, setEvents] = useState([])
+	const [notes, setNotes] = useState([])
 	const [loading, setLoading] = useState(false)
 	const [widths, setWidths] = useState({
 		left: 20,
@@ -42,7 +43,7 @@ function App() {
 		}
 	}, [])
 
-	// Load tasks and events when user authentication changes
+	// Load tasks, events, and notes when user authentication changes
 	useEffect(() => {
 		if (isAuthenticated && user) {
 			loadUserData()
@@ -97,6 +98,10 @@ function App() {
 				setEvents([])
 			}
 
+			// Load notes from backend (placeholder - assuming notesAPI exists)
+			// For now, initialize with empty notes
+			initializeNotes()
+
 		} catch (error) {
 			console.error('Error loading user data:', error)
 			// Fallback to localStorage
@@ -145,6 +150,29 @@ function App() {
 		} else {
 			setEvents([])
 		}
+
+		// Load notes from localStorage
+		const savedNotes = localStorage.getItem('notes')
+		if (savedNotes) {
+			try {
+				const parsedNotes = JSON.parse(savedNotes)
+				setNotes(parsedNotes)
+			} catch (error) {
+				console.error('Error parsing saved notes:', error)
+				initializeNotes()
+			}
+		} else {
+			initializeNotes()
+		}
+	}
+
+	const initializeNotes = () => {
+		// Create 5 empty notes
+		const initialNotes = Array.from({ length: 5 }, (_, index) => ({
+			id: crypto.randomUUID(),
+			content: ''
+		}))
+		setNotes(initialNotes)
 	}
 
 	// Save to localStorage for non-authenticated users
@@ -160,6 +188,12 @@ function App() {
 			localStorage.setItem('events', JSON.stringify(events))
 		}
 	}, [events, isAuthenticated])
+
+	useEffect(() => {
+		if (!isAuthenticated && notes.length > 0) {
+			localStorage.setItem('notes', JSON.stringify(notes))
+		}
+	}, [notes, isAuthenticated])
 
 	const handleTaskAdd = async (task) => {
 		console.log('Adding task:', task)
@@ -261,6 +295,26 @@ function App() {
 		}
 	}
 
+	const handleNoteAdd = () => {
+		const newNote = {
+			id: crypto.randomUUID(),
+			content: ''
+		}
+		setNotes(prevNotes => [...prevNotes, newNote])
+	}
+
+	const handleNoteUpdate = (noteId, content) => {
+		setNotes(prevNotes => 
+			prevNotes.map(note => 
+				note.id === noteId ? { ...note, content } : note
+			)
+		)
+	}
+
+	const handleNoteDelete = (noteId) => {
+		setNotes(prevNotes => prevNotes.filter(note => note.id !== noteId))
+	}
+
 	// Calculate available height for the task timeline
 	const calculateTimelineHeight = () => {
 		// Approximate heights of other components
@@ -315,6 +369,10 @@ function App() {
 								selectedDate={selectedDate}
 							/>
 							<Notes
+								notes={notes}
+								onAddNote={handleNoteAdd}
+								onUpdateNote={handleNoteUpdate}
+								onDeleteNote={handleNoteDelete}
 								selectedDate={selectedDate}
 								onDateSelect={setSelectedDate}
 							/>
