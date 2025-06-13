@@ -208,7 +208,16 @@ export const usersAPI = {
   getUserStats: () => api.get('/users/stats'),
   
   // Видалити акаунт
-  deleteAccount: () => api.delete('/users/account')
+  deleteAccount: () => api.delete('/users/account'),
+  
+  // Upload avatar
+  uploadAvatar: (formData) => {
+    return api.post('/users/avatar', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    });
+  }
 };
 
 export default api;

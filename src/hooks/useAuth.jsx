@@ -212,8 +212,14 @@ export const AuthProvider = ({ children }) => {
 
   const updateProfile = async (profileData) => {
     try {
-      const response = await authAPI.updateProfile(profileData);
-      setUser(response.data.data);
+      if (profileData) {
+        const response = await authAPI.updateProfile(profileData);
+        setUser(response.data.data);
+      } else {
+        // If no profile data provided, just refresh the user data
+        const response = await authAPI.getMe();
+        setUser(response.data.data);
+      }
       return { success: true };
     } catch (error) {
       console.error('Profile update failed:', error);
