@@ -43,38 +43,7 @@ const TodayTasks = ({ tasks = [], onAddTask, onUpdateTask, onDeleteTask }) => {
       color: '#3B82F6',
     }
 
-    if (isAuthenticated) {
-      try {
-        setLoading(true)
-        const response = await tasksAPI.createTask({
-          title: newTodo.title,
-          startDate: formatDateToYYYYMMDD(newTodo.start),
-          endDate: formatDateToYYYYMMDD(newTodo.end),
-          status: newTodo.status,
-          priority: newTodo.priority,
-          description: newTodo.description
-        })
-        
-        // Convert backend response to frontend format
-        const createdTask = {
-          ...response.data.data,
-          id: response.data.data._id,
-          start: new Date(response.data.data.startDate),
-          end: new Date(response.data.data.endDate),
-          color: newTodo.color
-        }
-        
-        onAddTask(createdTask)
-      } catch (error) {
-        console.error('Error creating task:', error)
-        // Fallback to local storage
-        onAddTask({ ...newTodo, id: crypto.randomUUID() })
-      } finally {
-        setLoading(false)
-      }
-    } else {
-      onAddTask({ ...newTodo, id: crypto.randomUUID() })
-    }
+    onAddTask(newTodo)
   }
 
   const startEditing = task => {
@@ -101,34 +70,7 @@ const TodayTasks = ({ tasks = [], onAddTask, onUpdateTask, onDeleteTask }) => {
         end: parseYYYYMMDDToDate(editingEnd),
       }
 
-      if (isAuthenticated) {
-        try {
-          setLoading(true)
-          const response = await tasksAPI.updateTask(editingId, {
-            title: updatedTask.title,
-            startDate: formatDateToYYYYMMDD(updatedTask.start),
-            endDate: formatDateToYYYYMMDD(updatedTask.end)
-          })
-          
-          const backendTask = {
-            ...response.data.data,
-            id: response.data.data._id,
-            start: new Date(response.data.data.startDate),
-            end: new Date(response.data.data.endDate),
-            color: updatedTask.color
-          }
-          
-          onUpdateTask(backendTask)
-        } catch (error) {
-          console.error('Error updating task:', error)
-          // Fallback to local update
-          onUpdateTask(updatedTask)
-        } finally {
-          setLoading(false)
-        }
-      } else {
-        onUpdateTask(updatedTask)
-      }
+      onUpdateTask(updatedTask)
     }
     
     setEditingId(null)
@@ -143,38 +85,7 @@ const TodayTasks = ({ tasks = [], onAddTask, onUpdateTask, onDeleteTask }) => {
   }
 
   const handleDrawerSave = async (updatedTask) => {
-    if (isAuthenticated) {
-      try {
-        setLoading(true)
-        const taskId = updatedTask.id || updatedTask._id
-        const response = await tasksAPI.updateTask(taskId, {
-          title: updatedTask.title,
-          description: updatedTask.description,
-          startDate: formatDateToYYYYMMDD(updatedTask.start),
-          endDate: formatDateToYYYYMMDD(updatedTask.end),
-          status: updatedTask.status,
-          priority: updatedTask.priority
-        })
-        
-        const backendTask = {
-          ...response.data.data,
-          id: response.data.data._id,
-          start: new Date(response.data.data.startDate),
-          end: new Date(response.data.data.endDate),
-          color: updatedTask.color
-        }
-        
-        onUpdateTask(backendTask)
-      } catch (error) {
-        console.error('Error updating task:', error)
-        onUpdateTask(updatedTask)
-      } finally {
-        setLoading(false)
-      }
-    } else {
-      onUpdateTask(updatedTask)
-    }
-    
+    onUpdateTask(updatedTask)
     setIsDrawerOpen(false)
     setDrawerTask(null)
   }
@@ -185,21 +96,7 @@ const TodayTasks = ({ tasks = [], onAddTask, onUpdateTask, onDeleteTask }) => {
   }
 
   const handleDeleteTask = async (taskId) => {
-    if (isAuthenticated) {
-      try {
-        setLoading(true)
-        await tasksAPI.deleteTask(taskId)
-        onDeleteTask(taskId)
-      } catch (error) {
-        console.error('Error deleting task:', error)
-        // Fallback to local delete
-        onDeleteTask(taskId)
-      } finally {
-        setLoading(false)
-      }
-    } else {
-      onDeleteTask(taskId)
-    }
+    onDeleteTask(taskId)
   }
 
   return (

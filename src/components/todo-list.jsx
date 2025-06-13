@@ -62,33 +62,7 @@ export default function TodoList({
 				end: parseYYYYMMDDToDate(editingEnd),
 			}
 
-			if (isAuthenticated) {
-				try {
-					setLoading(true)
-					const response = await tasksAPI.updateTask(editingId, {
-						title: updatedTask.title,
-						startDate: formatDateToYYYYMMDD(updatedTask.start),
-						endDate: formatDateToYYYYMMDD(updatedTask.end)
-					})
-					
-					const backendTask = {
-						...response.data.data,
-						id: response.data.data._id,
-						start: new Date(response.data.data.startDate),
-						end: new Date(response.data.data.endDate),
-						color: updatedTask.color
-					}
-					
-					onUpdateTask(backendTask)
-				} catch (error) {
-					console.error('Error updating task:', error)
-					onUpdateTask(updatedTask)
-				} finally {
-					setLoading(false)
-				}
-			} else {
-				onUpdateTask(updatedTask)
-			}
+			onUpdateTask(updatedTask)
 		}
 		
 		setEditingId(null)
@@ -105,71 +79,10 @@ export default function TodoList({
 	const handleDrawerSave = async (updatedTask) => {
 		if (!updatedTask.id && !updatedTask._id) {
 			// This is a new task
-			if (isAuthenticated) {
-				try {
-					setLoading(true)
-					const response = await tasksAPI.createTask({
-						title: updatedTask.title,
-						description: updatedTask.description,
-						startDate: formatDateToYYYYMMDD(updatedTask.start),
-						endDate: formatDateToYYYYMMDD(updatedTask.end),
-						status: updatedTask.status,
-						priority: updatedTask.priority
-					})
-					
-					const backendTask = {
-						...response.data.data,
-						id: response.data.data._id,
-						start: new Date(response.data.data.startDate),
-						end: new Date(response.data.data.endDate),
-						color: updatedTask.color
-					}
-					
-					onAddTask(backendTask)
-				} catch (error) {
-					console.error('Error creating task:', error)
-					const localTask = { ...updatedTask, id: crypto.randomUUID() }
-					onAddTask(localTask)
-				} finally {
-					setLoading(false)
-				}
-			} else {
-				const localTask = { ...updatedTask, id: crypto.randomUUID() }
-				onAddTask(localTask)
-			}
+			onAddTask(updatedTask)
 		} else {
 			// This is an existing task
-			if (isAuthenticated) {
-				try {
-					setLoading(true)
-					const taskId = updatedTask.id || updatedTask._id
-					const response = await tasksAPI.updateTask(taskId, {
-						title: updatedTask.title,
-						description: updatedTask.description,
-						startDate: formatDateToYYYYMMDD(updatedTask.start),
-						endDate: formatDateToYYYYMMDD(updatedTask.end),
-						status: updatedTask.status,
-						priority: updatedTask.priority
-					})
-					
-					const backendTask = {
-						...response.data.data,
-						id: response.data.data._id,
-						start: new Date(response.data.data.startDate),
-						end: new Date(response.data.data.endDate),
-						color: updatedTask.color
-					}
-					
-					onUpdateTask(backendTask)
-				} catch (error) {
-					console.error('Error updating task:', error)
-					onUpdateTask(updatedTask)
-				} finally {
-					setLoading(false)
-				}
-			} else {
-				onUpdateTask(updatedTask)
-			}
+			onUpdateTask(updatedTask)
 		}
 		
 		setIsDrawerOpen(false)
@@ -182,20 +95,7 @@ export default function TodoList({
 	}
 
 	const handleDeleteTask = async (taskId) => {
-		if (isAuthenticated) {
-			try {
-				setLoading(true)
-				await tasksAPI.deleteTask(taskId)
-				onDeleteTask(taskId)
-			} catch (error) {
-				console.error('Error deleting task:', error)
-				onDeleteTask(taskId)
-			} finally {
-				setLoading(false)
-			}
-		} else {
-			onDeleteTask(taskId)
-		}
+		onDeleteTask(taskId)
 	}
 
 	return (
