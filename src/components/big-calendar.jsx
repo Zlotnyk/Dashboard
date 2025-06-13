@@ -176,7 +176,7 @@ const BigCalendar = ({ events = [], onAddEvent, onDeleteEvent }) => {
     const year = eventDate.getFullYear()
     const month = String(eventDate.getMonth() + 1).padStart(2, '0')
     const day = String(eventDate.getDate()).padStart(2, '0')
-    const formattedDate = `${year}-${month}-${dayStr}`
+    const formattedDate = `${year}-${month}-${day}`
     
     setEventForm({
       title: event.title,
