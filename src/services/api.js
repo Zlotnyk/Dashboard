@@ -172,7 +172,7 @@ export const remindersAPI = {
 // Notes API
 export const notesAPI = {
   // Отримати всі нотатки
-  getNotes: () => api.get('/notes'),
+  getNotes: (params = {}) => api.get('/notes', { params }),
   
   // Створити нотатку
   createNote: (noteData) => api.post('/notes', noteData),
@@ -187,7 +187,13 @@ export const notesAPI = {
   getTodaysNotes: () => api.get('/notes/today'),
   
   // Пошук нотаток
-  searchNotes: (query) => api.get('/notes/search', { params: { q: query } })
+  searchNotes: (query) => api.get('/notes/search', { params: { q: query } }),
+  
+  // Отримати закріплені нотатки
+  getPinnedNotes: () => api.get('/notes/pinned'),
+  
+  // Отримати нотатки за категорією
+  getNotesByCategory: (category) => api.get(`/notes/category/${category}`)
 };
 
 // Users API
