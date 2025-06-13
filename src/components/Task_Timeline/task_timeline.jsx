@@ -188,7 +188,7 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask, height = '
     const newTask = {
       title: 'New Task',
       start: new Date(),
-      end: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
+      end: new Date(),
       progress: 0,
       status: 'Not started',
       priority: 'normal',
@@ -268,13 +268,9 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask, height = '
         const clickDay = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), selectedDate.getDate())
         clickDay.setHours(0, 0, 0, 0)
         
-        const endDay = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), selectedDate.getDate())
-        endDay.setHours(23, 59, 59, 999)
-        
         console.log('Creating task for date:', {
           selectedDate: selectedDate.toDateString(),
-          clickDay: clickDay.toDateString(),
-          endDay: endDay.toDateString()
+          clickDay: clickDay.toDateString()
         })
         
         const newTask = {
