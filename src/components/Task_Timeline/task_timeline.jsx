@@ -34,6 +34,7 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask, height = '
   const timelineRef = useRef(null)
   const scrollRef = useRef(null)
   const timelineContentRef = useRef(null)
+  const [timelineHeight, setTimelineHeight] = useState(height)
 
   const monthNames = [
     'January', 'February', 'March', 'April', 'May', 'June',
@@ -80,6 +81,19 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask, height = '
   const today = new Date()
   const dayWidth = viewMode === 'Week' ? 120 : 40
   const totalWidth = daysToShow.length * dayWidth
+
+  // Calculate adaptive height based on number of tasks
+  useEffect(() => {
+    const visibleTasks = getVisibleTasks()
+    // Calculate height based on number of tasks (each task is 44px tall + some padding)
+    const tasksHeight = Math.max(visibleTasks.length * 44 + 100, parseInt(height.replace('px', '')))
+    
+    // Set a minimum height
+    const minHeight = parseInt(height.replace('px', ''))
+    const newHeight = Math.max(minHeight, tasksHeight) + 'px'
+    
+    setTimelineHeight(newHeight)
+  }, [tasks, daysToShow, height])
 
   const navigateTime = (direction) => {
     const newDate = new Date(currentDate)
@@ -582,7 +596,7 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask, height = '
 
   return (
     <>
-      <div className="w-full bg-[#1a1a1a] rounded-lg flex flex-col" style={{ height }}>
+      <div className="w-full bg-[#1a1a1a] rounded-lg flex flex-col" style={{ height: timelineHeight }}>
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-3 flex-shrink-0">
           <div className="flex items-center gap-3">
