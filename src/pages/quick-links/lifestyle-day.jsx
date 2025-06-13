@@ -228,8 +228,8 @@ function LifestyleDayPage() {
             </div>
 
             {/* Main Content - Two Column Layout */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Left Column - Daily Brain Dump and Schedule */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Left Column */}
               <div className="space-y-6">
                 {/* Daily Brain Dump */}
                 <div className="bg-[#1a1a1a] rounded-lg p-4">
@@ -284,72 +284,6 @@ function LifestyleDayPage() {
                   </div>
                 </div>
                 
-                {/* Schedule */}
-                <div className="bg-[#1a1a1a] rounded-lg p-4">
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-lg font-[Libre_Baskerville] italic text-accent">
-                      Schedule
-                    </h3>
-                    <div className="flex items-center gap-2">
-                      <button className="p-1 text-gray-400 hover:text-white">
-                        <Calendar size={16} />
-                      </button>
-                    </div>
-                  </div>
-                  
-                  <div className="overflow-x-auto">
-                    <table className="w-full">
-                      <thead>
-                        <tr>
-                          <th className="text-left p-2 text-gray-400 font-medium w-1/4">Time</th>
-                          <th className="text-left p-2 text-gray-400 font-medium">Task</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {timeSlots.map(timeSlot => (
-                          <tr key={timeSlot} className="border-t border-gray-700">
-                            <td className="p-2 text-gray-300">{timeSlot}</td>
-                            <td className="p-2">
-                              <input
-                                type="text"
-                                value={scheduleItems[timeSlot] || ''}
-                                onChange={(e) => handleScheduleItemChange(timeSlot, e.target.value)}
-                                placeholder="Add task"
-                                className="w-full bg-transparent text-white outline-none"
-                              />
-                            </td>
-                          </tr>
-                        ))}
-                        <tr>
-                          <td colSpan="2" className="p-2">
-                            <button className="flex items-center gap-2 text-gray-400 hover:text-white">
-                              <Plus size={14} />
-                              <span className="text-sm">New page</span>
-                            </button>
-                          </td>
-                        </tr>
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-                
-                {/* Today's Reflection */}
-                <div className="bg-[#1a1a1a] rounded-lg p-4">
-                  <h3 className="text-lg font-[Libre_Baskerville] italic text-accent mb-4">
-                    Today's Reflection
-                  </h3>
-                  
-                  <textarea
-                    value={reflection}
-                    onChange={(e) => setReflection(e.target.value)}
-                    placeholder="Type something..."
-                    className="w-full h-32 bg-[#2a2a2a] border border-gray-700 rounded-lg p-3 text-white resize-none focus:outline-none focus:border-accent"
-                  />
-                </div>
-              </div>
-              
-              {/* Right Column - Tasks, Goals, Priorities, Notes */}
-              <div className="space-y-6">
                 {/* Today's Tasks */}
                 <div className="bg-[#1a1a1a] rounded-lg p-4">
                   <div className="flex items-center justify-between mb-4">
@@ -493,6 +427,58 @@ function LifestyleDayPage() {
                     />
                   </div>
                 </div>
+              </div>
+              
+              {/* Right Column */}
+              <div className="space-y-6">
+                {/* Schedule */}
+                <div className="bg-[#1a1a1a] rounded-lg p-4">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-lg font-[Libre_Baskerville] italic text-accent">
+                      Schedule
+                    </h3>
+                    <div className="flex items-center gap-2">
+                      <button className="p-1 text-gray-400 hover:text-white">
+                        <Calendar size={16} />
+                      </button>
+                    </div>
+                  </div>
+                  
+                  <div className="overflow-x-auto">
+                    <table className="w-full">
+                      <thead>
+                        <tr>
+                          <th className="text-left p-2 text-gray-400 font-medium w-1/4">Time</th>
+                          <th className="text-left p-2 text-gray-400 font-medium">Task</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {timeSlots.map(timeSlot => (
+                          <tr key={timeSlot} className="border-t border-gray-700">
+                            <td className="p-2 text-gray-300">{timeSlot}</td>
+                            <td className="p-2">
+                              <input
+                                type="text"
+                                value={scheduleItems[timeSlot] || ''}
+                                onChange={(e) => handleScheduleItemChange(timeSlot, e.target.value)}
+                                placeholder="Add task"
+                                className="w-full bg-transparent text-white outline-none"
+                              />
+                            </td>
+                          </tr>
+                        ))}
+                        <tr>
+                          <td colSpan="2" className="p-2">
+                            <button className="flex items-center gap-2 text-gray-400 hover:text-white">
+                              <Plus size={14} />
+                              <span className="text-sm">New page</span>
+                            </button>
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
                 
                 {/* Notes */}
                 <div className="bg-[#1a1a1a] rounded-lg p-4">
@@ -503,6 +489,32 @@ function LifestyleDayPage() {
                   <textarea
                     value={notes}
                     onChange={(e) => setNotes(e.target.value)}
+                    placeholder="Type something..."
+                    className="w-full h-32 bg-[#2a2a2a] border border-gray-700 rounded-lg p-3 text-white resize-none focus:outline-none focus:border-accent"
+                  />
+                </div>
+                
+                {/* Today's Reflection */}
+                <div className="bg-[#1a1a1a] rounded-lg p-4">
+                  <h3 className="text-lg font-[Libre_Baskerville] italic text-accent mb-4">
+                    Today's Reflection
+                  </h3>
+                  
+                  <textarea
+                    value={reflection}
+                    onChange={(e) => setReflection(e.target.value)}
+                    placeholder="Type something..."
+                    className="w-full h-32 bg-[#2a2a2a] border border-gray-700 rounded-lg p-3 text-white resize-none focus:outline-none focus:border-accent"
+                  />
+                </div>
+                
+                {/* Random Thoughts */}
+                <div className="bg-[#1a1a1a] rounded-lg p-4">
+                  <h3 className="text-lg font-[Libre_Baskerville] italic text-accent mb-4">
+                    Random Thoughts
+                  </h3>
+                  
+                  <textarea
                     placeholder="Type something..."
                     className="w-full h-32 bg-[#2a2a2a] border border-gray-700 rounded-lg p-3 text-white resize-none focus:outline-none focus:border-accent"
                   />

@@ -797,7 +797,26 @@ const BigCalendar = ({ events = [], onAddEvent, onDeleteEvent }) => {
                         <span className="text-red-400 font-medium">Exam Event</span>
                       </div>
                       <div className="text-sm text-gray-300">
-                        This event will be synchronized with your Exam Preparation section.
+                        {eventForm.date && (
+                          <div>
+                            {(() => {
+                              const examDate = new Date(eventForm.date);
+                              const today = new Date();
+                              const diffTime = examDate - today;
+                              const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                              
+                              if (diffDays < 0) {
+                                return "This exam has already passed.";
+                              } else if (diffDays === 0) {
+                                return "This exam is today!";
+                              } else if (diffDays === 1) {
+                                return "This exam is tomorrow!";
+                              } else {
+                                return `This exam is in ${diffDays} days.`;
+                              }
+                            })()}
+                          </div>
+                        )}
                       </div>
                     </div>
                   )}
