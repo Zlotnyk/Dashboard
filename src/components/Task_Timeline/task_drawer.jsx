@@ -13,19 +13,18 @@ const TaskDrawer = ({ isOpen, task, onSave, onClose, onDelete }) => {
     priority: 'normal',
   });
 
-  // Збереження позиції прокручування
+  // Збереження позиції прокручування та блокування прокручування фону
   useEffect(() => {
     if (isOpen) {
-      // Зберігаємо поточну позицію прокручування
       const scrollY = window.scrollY;
-      // Блокуємо прокручування сторінки
+      // Фіксуємо позицію сторінки, але не затемнюємо фон
       document.body.style.overflow = 'hidden';
       document.body.style.position = 'fixed';
       document.body.style.top = `-${scrollY}px`;
       document.body.style.width = '100%';
 
-      // Відновлюємо прокручування при закритті
       return () => {
+        // Відновлюємо прокручування після закриття
         const scrollY = document.body.style.top;
         document.body.style.overflow = '';
         document.body.style.position = '';
@@ -75,9 +74,10 @@ const TaskDrawer = ({ isOpen, task, onSave, onClose, onDelete }) => {
 
   return (
     <Dialog open={isOpen} onClose={onClose} className="relative z-50">
+      {/* Прозорий фон, щоб сайт залишався видимим */}
       <DialogBackdrop
         transition
-        className="fixed inset-0 bg-black/60 backdrop-blur-sm transition-opacity duration-300 ease-in-out data-[closed]:opacity-0"
+        className="fixed inset-0 bg-transparent transition-opacity duration-300 ease-in-out data-[closed]:opacity-0"
       />
 
       <div className="fixed inset-0 overflow-hidden">
