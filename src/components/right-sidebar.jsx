@@ -70,7 +70,7 @@ const RightSidebar = () => {
     }
   }, [assignmentReminders])
 
-  // Sync with exam preparation data
+  // Sync with exam preparation data - FIXED to prevent duplication
   useEffect(() => {
     const savedExams = localStorage.getItem('examPreparationData')
     
@@ -81,11 +81,21 @@ const RightSidebar = () => {
           date: new Date(exam.date)
         }))
         
+        // Create a map of existing reminders by examId for quick lookup
+        const existingReminderMap = new Map()
+        examReminders.forEach(reminder => {
+          if (reminder.examId) {
+            existingReminderMap.set(reminder.examId, reminder)
+          }
+        })
+        
+        // Track new reminders to add
+        const newReminders = []
+        
         // For each exam in the exam preparation data, ensure there's a corresponding reminder
         parsedExams.forEach(exam => {
-          const existingReminder = examReminders.find(reminder => reminder.examId === exam.id)
-          
-          if (!existingReminder) {
+          // Skip if we already have a reminder for this exam
+          if (!existingReminderMap.has(exam.id)) {
             // Create a new reminder for this exam
             const newReminder = {
               id: crypto.randomUUID(),
@@ -96,17 +106,22 @@ const RightSidebar = () => {
               location: exam.location || '',
               notes: exam.notes || '',
               attended: false,
-              isUrgent: calculateDaysUntil(exam.date) === 'Tomorrow.'
+              isUrgent: calculateDaysUntil(exam.date) === 'Tomorrow'
             }
             
-            setExamReminders(prev => [...prev, newReminder])
+            newReminders.push(newReminder)
           }
         })
+        
+        // Only update state if we have new reminders to add
+        if (newReminders.length > 0) {
+          setExamReminders(prev => [...prev, ...newReminders])
+        }
       } catch (error) {
         console.error('Error syncing with exam preparation data:', error)
       }
     }
-  }, [])
+  }, []) // Only run once on component mount
 
   const calculateDaysUntil = (date) => {
     const today = new Date()
@@ -115,7 +130,7 @@ const RightSidebar = () => {
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
     
     if (diffDays === 0) return 'Today'
-    if (diffDays === 1) return 'Tomorrow.'
+    if (diffDays === 1) return 'Tomorrow'
     if (diffDays < 0) return `${Math.abs(diffDays)} days ago`
     return `${diffDays} days`
   }
@@ -245,7 +260,7 @@ const RightSidebar = () => {
         location: examForm.location,
         notes: examForm.notes,
         attended: examForm.attended,
-        isUrgent: calculateDaysUntil(examForm.date) === 'Tomorrow.'
+        isUrgent: calculateDaysUntil(examForm.date) === 'Tomorrow'
       }
       setExamReminders(prev => prev.map(exam => 
         exam.id === selectedExam.id ? updatedExam : exam
@@ -260,7 +275,7 @@ const RightSidebar = () => {
         location: examForm.location,
         notes: examForm.notes,
         attended: examForm.attended,
-        isUrgent: calculateDaysUntil(examForm.date) === 'Tomorrow.'
+        isUrgent: calculateDaysUntil(examForm.date) === 'Tomorrow'
       }
       setExamReminders(prev => [...prev, newReminder])
     }
@@ -290,7 +305,7 @@ const RightSidebar = () => {
         status: assignmentForm.status,
         notes: assignmentForm.notes,
         submitted: assignmentForm.submitted,
-        isUrgent: calculateDaysUntil(assignmentForm.dueDate) === 'Tomorrow.'
+        isUrgent: calculateDaysUntil(assignmentForm.dueDate) === 'Tomorrow'
       }
       setAssignmentReminders(prev => prev.map(assignment => 
         assignment.id === selectedAssignment.id ? updatedAssignment : assignment
@@ -304,7 +319,7 @@ const RightSidebar = () => {
         status: assignmentForm.status,
         notes: assignmentForm.notes,
         submitted: assignmentForm.submitted,
-        isUrgent: calculateDaysUntil(assignmentForm.dueDate) === 'Tomorrow.'
+        isUrgent: calculateDaysUntil(assignmentForm.dueDate) === 'Tomorrow'
       }
       setAssignmentReminders(prev => [...prev, newReminder])
     }
