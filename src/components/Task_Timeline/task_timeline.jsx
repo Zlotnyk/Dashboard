@@ -12,6 +12,7 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask, height = '
   const [isDrawerOpen, setIsDrawerOpen] = useState(false)
   const [drawerTask, setDrawerTask] = useState(null)
   const [loading, setLoading] = useState(false)
+  const [timelineHeight, setTimelineHeight] = useState(height)
   
   // Enhanced filter state
   const [filterOpen, setFilterOpen] = useState(false)
@@ -223,12 +224,18 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask, height = '
         onAddTask(createdTask)
         setDrawerTask(createdTask)
         setIsDrawerOpen(true)
+        
+        // Update timeline height when adding a new task
+        updateTimelineHeight()
       } catch (error) {
         console.error('Error creating task:', error)
         const localTask = { ...newTask, id: crypto.randomUUID() }
         onAddTask(localTask)
         setDrawerTask(localTask)
         setIsDrawerOpen(true)
+        
+        // Update timeline height when adding a new task
+        updateTimelineHeight()
       } finally {
         setLoading(false)
       }
@@ -237,6 +244,9 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask, height = '
       onAddTask(localTask)
       setDrawerTask(localTask)
       setIsDrawerOpen(true)
+      
+      // Update timeline height when adding a new task
+      updateTimelineHeight()
     }
   }
 
@@ -311,12 +321,18 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask, height = '
             onAddTask(createdTask)
             setDrawerTask(createdTask)
             setIsDrawerOpen(true)
+            
+            // Update timeline height when adding a new task
+            updateTimelineHeight()
           } catch (error) {
             console.error('Error creating task:', error)
             const localTask = { ...newTask, id: crypto.randomUUID() }
             onAddTask(localTask)
             setDrawerTask(localTask)
             setIsDrawerOpen(true)
+            
+            // Update timeline height when adding a new task
+            updateTimelineHeight()
           } finally {
             setLoading(false)
           }
@@ -325,11 +341,29 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask, height = '
           onAddTask(localTask)
           setDrawerTask(localTask)
           setIsDrawerOpen(true)
+          
+          // Update timeline height when adding a new task
+          updateTimelineHeight()
         }
       } else {
         console.warn('Click outside valid day range:', dayIndex, 'Total days:', daysToShow.length)
       }
     }
+  }
+
+  // Function to update timeline height based on number of tasks
+  const updateTimelineHeight = () => {
+    const visibleTasksCount = getVisibleTasks().length + 1 // +1 for the new task
+    const minHeight = parseInt(height.replace('px', ''))
+    const taskHeight = 44 // Height of each task row in pixels
+    const headerHeight = 72 // Height of the header section
+    const padding = 16 // Additional padding
+    
+    // Calculate new height based on number of tasks
+    const calculatedHeight = Math.max(minHeight, (visibleTasksCount * taskHeight) + headerHeight + padding)
+    
+    // Update the timeline height
+    setTimelineHeight(`${calculatedHeight}px`)
   }
 
   // GLOBAL MOUSE HANDLERS
@@ -469,6 +503,11 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask, height = '
 
   const visibleTasks = getVisibleTasks()
 
+  // Update timeline height when tasks change
+  useEffect(() => {
+    updateTimelineHeight()
+  }, [tasks, viewMode, currentDate])
+
   const handleDrawerSave = async (updatedTask) => {
     if (isAuthenticated) {
       try {
@@ -582,7 +621,7 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask, height = '
 
   return (
     <>
-      <div className="w-full bg-[#1a1a1a] rounded-lg flex flex-col" style={{ height }}>
+      <div className="w-full bg-[#1a1a1a] rounded-lg flex flex-col" style={{ height: timelineHeight }}>
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-3 flex-shrink-0">
           <div className="flex items-center gap-3">
@@ -763,7 +802,7 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask, height = '
               {/* Month Labels (only for month view) */}
               {viewMode === 'Month' && (
                 <div 
-                  className="flex h-8 bg-[#1a1a1a] sticky top-0 z-20 border-b border-gray-600"
+                  className="flex h-6 bg-[#1a1a1a] sticky top-0 z-20 border-b border-gray-600"
                   style={{ width: `${totalWidth}px` }}
                 >
                   {monthLabels.map((month, i) => (
@@ -784,10 +823,10 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask, height = '
 
               {/* Days Header */}
               <div 
-                className="flex h-10 bg-[#1a1a1a] sticky z-10 border-b border-gray-700"
+                className="flex h-8 bg-[#1a1a1a] sticky z-10 border-b border-gray-700"
                 style={{ 
                   width: `${totalWidth}px`,
-                  top: viewMode === 'Month' ? '32px' : '0px'
+                  top: viewMode === 'Month' ? '24px' : '0px'
                 }}
               >
                 {daysToShow.map((date, i) => {
@@ -822,7 +861,7 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask, height = '
                   className="absolute bottom-0 w-px bg-gray-800 z-0"
                   style={{ 
                     left: `${(i + 1) * dayWidth}px`,
-                    top: viewMode === 'Month' ? '72px' : '40px'
+                    top: viewMode === 'Month' ? '32px' : '32px'
                   }}
                 />
               ))}
@@ -836,7 +875,7 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask, height = '
                       className="absolute bottom-0 w-0.5 z-20 pointer-events-none"
                       style={{ 
                         left: `${todayPosition + dayWidth / 2}px`,
-                        top: viewMode === 'Month' ? '72px' : '40px',
+                        top: viewMode === 'Month' ? '32px' : '32px',
                         backgroundColor: 'var(--accent-color, #97e7aa)'
                       }}
                     />
@@ -847,8 +886,8 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask, height = '
 
               {/* Tasks Area */}
               <div 
-                className="relative h-full pt-4 pb-4 overflow-y-auto custom-scrollbar z-10"
-                style={{ marginTop: viewMode === 'Month' ? '32px' : '0px' }}
+                className="relative h-full pt-2 pb-4 overflow-y-auto custom-scrollbar z-10"
+                style={{ marginTop: viewMode === 'Month' ? '0px' : '0px' }}
               >
                 {visibleTasks.map((task, index) => {
                   const isUrgent = task.priority === 'urgent'
