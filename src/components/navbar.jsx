@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
-import { Settings, User, LogOut, ChevronDown } from 'lucide-react'
+import { Settings, User, LogOut, ChevronDown, X } from 'lucide-react'
+import { Dialog, DialogBackdrop, DialogPanel, DialogTitle } from '@headlessui/react'
 import { useAuth } from '../hooks/useAuth'
 import LoginModal from './auth/LoginModal'
 import RegisterModal from './auth/RegisterModal'
