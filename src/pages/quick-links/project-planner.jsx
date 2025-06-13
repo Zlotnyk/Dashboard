@@ -378,6 +378,134 @@ function ProjectPlannerPage() {
     (a, b) => new Date(a.startDate) - new Date(b.startDate)
   )
 
+  // Implement drag and drop for projects in timeline
+  const [dragState, setDragState] = useState({
+    isDragging: false,
+    draggedProject: null,
+    dragMode: null, // 'move', 'resize-left', 'resize-right'
+    startX: 0,
+    originalStart: null,
+    originalEnd: null,
+    hasMoved: false
+  })
+
+  const handleProjectMouseDown = (e, project) => {
+    e.preventDefault()
+    e.stopPropagation()
+    
+    const rect = e.currentTarget.getBoundingClientRect()
+    const clickX = e.clientX - rect.left
+    const projectWidth = rect.width
+    
+    // Determine drag mode based on click position
+    let mode = 'move'
+    if (clickX < 20) {
+      mode = 'resize-left'
+    } else if (clickX > projectWidth - 20) {
+      mode = 'resize-right'
+    }
+    
+    setDragState({
+      isDragging: true,
+      draggedProject: project,
+      dragMode: mode,
+      startX: e.clientX,
+      originalStart: new Date(project.startDate),
+      originalEnd: new Date(project.endDate),
+      hasMoved: false
+    })
+    
+    document.body.style.userSelect = 'none'
+  }
+
+  const handleProjectClick = (project, e) => {
+    e.stopPropagation()
+    
+    if (!dragState.isDragging && !dragState.hasMoved) {
+      handleEditProject(project)
+    }
+  }
+
+  // Global mouse handlers for project dragging
+  useEffect(() => {
+    const handleMouseMove = (e) => {
+      if (!dragState.isDragging || !dragState.draggedProject) return
+      
+      const deltaX = e.clientX - dragState.startX
+      
+      if (Math.abs(deltaX) > 5) {
+        setDragState(prev => ({ ...prev, hasMoved: true }))
+      }
+      
+      const daysDelta = Math.round(deltaX / dayWidth)
+      
+      if (daysDelta === 0) return
+      
+      const { draggedProject, dragMode, originalStart, originalEnd } = dragState
+      let newStart = new Date(originalStart)
+      let newEnd = new Date(originalEnd)
+      
+      if (dragMode === 'move') {
+        newStart.setDate(originalStart.getDate() + daysDelta)
+        newEnd.setDate(originalEnd.getDate() + daysDelta)
+      } else if (dragMode === 'resize-left') {
+        newStart.setDate(originalStart.getDate() + daysDelta)
+        if (newStart >= originalEnd) {
+          newStart = new Date(originalEnd)
+          newStart.setDate(newStart.getDate() - 1)
+        }
+      } else if (dragMode === 'resize-right') {
+        newEnd.setDate(originalEnd.getDate() + daysDelta)
+        if (newEnd <= originalStart) {
+          newEnd = new Date(originalStart)
+          newEnd.setDate(newEnd.getDate() + 1)
+        }
+      }
+      
+      const updatedProject = {
+        ...draggedProject,
+        startDate: newStart,
+        endDate: newEnd
+      }
+      
+      setProjects(prev => prev.map(project => 
+        project.id === draggedProject.id ? updatedProject : project
+      ))
+    }
+    
+    const handleMouseUp = () => {
+      const hadMoved = dragState.hasMoved
+      
+      setDragState({
+        isDragging: false,
+        draggedProject: null,
+        dragMode: null,
+        startX: 0,
+        originalStart: null,
+        originalEnd: null,
+        hasMoved: hadMoved
+      })
+      
+      if (hadMoved) {
+        setTimeout(() => {
+          setDragState(prev => ({ ...prev, hasMoved: false }))
+        }, 100)
+      }
+      
+      document.body.style.userSelect = ''
+    }
+    
+    if (dragState.isDragging) {
+      document.addEventListener('mousemove', handleMouseMove)
+      document.addEventListener('mouseup', handleMouseUp)
+    }
+    
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove)
+      document.removeEventListener('mouseup', handleMouseUp)
+    }
+  }, [dragState, dayWidth])
+
   return (
     <div>
       <div>
@@ -720,19 +848,35 @@ function ProjectPlannerPage() {
                             const isUrgent = project.priority === 'urgent'
                             const projectColor = isUrgent ? '#ff6b35' : getStatusColor(project.status)
                             const projectWidth = getProjectWidth(project)
+                            const isDraggedProject = dragState.draggedProject && dragState.draggedProject.id === project.id
                             
                             return (
                               <div
                                 key={project.id}
-                                className="absolute h-10 rounded cursor-pointer transition-all duration-200 group z-20 select-none"
+                                className={`absolute h-10 rounded cursor-pointer transition-all duration-200 group z-20 select-none ${
+                                  isDraggedProject ? 'opacity-80 shadow-lg z-30' : ''
+                                }`}
                                 style={{
                                   left: `${getDayPosition(project.startDate)}px`,
                                   width: `${projectWidth}px`,
                                   top: `${index * 44 + 8}px`,
                                   backgroundColor: projectColor
                                 }}
-                                onClick={() => handleEditProject(project)}
+                                onClick={(e) => handleProjectClick(project, e)}
+                                onMouseDown={(e) => handleProjectMouseDown(e, project)}
                               >
+                                {/* Resize indicators */}
+                                <div 
+                                  className="absolute left-0 top-0 h-full w-5 cursor-ew-resize opacity-0 group-hover:opacity-100 bg-white bg-opacity-20 rounded-l transition-opacity flex items-center justify-center"
+                                >
+                                  <div className="w-1 h-4 bg-white opacity-80 rounded"></div>
+                                </div>
+                                <div 
+                                  className="absolute right-0 top-0 h-full w-5 cursor-ew-resize opacity-0 group-hover:opacity-100 bg-white bg-opacity-20 rounded-r transition-opacity flex items-center justify-center"
+                                >
+                                  <div className="w-1 h-4 bg-white opacity-80 rounded"></div>
+                                </div>
+                                
                                 <div className="flex items-center h-full px-3 text-white text-sm pointer-events-none">
                                   {isUrgent && <span className="mr-1">🔥</span>}
                                   <span className="truncate">

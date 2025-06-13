@@ -136,6 +136,24 @@ function AssignmentPlannerPage() {
     setAssignments(prev => prev.map(assignment => 
       assignment.id === id ? updatedAssignment : assignment
     ))
+    
+    // Update the corresponding event in the calendar
+    const assignmentEvent = events.find(event => event.assignmentId === id)
+    if (assignmentEvent) {
+      const updatedEvent = {
+        ...assignmentEvent,
+        title: updatedAssignment.assignment,
+        date: new Date(updatedAssignment.dueDate),
+        category: 'assignment'
+      }
+      setEvents(prev => prev.map(event => 
+        event.assignmentId === id ? updatedEvent : event
+      ))
+    }
+    
+    // Update the corresponding reminder in the main dashboard
+    updateAssignmentReminder(updatedAssignment)
+    
     setEditingAssignment(null)
     setEditingValues({})
   }
@@ -163,6 +181,12 @@ function AssignmentPlannerPage() {
 
   const handleDeleteAssignment = (assignmentId) => {
     setAssignments(prev => prev.filter(assignment => assignment.id !== assignmentId))
+    
+    // Also delete the corresponding event from the calendar
+    setEvents(prev => prev.filter(event => event.assignmentId !== assignmentId))
+    
+    // Also delete the corresponding reminder from the main dashboard
+    deleteAssignmentReminder(assignmentId)
   }
 
   const handleEditingValueChange = (field, value) => {
@@ -187,12 +211,171 @@ function AssignmentPlannerPage() {
   }
 
   const handleEventAdd = (event) => {
-    setEvents(prevEvents => [...prevEvents, event])
+    // If it's an assignment event, also add it to the assignments list
+    if (event.category === 'assignment' && !event.assignmentId) {
+      const newAssignment = {
+        id: crypto.randomUUID(),
+        assignment: event.title,
+        dueDate: new Date(event.date),
+        status: 'Not started',
+        submitted: false,
+        grade: '',
+        notes: '',
+        createdAt: new Date().toISOString()
+      }
+      
+      setAssignments(prev => [...prev, newAssignment])
+      
+      // Update the event with the assignment ID reference
+      const updatedEvent = {
+        ...event,
+        assignmentId: newAssignment.id
+      }
+      
+      setEvents(prevEvents => [...prevEvents, updatedEvent])
+      
+      // Also add to assignment reminders
+      addAssignmentReminder(newAssignment)
+    } else {
+      setEvents(prevEvents => [...prevEvents, event])
+    }
   }
 
   const handleEventDelete = (eventId) => {
+    const event = events.find(e => e.id === eventId)
+    
+    // If it's an assignment event, also delete the assignment
+    if (event && event.category === 'assignment' && event.assignmentId) {
+      setAssignments(prev => prev.filter(assignment => assignment.id !== event.assignmentId))
+      
+      // Also delete from assignment reminders
+      deleteAssignmentReminder(event.assignmentId)
+    }
+    
     setEvents(prevEvents => prevEvents.filter(event => event.id !== eventId))
   }
+
+  // Functions to sync with assignment reminders in the main dashboard
+  const addAssignmentReminder = (assignment) => {
+    const savedReminders = localStorage.getItem('assignmentReminders')
+    let reminders = []
+    
+    if (savedReminders) {
+      try {
+        reminders = JSON.parse(savedReminders).map(reminder => ({
+          ...reminder,
+          dueDate: new Date(reminder.dueDate)
+        }))
+      } catch (error) {
+        console.error('Error parsing assignment reminders:', error)
+      }
+    }
+    
+    // Check if a reminder already exists for this assignment
+    const existingReminderIndex = reminders.findIndex(r => r.assignmentId === assignment.id)
+    
+    if (existingReminderIndex >= 0) {
+      // Update existing reminder
+      reminders[existingReminderIndex] = {
+        ...reminders[existingReminderIndex],
+        title: assignment.assignment,
+        dueDate: new Date(assignment.dueDate),
+        status: assignment.status,
+        notes: assignment.notes || '',
+        submitted: assignment.submitted || false,
+        isUrgent: calculateDaysUntil(assignment.dueDate) === 'Tomorrow'
+      }
+    } else {
+      // Create a new reminder
+      const newReminder = {
+        id: crypto.randomUUID(),
+        assignmentId: assignment.id,
+        title: assignment.assignment,
+        dueDate: new Date(assignment.dueDate),
+        status: assignment.status,
+        notes: assignment.notes || '',
+        submitted: assignment.submitted || false,
+        isUrgent: calculateDaysUntil(assignment.dueDate) === 'Tomorrow'
+      }
+      reminders.push(newReminder)
+    }
+    
+    localStorage.setItem('assignmentReminders', JSON.stringify(reminders))
+  }
+
+  const updateAssignmentReminder = (assignment) => {
+    const savedReminders = localStorage.getItem('assignmentReminders')
+    if (!savedReminders) return
+    
+    try {
+      const reminders = JSON.parse(savedReminders).map(reminder => ({
+        ...reminder,
+        dueDate: new Date(reminder.dueDate)
+      }))
+      
+      const updatedReminders = reminders.map(reminder => 
+        reminder.assignmentId === assignment.id ? {
+          ...reminder,
+          title: assignment.assignment,
+          dueDate: new Date(assignment.dueDate),
+          status: assignment.status,
+          notes: assignment.notes || '',
+          submitted: assignment.submitted || false,
+          isUrgent: calculateDaysUntil(assignment.dueDate) === 'Tomorrow'
+        } : reminder
+      )
+      
+      localStorage.setItem('assignmentReminders', JSON.stringify(updatedReminders))
+    } catch (error) {
+      console.error('Error updating assignment reminder:', error)
+    }
+  }
+
+  const deleteAssignmentReminder = (assignmentId) => {
+    const savedReminders = localStorage.getItem('assignmentReminders')
+    if (!savedReminders) return
+    
+    try {
+      const reminders = JSON.parse(savedReminders).map(reminder => ({
+        ...reminder,
+        dueDate: new Date(reminder.dueDate)
+      }))
+      
+      const filteredReminders = reminders.filter(reminder => reminder.assignmentId !== assignmentId)
+      
+      localStorage.setItem('assignmentReminders', JSON.stringify(filteredReminders))
+    } catch (error) {
+      console.error('Error deleting assignment reminder:', error)
+    }
+  }
+
+  // Sync assignments with calendar events
+  useEffect(() => {
+    // For each assignment, ensure there's a corresponding calendar event
+    assignments.forEach(assignment => {
+      const existingEvent = events.find(event => event.assignmentId === assignment.id)
+      
+      if (!existingEvent) {
+        // Create a new event for this assignment
+        const newEvent = {
+          id: crypto.randomUUID(),
+          assignmentId: assignment.id, // Reference to the assignment
+          title: assignment.assignment,
+          date: new Date(assignment.dueDate),
+          category: 'assignment'
+        }
+        
+        setEvents(prev => [...prev, newEvent])
+      }
+    })
+  }, [assignments])
+
+  // Sync assignments with assignment reminders in the main dashboard
+  useEffect(() => {
+    assignments.forEach(assignment => {
+      addAssignmentReminder(assignment)
+    })
+  }, [])
 
   return (
     <div>

@@ -322,6 +322,98 @@ function EssayPlannerPage() {
 
   const monthLabels = viewMode === 'Month' ? getMonthLabels() : []
 
+  // Implement drag and drop for essays in timeline
+  const [dragState, setDragState] = useState({
+    isDragging: false,
+    draggedEssay: null,
+    startX: 0,
+    originalDueDate: null,
+    hasMoved: false
+  })
+
+  const handleEssayMouseDown = (e, essay) => {
+    e.preventDefault()
+    e.stopPropagation()
+    
+    setDragState({
+      isDragging: true,
+      draggedEssay: essay,
+      startX: e.clientX,
+      originalDueDate: new Date(essay.dueDate),
+      hasMoved: false
+    })
+    
+    document.body.style.userSelect = 'none'
+  }
+
+  const handleEssayClick = (essay, e) => {
+    e.stopPropagation()
+    
+    if (!dragState.isDragging && !dragState.hasMoved) {
+      startEditingEssay(essay)
+    }
+  }
+
+  // Global mouse handlers for essay dragging
+  useEffect(() => {
+    const handleMouseMove = (e) => {
+      if (!dragState.isDragging || !dragState.draggedEssay) return
+      
+      const deltaX = e.clientX - dragState.startX
+      
+      if (Math.abs(deltaX) > 5) {
+        setDragState(prev => ({ ...prev, hasMoved: true }))
+      }
+      
+      const daysDelta = Math.round(deltaX / dayWidth)
+      
+      if (daysDelta === 0) return
+      
+      const { draggedEssay, originalDueDate } = dragState
+      let newDueDate = new Date(originalDueDate)
+      newDueDate.setDate(originalDueDate.getDate() + daysDelta)
+      
+      const updatedEssay = {
+        ...draggedEssay,
+        dueDate: newDueDate
+      }
+      
+      setEssays(prev => prev.map(essay => 
+        essay.id === draggedEssay.id ? updatedEssay : essay
+      ))
+    }
+    
+    const handleMouseUp = () => {
+      const hadMoved = dragState.hasMoved
+      
+      setDragState({
+        isDragging: false,
+        draggedEssay: null,
+        startX: 0,
+        originalDueDate: null,
+        hasMoved: hadMoved
+      })
+      
+      if (hadMoved) {
+        setTimeout(() => {
+          setDragState(prev => ({ ...prev, hasMoved: false }))
+        }, 100)
+      }
+      
+      document.body.style.userSelect = ''
+    }
+    
+    if (dragState.isDragging) {
+      document.addEventListener('mousemove', handleMouseMove)
+      document.addEventListener('mouseup', handleMouseUp)
+    }
+    
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove)
+      document.removeEventListener('mouseup', handleMouseUp)
+    }
+  }, [dragState, dayWidth])
+
   return (
     <div>
       <div>
@@ -758,18 +850,22 @@ function EssayPlannerPage() {
                         >
                           {visibleEssays.map((essay, index) => {
                             const statusColor = getStatusColor(essay.status)
+                            const isDraggedEssay = dragState.draggedEssay && dragState.draggedEssay.id === essay.id
                             
                             return (
                               <div
                                 key={essay.id}
-                                className="absolute h-10 rounded cursor-pointer transition-all duration-200 group z-20 select-none"
+                                className={`absolute h-10 rounded cursor-pointer transition-all duration-200 group z-20 select-none ${
+                                  isDraggedEssay ? 'opacity-80 shadow-lg z-30' : ''
+                                }`}
                                 style={{
                                   left: `${getDayPosition(essay.dueDate)}px`,
                                   width: `${dayWidth}px`,
                                   top: `${index * 44 + 8}px`,
                                   backgroundColor: statusColor
                                 }}
-                                onClick={() => startEditingEssay(essay)}
+                                onClick={(e) => handleEssayClick(essay, e)}
+                                onMouseDown={(e) => handleEssayMouseDown(e, essay)}
                               >
                                 <div className="flex items-center h-full px-3 text-white text-sm pointer-events-none">
                                   <span className="truncate">

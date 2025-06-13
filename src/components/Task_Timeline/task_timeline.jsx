@@ -4,7 +4,7 @@ import TaskDrawer from './task_drawer'
 import { useAuth } from '../../hooks/useAuth'
 import { tasksAPI } from '../../services/api'
 
-const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
+const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask, height = '400px' }) => {
   const { isAuthenticated } = useAuth()
   const [currentDate, setCurrentDate] = useState(new Date())
   const [selectedTask, setSelectedTask] = useState(null)
@@ -12,7 +12,6 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false)
   const [drawerTask, setDrawerTask] = useState(null)
   const [loading, setLoading] = useState(false)
-  const [timelineHeight, setTimelineHeight] = useState(400) // Default height
   
   // Enhanced filter state
   const [filterOpen, setFilterOpen] = useState(false)
@@ -35,7 +34,6 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
   const timelineRef = useRef(null)
   const scrollRef = useRef(null)
   const timelineContentRef = useRef(null)
-  const containerRef = useRef(null)
 
   const monthNames = [
     'January', 'February', 'March', 'April', 'May', 'June',
@@ -44,41 +42,6 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
 
   const currentMonth = currentDate.getMonth()
   const currentYear = currentDate.getFullYear()
-  
-  // Calculate adaptive height based on container size and number of tasks
-  useEffect(() => {
-    const updateHeight = () => {
-      if (containerRef.current) {
-        // Get the container's height
-        const containerHeight = containerRef.current.clientHeight;
-        
-        // Get the number of visible tasks
-        const visibleTasks = getVisibleTasks();
-        
-        // Calculate minimum height needed for tasks (44px per task + padding)
-        const minTasksHeight = visibleTasks.length * 44 + 80;
-        
-        // Calculate available height (container height minus header height)
-        const headerHeight = 120; // Approximate header height including filters
-        const availableHeight = Math.max(300, containerHeight - headerHeight);
-        
-        // Set height to either the minimum needed for tasks or the available height
-        const newHeight = Math.max(300, Math.min(minTasksHeight, availableHeight));
-        
-        setTimelineHeight(newHeight);
-      }
-    };
-
-    // Update height on mount and when tasks or container size changes
-    updateHeight();
-    
-    // Add resize listener
-    window.addEventListener('resize', updateHeight);
-    
-    return () => {
-      window.removeEventListener('resize', updateHeight);
-    };
-  }, [tasks, containerRef.current, viewMode, currentDate]);
   
   // Improved days calculation
   const getDaysToShow = () => {
@@ -222,14 +185,10 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
   }
 
   const handleAddTask = async () => {
-    const today = new Date()
-    const startDate = new Date(today.getFullYear(), today.getMonth(), today.getDate())
-    const endDate = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 2) // 3 days duration
-    
     const newTask = {
       title: 'New Task',
-      start: startDate,
-      end: endDate,
+      start: new Date(),
+      end: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
       progress: 0,
       status: 'Not started',
       priority: 'normal',
@@ -277,7 +236,7 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
     }
   }
 
-  // FIXED: Accurate timeline click handler with proper date creation
+  // FIXED: Accurate timeline click handler
   const handleTimelineClick = async (e) => {
     if (dragState.isDragging || dragState.hasMoved) return
     
@@ -305,20 +264,23 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
       if (dayIndex >= 0 && dayIndex < daysToShow.length) {
         const selectedDate = daysToShow[dayIndex]
         
-        // FIXED: Create dates properly to avoid timezone issues
-        const startDate = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), selectedDate.getDate())
-        const endDate = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), selectedDate.getDate() + 2) // 3 days duration
+        // FIXED: Create date more explicitly to avoid timezone issues
+        const clickDay = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), selectedDate.getDate())
+        clickDay.setHours(0, 0, 0, 0)
         
-        console.log('Creating task for date range:', {
+        const endDay = new Date(selectedDate.getFullYear(), selectedDate.getMonth(), selectedDate.getDate())
+        endDay.setHours(23, 59, 59, 999)
+        
+        console.log('Creating task for date:', {
           selectedDate: selectedDate.toDateString(),
-          startDate: startDate.toDateString(),
-          endDate: endDate.toDateString()
+          clickDay: clickDay.toDateString(),
+          endDay: endDay.toDateString()
         })
         
         const newTask = {
           title: 'New Task',
-          start: startDate,
-          end: endDate,
+          start: clickDay,
+          end: endDay,
           progress: 0,
           status: 'Not started',
           priority: 'normal',
@@ -620,7 +582,7 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
 
   return (
     <>
-      <div ref={containerRef} className="w-full bg-[#1a1a1a] rounded-lg flex flex-col">
+      <div className="w-full bg-[#1a1a1a] rounded-lg flex flex-col" style={{ height }}>
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-3 flex-shrink-0">
           <div className="flex items-center gap-3">
@@ -787,7 +749,7 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
         )}
 
         {/* Calendar Grid with Horizontal Scroll */}
-        <div className="relative flex-1 overflow-hidden" style={{ height: `${timelineHeight}px` }}>
+        <div className="relative flex-1 overflow-hidden">
           <div 
             ref={scrollRef}
             className="h-full overflow-x-auto overflow-y-hidden custom-scrollbar"
@@ -860,8 +822,7 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
                   className="absolute bottom-0 w-px bg-gray-800 z-0"
                   style={{ 
                     left: `${(i + 1) * dayWidth}px`,
-                    top: viewMode === 'Month' ? '72px' : '40px',
-                    height: `calc(100% - ${viewMode === 'Month' ? '72px' : '40px'})`
+                    top: viewMode === 'Month' ? '72px' : '40px'
                   }}
                 />
               ))}
@@ -876,7 +837,6 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
                       style={{ 
                         left: `${todayPosition + dayWidth / 2}px`,
                         top: viewMode === 'Month' ? '72px' : '40px',
-                        height: `calc(100% - ${viewMode === 'Month' ? '72px' : '40px'})`,
                         backgroundColor: 'var(--accent-color, #97e7aa)'
                       }}
                     />
@@ -888,10 +848,7 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask }) => {
               {/* Tasks Area */}
               <div 
                 className="relative h-full pt-4 pb-4 overflow-y-auto custom-scrollbar z-10"
-                style={{ 
-                  marginTop: viewMode === 'Month' ? '32px' : '0px',
-                  height: `calc(100% - ${viewMode === 'Month' ? '32px' : '0px'})`
-                }}
+                style={{ marginTop: viewMode === 'Month' ? '32px' : '0px' }}
               >
                 {visibleTasks.map((task, index) => {
                   const isUrgent = task.priority === 'urgent'

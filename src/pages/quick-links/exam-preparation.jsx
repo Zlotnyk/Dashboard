@@ -363,6 +363,86 @@ function ExamPreparationPage() {
     })
   }, [exams])
 
+  // Sync exams with exam reminders in the main dashboard
+  useEffect(() => {
+    // Get existing exam reminders
+    const savedExamReminders = localStorage.getItem('examReminders')
+    let examReminders = []
+    
+    if (savedExamReminders) {
+      try {
+        examReminders = JSON.parse(savedExamReminders).map(reminder => ({
+          ...reminder,
+          date: new Date(reminder.date)
+        }))
+      } catch (error) {
+        console.error('Error parsing exam reminders:', error)
+      }
+    }
+    
+    // For each exam, ensure there's a corresponding reminder
+    const updatedReminders = [...examReminders]
+    let hasChanges = false
+    
+    exams.forEach(exam => {
+      // Check if a reminder already exists for this exam
+      const existingReminderIndex = updatedReminders.findIndex(r => r.examId === exam.id)
+      
+      if (existingReminderIndex >= 0) {
+        // Update existing reminder
+        const existingReminder = updatedReminders[existingReminderIndex]
+        if (
+          existingReminder.title !== exam.exam ||
+          existingReminder.date.getTime() !== exam.date.getTime() ||
+          existingReminder.time !== exam.time ||
+          existingReminder.location !== exam.location ||
+          existingReminder.notes !== exam.notes
+        ) {
+          updatedReminders[existingReminderIndex] = {
+            ...existingReminder,
+            title: exam.exam,
+            date: new Date(exam.date),
+            time: exam.time || '',
+            location: exam.location || '',
+            notes: exam.notes || '',
+            isUrgent: calculateDaysUntil(exam.date) === 'Tomorrow'
+          }
+          hasChanges = true
+        }
+      } else {
+        // Create a new reminder
+        const newReminder = {
+          id: crypto.randomUUID(),
+          examId: exam.id,
+          title: exam.exam,
+          date: new Date(exam.date),
+          time: exam.time || '',
+          location: exam.location || '',
+          notes: exam.notes || '',
+          attended: false,
+          isUrgent: calculateDaysUntil(exam.date) === 'Tomorrow'
+        }
+        updatedReminders.push(newReminder)
+        hasChanges = true
+      }
+    })
+    
+    // Remove reminders for deleted exams
+    const examIds = exams.map(exam => exam.id)
+    const filteredReminders = updatedReminders.filter(reminder => 
+      !reminder.examId || examIds.includes(reminder.examId)
+    )
+    
+    if (filteredReminders.length !== updatedReminders.length) {
+      hasChanges = true
+    }
+    
+    // Save updated reminders if there were changes
+    if (hasChanges) {
+      localStorage.setItem('examReminders', JSON.stringify(filteredReminders))
+    }
+  }, [exams])
+
   return (
     <div>
       <div>

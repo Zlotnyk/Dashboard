@@ -38,7 +38,20 @@ const RightSidebar = () => {
           ...reminder,
           date: new Date(reminder.date)
         }))
-        setExamReminders(parsedExamReminders)
+        // Remove duplicates based on examId
+        const uniqueExamReminders = [];
+        const examIds = new Set();
+        
+        parsedExamReminders.forEach(reminder => {
+          if (!reminder.examId || !examIds.has(reminder.examId)) {
+            uniqueExamReminders.push(reminder);
+            if (reminder.examId) {
+              examIds.add(reminder.examId);
+            }
+          }
+        });
+        
+        setExamReminders(uniqueExamReminders)
       } catch (error) {
         console.error('Error parsing exam reminders:', error)
       }
@@ -70,7 +83,7 @@ const RightSidebar = () => {
     }
   }, [assignmentReminders])
 
-  // Sync with exam preparation data - FIXED to prevent duplication
+  // Sync with exam preparation data
   useEffect(() => {
     const savedExams = localStorage.getItem('examPreparationData')
     
@@ -81,21 +94,35 @@ const RightSidebar = () => {
           date: new Date(exam.date)
         }))
         
-        // Create a map of existing reminders by examId for quick lookup
-        const existingReminderMap = new Map()
-        examReminders.forEach(reminder => {
-          if (reminder.examId) {
-            existingReminderMap.set(reminder.examId, reminder)
-          }
-        })
-        
-        // Track new reminders to add
-        const newReminders = []
-        
         // For each exam in the exam preparation data, ensure there's a corresponding reminder
+        let hasChanges = false;
+        const updatedReminders = [...examReminders];
+        
         parsedExams.forEach(exam => {
-          // Skip if we already have a reminder for this exam
-          if (!existingReminderMap.has(exam.id)) {
+          const existingReminderIndex = updatedReminders.findIndex(reminder => reminder.examId === exam.id)
+          
+          if (existingReminderIndex >= 0) {
+            // Update existing reminder if needed
+            const existingReminder = updatedReminders[existingReminderIndex];
+            if (
+              existingReminder.title !== exam.exam ||
+              existingReminder.date.getTime() !== exam.date.getTime() ||
+              existingReminder.time !== exam.time ||
+              existingReminder.location !== exam.location ||
+              existingReminder.notes !== exam.notes
+            ) {
+              updatedReminders[existingReminderIndex] = {
+                ...existingReminder,
+                title: exam.exam,
+                date: new Date(exam.date),
+                time: exam.time || '',
+                location: exam.location || '',
+                notes: exam.notes || '',
+                isUrgent: calculateDaysUntil(exam.date) === 'Tomorrow'
+              };
+              hasChanges = true;
+            }
+          } else {
             // Create a new reminder for this exam
             const newReminder = {
               id: crypto.randomUUID(),
@@ -109,19 +136,104 @@ const RightSidebar = () => {
               isUrgent: calculateDaysUntil(exam.date) === 'Tomorrow'
             }
             
-            newReminders.push(newReminder)
+            updatedReminders.push(newReminder)
+            hasChanges = true;
           }
         })
         
-        // Only update state if we have new reminders to add
-        if (newReminders.length > 0) {
-          setExamReminders(prev => [...prev, ...newReminders])
+        // Remove reminders for deleted exams
+        const examIds = parsedExams.map(exam => exam.id);
+        const filteredReminders = updatedReminders.filter(reminder => 
+          !reminder.examId || examIds.includes(reminder.examId)
+        );
+        
+        if (filteredReminders.length !== updatedReminders.length) {
+          hasChanges = true;
+        }
+        
+        if (hasChanges) {
+          setExamReminders(filteredReminders);
         }
       } catch (error) {
         console.error('Error syncing with exam preparation data:', error)
       }
     }
-  }, []) // Only run once on component mount
+  }, [])
+
+  // Sync with assignment planner data
+  useEffect(() => {
+    const savedAssignments = localStorage.getItem('assignmentPlannerData')
+    
+    if (savedAssignments) {
+      try {
+        const parsedAssignments = JSON.parse(savedAssignments).map(assignment => ({
+          ...assignment,
+          dueDate: new Date(assignment.dueDate)
+        }))
+        
+        // For each assignment in the planner, ensure there's a corresponding reminder
+        let hasChanges = false;
+        const updatedReminders = [...assignmentReminders];
+        
+        parsedAssignments.forEach(assignment => {
+          const existingReminderIndex = updatedReminders.findIndex(reminder => reminder.assignmentId === assignment.id)
+          
+          if (existingReminderIndex >= 0) {
+            // Update existing reminder if needed
+            const existingReminder = updatedReminders[existingReminderIndex];
+            if (
+              existingReminder.title !== assignment.assignment ||
+              existingReminder.dueDate.getTime() !== assignment.dueDate.getTime() ||
+              existingReminder.status !== assignment.status ||
+              existingReminder.notes !== assignment.notes
+            ) {
+              updatedReminders[existingReminderIndex] = {
+                ...existingReminder,
+                title: assignment.assignment,
+                dueDate: new Date(assignment.dueDate),
+                status: assignment.status,
+                notes: assignment.notes || '',
+                submitted: assignment.submitted || false,
+                isUrgent: calculateDaysUntil(assignment.dueDate) === 'Tomorrow'
+              };
+              hasChanges = true;
+            }
+          } else {
+            // Create a new reminder for this assignment
+            const newReminder = {
+              id: crypto.randomUUID(),
+              assignmentId: assignment.id,
+              title: assignment.assignment,
+              dueDate: new Date(assignment.dueDate),
+              status: assignment.status,
+              notes: assignment.notes || '',
+              submitted: assignment.submitted || false,
+              isUrgent: calculateDaysUntil(assignment.dueDate) === 'Tomorrow'
+            }
+            
+            updatedReminders.push(newReminder)
+            hasChanges = true;
+          }
+        })
+        
+        // Remove reminders for deleted assignments
+        const assignmentIds = parsedAssignments.map(assignment => assignment.id);
+        const filteredReminders = updatedReminders.filter(reminder => 
+          !reminder.assignmentId || assignmentIds.includes(reminder.assignmentId)
+        );
+        
+        if (filteredReminders.length !== updatedReminders.length) {
+          hasChanges = true;
+        }
+        
+        if (hasChanges) {
+          setAssignmentReminders(filteredReminders);
+        }
+      } catch (error) {
+        console.error('Error syncing with assignment planner data:', error)
+      }
+    }
+  }, [])
 
   const calculateDaysUntil = (date) => {
     const today = new Date()
@@ -130,7 +242,7 @@ const RightSidebar = () => {
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
     
     if (diffDays === 0) return 'Today'
-    if (diffDays === 1) return 'Tomorrow'
+    if (diffDays === 1) return 'Tomorrow.'
     if (diffDays < 0) return `${Math.abs(diffDays)} days ago`
     return `${diffDays} days`
   }
@@ -260,22 +372,71 @@ const RightSidebar = () => {
         location: examForm.location,
         notes: examForm.notes,
         attended: examForm.attended,
-        isUrgent: calculateDaysUntil(examForm.date) === 'Tomorrow'
+        isUrgent: calculateDaysUntil(examForm.date) === 'Tomorrow.'
       }
       setExamReminders(prev => prev.map(exam => 
         exam.id === selectedExam.id ? updatedExam : exam
       ))
+      
+      // If this is linked to an exam in the exam preparation, update it there too
+      if (selectedExam.examId) {
+        const savedExams = localStorage.getItem('examPreparationData')
+        if (savedExams) {
+          try {
+            const parsedExams = JSON.parse(savedExams).map(exam => ({
+              ...exam,
+              date: new Date(exam.date)
+            }))
+            
+            const updatedExams = parsedExams.map(exam => 
+              exam.id === selectedExam.examId ? {
+                ...exam,
+                exam: updatedExam.title,
+                date: updatedExam.date,
+                time: updatedExam.time,
+                location: updatedExam.location,
+                notes: updatedExam.notes
+              } : exam
+            )
+            
+            localStorage.setItem('examPreparationData', JSON.stringify(updatedExams))
+            
+            // Also update the corresponding event in the calendar
+            const savedEvents = localStorage.getItem('examEvents')
+            if (savedEvents) {
+              const parsedEvents = JSON.parse(savedEvents).map(event => ({
+                ...event,
+                date: new Date(event.date)
+              }))
+              
+              const updatedEvents = parsedEvents.map(event => 
+                event.examId === selectedExam.examId ? {
+                  ...event,
+                  title: updatedExam.title,
+                  date: updatedExam.date,
+                  time: updatedExam.time,
+                  location: updatedExam.location
+                } : event
+              )
+              
+              localStorage.setItem('examEvents', JSON.stringify(updatedEvents))
+            }
+          } catch (error) {
+            console.error('Error updating exam in preparation data:', error)
+          }
+        }
+      }
     } else {
       // Create new exam
       const newReminder = {
-        id: Date.now(),
+        id: crypto.randomUUID(),
         title: examForm.title,
         date: new Date(examForm.date),
         time: examForm.time,
         location: examForm.location,
         notes: examForm.notes,
         attended: examForm.attended,
-        isUrgent: calculateDaysUntil(examForm.date) === 'Tomorrow'
+        isUrgent: calculateDaysUntil(examForm.date) === 'Tomorrow.'
       }
       setExamReminders(prev => [...prev, newReminder])
     }
@@ -305,21 +466,49 @@ const RightSidebar = () => {
         status: assignmentForm.status,
         notes: assignmentForm.notes,
         submitted: assignmentForm.submitted,
-        isUrgent: calculateDaysUntil(assignmentForm.dueDate) === 'Tomorrow'
+        isUrgent: calculateDaysUntil(assignmentForm.dueDate) === 'Tomorrow.'
       }
       setAssignmentReminders(prev => prev.map(assignment => 
         assignment.id === selectedAssignment.id ? updatedAssignment : assignment
       ))
+      
+      // If this is linked to an assignment in the assignment planner, update it there too
+      if (selectedAssignment.assignmentId) {
+        const savedAssignments = localStorage.getItem('assignmentPlannerData')
+        if (savedAssignments) {
+          try {
+            const parsedAssignments = JSON.parse(savedAssignments).map(assignment => ({
+              ...assignment,
+              dueDate: new Date(assignment.dueDate)
+            }))
+            
+            const updatedAssignments = parsedAssignments.map(assignment => 
+              assignment.id === selectedAssignment.assignmentId ? {
+                ...assignment,
+                assignment: updatedAssignment.title,
+                dueDate: updatedAssignment.dueDate,
+                status: updatedAssignment.status,
+                notes: updatedAssignment.notes,
+                submitted: updatedAssignment.submitted
+              } : assignment
+            )
+            
+            localStorage.setItem('assignmentPlannerData', JSON.stringify(updatedAssignments))
+          } catch (error) {
+            console.error('Error updating assignment in planner data:', error)
+          }
+        }
+      }
     } else {
       // Create new assignment
       const newReminder = {
-        id: Date.now(),
+        id: crypto.randomUUID(),
         title: assignmentForm.title,
         dueDate: new Date(assignmentForm.dueDate),
         status: assignmentForm.status,
         notes: assignmentForm.notes,
         submitted: assignmentForm.submitted,
-        isUrgent: calculateDaysUntil(assignmentForm.dueDate) === 'Tomorrow'
+        isUrgent: calculateDaysUntil(assignmentForm.dueDate) === 'Tomorrow.'
       }
       setAssignmentReminders(prev => [...prev, newReminder])
     }
