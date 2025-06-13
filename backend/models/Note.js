@@ -83,6 +83,8 @@ noteSchema.index({ user: 1, category: 1 });
 noteSchema.index({ user: 1, isPinned: 1 });
 noteSchema.index({ user: 1, isArchived: 1 });
 noteSchema.index({ user: 1, tags: 1 });
+// Add text index for content and title to enable full-text search
+noteSchema.index({ content: 'text', title: 'text' });
 
 // Virtual for word count
 noteSchema.virtual('wordCount').get(function() {

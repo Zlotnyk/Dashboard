@@ -79,6 +79,13 @@ export const createNote = async (req, res) => {
   try {
     req.body.user = req.user.id;
 
+    // Set date to today if not provided
+    if (!req.body.date) {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      req.body.date = today;
+    }
+
     const note = await Note.create(req.body);
 
     res.status(201).json({

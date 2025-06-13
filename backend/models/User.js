@@ -96,6 +96,9 @@ const userSchema = new mongoose.Schema({
   toObject: { virtuals: true }
 });
 
+// Create a compound index for avatar field to improve query performance
+userSchema.index({ avatar: 1 });
+
 // Virtual for user's full profile
 userSchema.virtual('profile').get(function() {
   return {

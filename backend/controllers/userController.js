@@ -120,7 +120,31 @@ export const uploadAvatar = async (req, res) => {
 
       // Update user avatar in database
       const avatarUrl = `/uploads/${fileName}`;
-      await User.findByIdAndUpdate(req.user.id, { avatar: avatarUrl });
+      
+      // Find and update the user
+      const user = await User.findById(req.user.id);
+      if (!user) {
+        return res.status(404).json({
+          success: false,
+          message: 'User not found'
+        });
+      }
+      
+      // Delete old avatar file if it exists
+      if (user.avatar && user.avatar.startsWith('/uploads/')) {
+        const oldAvatarPath = path.join(__dirname, '..', 'public', user.avatar);
+        if (fs.existsSync(oldAvatarPath)) {
+          try {
+            fs.unlinkSync(oldAvatarPath);
+          } catch (error) {
+            console.error('Error deleting old avatar:', error);
+          }
+        }
+      }
+      
+      // Update user with new avatar
+      user.avatar = avatarUrl;
+      await user.save();
 
       res.status(200).json({
         success: true,
