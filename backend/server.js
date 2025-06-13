@@ -101,6 +101,12 @@ app.use(passport.session())
 // Connect to MongoDB
 const connectDB = async () => {
 	try {
+		// Check if MONGODB_URI is defined
+		if (!process.env.MONGODB_URI) {
+			console.error('❌ MongoDB connection error: MONGODB_URI is not defined in environment variables')
+			process.exit(1)
+		}
+		
 		const conn = await mongoose.connect(process.env.MONGODB_URI)
 		console.log(`✅ MongoDB Connected: ${conn.connection.host}`)
 	} catch (error) {
