@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogBackdrop, DialogPanel, DialogTitle, TransitionChild } from '@headlessui/react';
 import { X, Calendar, FileText, Flag, Clock } from 'lucide-react';
+import { formatDateToYYYYMMDD, parseYYYYMMDDToDate } from './timeline_utils';
 
 const TaskDrawer = ({ isOpen, task, onSave, onClose, onDelete }) => {
   const [formData, setFormData] = useState({
@@ -29,8 +30,8 @@ const TaskDrawer = ({ isOpen, task, onSave, onClose, onDelete }) => {
       setFormData({
         title: task.title || '',
         description: task.description || '',
-        start: task.start ? task.start.toISOString().split('T')[0] : '',
-        end: task.end ? task.end.toISOString().split('T')[0] : '',
+        start: formatDateToYYYYMMDD(task.start),
+        end: formatDateToYYYYMMDD(task.end),
         status: task.status || 'Not started',
         priority: task.priority || 'normal',
       });
@@ -45,8 +46,8 @@ const TaskDrawer = ({ isOpen, task, onSave, onClose, onDelete }) => {
       ...task,
       title: formData.title,
       description: formData.description,
-      start: new Date(formData.start),
-      end: new Date(formData.end),
+      start: parseYYYYMMDDToDate(formData.start),
+      end: parseYYYYMMDDToDate(formData.end),
       status: formData.status,
       priority: formData.priority,
     };

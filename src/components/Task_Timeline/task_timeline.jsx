@@ -3,6 +3,7 @@ import { ChevronLeft, ChevronRight, Calendar, Plus, Filter, X } from 'lucide-rea
 import TaskDrawer from './task_drawer'
 import { useAuth } from '../../hooks/useAuth'
 import { tasksAPI } from '../../services/api'
+import { formatDateToYYYYMMDD, parseYYYYMMDDToDate } from './timeline_utils'
 
 const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask, height = '400px' }) => {
   const { isAuthenticated } = useAuth()
@@ -206,8 +207,8 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask, height = '
         setLoading(true)
         const response = await tasksAPI.createTask({
           title: newTask.title,
-          startDate: newTask.start,
-          endDate: newTask.end,
+          startDate: formatDateToYYYYMMDD(newTask.start),
+          endDate: formatDateToYYYYMMDD(newTask.end),
           status: newTask.status,
           priority: newTask.priority,
           description: newTask.description
@@ -288,8 +289,8 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask, height = '
             setLoading(true)
             const response = await tasksAPI.createTask({
               title: newTask.title,
-              startDate: newTask.start,
-              endDate: newTask.end,
+              startDate: formatDateToYYYYMMDD(newTask.start),
+              endDate: formatDateToYYYYMMDD(newTask.end),
               status: newTask.status,
               priority: newTask.priority,
               description: newTask.description
@@ -399,8 +400,8 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask, height = '
         try {
           const taskId = dragState.draggedTask.id || dragState.draggedTask._id
           await tasksAPI.updateTask(taskId, {
-            startDate: dragState.draggedTask.start,
-            endDate: dragState.draggedTask.end
+            startDate: formatDateToYYYYMMDD(dragState.draggedTask.start),
+            endDate: formatDateToYYYYMMDD(dragState.draggedTask.end)
           })
         } catch (error) {
           console.error('Error updating task:', error)
@@ -499,8 +500,8 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask, height = '
         const response = await tasksAPI.updateTask(taskId, {
           title: updatedTask.title,
           description: updatedTask.description,
-          startDate: updatedTask.start,
-          endDate: updatedTask.end,
+          startDate: formatDateToYYYYMMDD(updatedTask.start),
+          endDate: formatDateToYYYYMMDD(updatedTask.end),
           status: updatedTask.status,
           priority: updatedTask.priority
         })

@@ -44,3 +44,31 @@ export const taskOverlapsRange = (task, rangeStart, rangeEnd) => {
 	const taskEnd = new Date(task.end)
 	return taskStart <= rangeEnd && taskEnd >= rangeStart
 }
+
+// Utility function to check if a date is within a range
+export const isDateInRange = (date, rangeStart, rangeEnd) => {
+	return date >= rangeStart && date <= rangeEnd
+}
+
+// Format date to YYYY-MM-DD string in local timezone
+export const formatDateToYYYYMMDD = (date) => {
+	if (!date) return '';
+	
+	const d = new Date(date);
+	const year = d.getFullYear();
+	// getMonth() is 0-indexed, so add 1 and pad with leading zero if needed
+	const month = String(d.getMonth() + 1).padStart(2, '0');
+	// getDate() returns the day of month, pad with leading zero if needed
+	const day = String(d.getDate()).padStart(2, '0');
+	
+	return `${year}-${month}-${day}`;
+}
+
+// Parse YYYY-MM-DD string to Date object preserving local date
+export const parseYYYYMMDDToDate = (dateString) => {
+	if (!dateString) return new Date();
+	
+	const [year, month, day] = dateString.split('-').map(Number);
+	const date = new Date(year, month - 1, day);
+	return date;
+}
