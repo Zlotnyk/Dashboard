@@ -16,6 +16,7 @@ import TaskTimeline from './components/Task_Timeline/task_timeline'
 import { generateMockTasks } from './components/Task_Timeline/timeline_utils'
 import { useAuth } from './hooks/useAuth'
 import { tasksAPI, eventsAPI, notesAPI } from './services/api'
+import { Toaster, toast } from 'react-hot-toast'
 
 function App() {
 	const { isAuthenticated, user } = useAuth()
@@ -80,6 +81,7 @@ function App() {
 				})
 				console.log('Processed tasks:', backendTasks)
 				setTasks(backendTasks)
+				toast.success('Tasks loaded successfully')
 			} else {
 				console.log('No tasks data in response')
 				setTasks([])
@@ -94,6 +96,7 @@ function App() {
 					date: new Date(event.date)
 				}))
 				setEvents(backendEvents)
+				toast.success('Events loaded successfully')
 			} else {
 				setEvents([])
 			}
@@ -106,16 +109,15 @@ function App() {
 					content: note.content
 				}))
 				setNotes(backendNotes)
+				toast.success('Notes loaded successfully')
 			} else {
-				// Initialize with empty notes if none found
-				setNotes(Array.from({ length: 5 }, () => ({
-					id: crypto.randomUUID(),
-					content: 'Note',
-				})))
+				// Don't initialize with empty notes if none found
+				setNotes([])
 			}
 
 		} catch (error) {
 			console.error('Error loading user data:', error)
+			toast.error('Failed to load data from server')
 			// Fallback to localStorage
 			loadLocalData()
 		} finally {
@@ -170,17 +172,11 @@ function App() {
 				setNotes(JSON.parse(savedNotes))
 			} catch (error) {
 				console.error('Error parsing saved notes:', error)
-				setNotes(Array.from({ length: 5 }, () => ({
-					id: crypto.randomUUID(),
-					content: 'Note',
-				})))
+				setNotes([])
 			}
 		} else {
-			// Initialize with empty notes
-			setNotes(Array.from({ length: 5 }, () => ({
-				id: crypto.randomUUID(),
-				content: 'Note',
-			})))
+			// Initialize with empty array, not auto-creating notes
+			setNotes([])
 		}
 	}
 
@@ -236,8 +232,11 @@ function App() {
 					console.log('Updated tasks state after API create:', newTasks)
 					return newTasks
 				})
+				
+				toast.success('Task created successfully')
 			} catch (error) {
 				console.error('Error creating task via API:', error)
+				toast.error('Failed to create task')
 				// Fallback to local add
 				const newTask = { ...task, id: task.id || crypto.randomUUID() }
 				setTasks(prevTasks => {
@@ -288,8 +287,11 @@ function App() {
 					console.log('Updated tasks state after API update:', newTasks)
 					return newTasks
 				})
+				
+				toast.success('Task updated successfully')
 			} catch (error) {
 				console.error('Error updating task via API:', error)
+				toast.error('Failed to update task')
 				// Fallback to local update
 				setTasks(prevTasks => {
 					const newTasks = prevTasks.map(task => {
@@ -335,8 +337,11 @@ function App() {
 					console.log('Updated tasks state after API delete:', newTasks)
 					return newTasks
 				})
+				
+				toast.success('Task deleted successfully')
 			} catch (error) {
 				console.error('Error deleting task via API:', error)
+				toast.error('Failed to delete task')
 				// Fallback to local delete
 				setTasks(prevTasks => {
 					const newTasks = prevTasks.filter(task => {
@@ -379,8 +384,10 @@ function App() {
 				}
 				
 				setEvents(prevEvents => [...prevEvents, backendEvent])
+				toast.success('Event created successfully')
 			} catch (error) {
 				console.error('Error creating event:', error)
+				toast.error('Failed to create event')
 				// Fallback to local storage
 				setEvents(prevEvents => [...prevEvents, event])
 			}
@@ -397,9 +404,11 @@ function App() {
 					const currentEventId = event.id || event._id
 					return currentEventId !== eventId
 				}))
+				toast.success('Event deleted successfully')
 			} catch (error) {
 				console.error('Error deleting event:', error)
-				// Fallback to local delete
+				toast.error('Failed to delete event')
+				// Fallback to local deletion
 				setEvents(prevEvents => prevEvents.filter(event => {
 					const currentEventId = event.id || event._id
 					return currentEventId !== eventId
@@ -414,7 +423,7 @@ function App() {
 	const handleNoteAdd = async () => {
 		const newNote = {
 			id: crypto.randomUUID(),
-			content: 'Note',
+			content: 'New note',
 		}
 		
 		if (isAuthenticated) {
@@ -430,8 +439,10 @@ function App() {
 				}
 				
 				setNotes(prevNotes => [...prevNotes, createdNote])
+				toast.success('Note created successfully')
 			} catch (error) {
 				console.error('Error creating note:', error)
+				toast.error('Failed to create note')
 				// Fallback to local storage
 				setNotes(prevNotes => [...prevNotes, newNote])
 			}
@@ -455,6 +466,8 @@ function App() {
 					setNotes(prevNotes => prevNotes.map(note => 
 						note.id === id ? { id: response.data.data._id, content } : note
 					))
+					
+					toast.success('Note saved to server')
 				} else {
 					// Update existing note
 					await notesAPI.updateNote(id, { content })
@@ -463,9 +476,12 @@ function App() {
 					setNotes(prevNotes => prevNotes.map(note => 
 						note.id === id ? { ...note, content } : note
 					))
+					
+					toast.success('Note updated successfully')
 				}
 			} catch (error) {
 				console.error('Error updating note:', error)
+				toast.error('Failed to update note')
 				// Fallback to local update
 				setNotes(prevNotes => prevNotes.map(note => 
 					note.id === id ? { ...note, content } : note
@@ -484,8 +500,10 @@ function App() {
 			try {
 				await notesAPI.deleteNote(id)
 				setNotes(prevNotes => prevNotes.filter(note => note.id !== id))
+				toast.success('Note deleted successfully')
 			} catch (error) {
 				console.error('Error deleting note:', error)
+				toast.error('Failed to delete note')
 				// Fallback to local delete
 				setNotes(prevNotes => prevNotes.filter(note => note.id !== id))
 			}
@@ -581,6 +599,29 @@ function App() {
 					</section>
 				</main>
 			</div>
+			<Toaster 
+				position="top-right"
+				toastOptions={{
+					duration: 3000,
+					style: {
+						background: '#333',
+						color: '#fff',
+						border: '1px solid #444'
+					},
+					success: {
+						iconTheme: {
+							primary: 'var(--accent-color, #97e7aa)',
+							secondary: '#fff'
+						}
+					},
+					error: {
+						iconTheme: {
+							primary: '#ef4444',
+							secondary: '#fff'
+						}
+					}
+				}}
+			/>
 		</div>
 	)
 }

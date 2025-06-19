@@ -1,7 +1,10 @@
 import React, { useState, useEffect } from 'react'
+import { Edit, Trash2 } from 'lucide-react'
 
 export default function Notes({ notes = [], onAddNote, onUpdateNote, onDeleteNote }) {
 	const [loading, setLoading] = useState(false)
+	const [editingId, setEditingId] = useState(null)
+	const [editingContent, setEditingContent] = useState('')
 
 	// Initialize with empty notes if none provided
 	useEffect(() => {
@@ -22,6 +25,24 @@ export default function Notes({ notes = [], onAddNote, onUpdateNote, onDeleteNot
 			onDeleteNote(id)
 			e.preventDefault()
 		}
+	}
+
+	const startEditing = (id, content) => {
+		setEditingId(id)
+		setEditingContent(content)
+	}
+
+	const saveEditing = () => {
+		if (editingId) {
+			onUpdateNote(editingId, editingContent)
+			setEditingId(null)
+			setEditingContent('')
+		}
+	}
+
+	const handleDelete = (id, e) => {
+		e.stopPropagation()
+		onDeleteNote(id)
 	}
 
 	if (loading) {
@@ -51,13 +72,60 @@ export default function Notes({ notes = [], onAddNote, onUpdateNote, onDeleteNot
 
 			<ul className='list-disc pl-6 space-y-3'>
 				{notes.map(note => (
-					<li key={note.id} className='text-white'>
-						<input
-							className='w-full bg-transparent text-white outline-none'
-							value={note.content}
-							onChange={e => handleContentChange(note.id, e.target.value)}
-							onKeyDown={e => handleKeyDown(note.id, note.content, e)}
-						/>
+					<li key={note.id} className='text-white group relative'>
+						{editingId === note.id ? (
+							<div className="flex flex-col gap-2">
+								<textarea
+									className='w-full bg-transparent text-white outline-none border border-gray-600 rounded p-2 focus:border-accent'
+									value={editingContent}
+									onChange={e => setEditingContent(e.target.value)}
+									onBlur={saveEditing}
+									onKeyDown={e => {
+										if (e.key === 'Enter' && !e.shiftKey) {
+											e.preventDefault()
+											saveEditing()
+										}
+									}}
+									autoFocus
+									rows={3}
+								/>
+								<div className="flex justify-end">
+									<button 
+										onClick={saveEditing}
+										className="text-xs bg-accent text-white px-2 py-1 rounded"
+									>
+										Save
+									</button>
+								</div>
+							</div>
+						) : (
+							<div className="flex items-start">
+								<input
+									className='w-full bg-transparent text-white outline-none cursor-text'
+									value={note.content}
+									onChange={e => handleContentChange(note.id, e.target.value)}
+									onKeyDown={e => handleKeyDown(note.id, note.content, e)}
+									onClick={() => startEditing(note.id, note.content)}
+									readOnly
+								/>
+								<div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+									<button 
+										onClick={() => startEditing(note.id, note.content)}
+										className="text-gray-400 hover:text-white p-1"
+										title="Edit note"
+									>
+										<Edit size={14} />
+									</button>
+									<button 
+										onClick={(e) => handleDelete(note.id, e)}
+										className="text-gray-400 hover:text-red-400 p-1"
+										title="Delete note"
+									>
+										<Trash2 size={14} />
+									</button>
+								</div>
+							</div>
+						)}
 					</li>
 				))}
 			</ul>

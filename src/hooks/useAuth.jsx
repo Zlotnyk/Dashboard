@@ -1,5 +1,6 @@
 import { useState, useEffect, createContext, useContext } from 'react';
 import { authAPI, usersAPI } from '../services/api';
+import { toast } from 'react-hot-toast';
 
 // Створюємо контекст для аутентифікації
 const AuthContext = createContext();
@@ -57,7 +58,8 @@ const saveUserData = (userId) => {
     'timetableSchedule',
     'todaysNotes',
     'accentColor',
-    'backgroundGif'
+    'backgroundGif',
+    'tasks'
   ];
   
   keysToSave.forEach(key => {
@@ -82,7 +84,8 @@ const loadUserData = (userId) => {
     'timetableSchedule',
     'todaysNotes',
     'accentColor',
-    'backgroundGif'
+    'backgroundGif',
+    'tasks'
   ];
   
   keysToLoad.forEach(key => {
@@ -124,6 +127,9 @@ const loadUserData = (userId) => {
           break;
         case 'backgroundGif':
           localStorage.setItem(key, 'Green.gif');
+          break;
+        case 'tasks':
+          localStorage.setItem(key, JSON.stringify([]));
           break;
         default:
           localStorage.setItem(key, JSON.stringify([]));
@@ -190,9 +196,11 @@ export const AuthProvider = ({ children }) => {
       // Завантажуємо дані користувача
       loadUserData(userData.id);
       
+      toast.success('Login successful!');
       return { success: true };
     } catch (error) {
       console.error('Login failed:', error);
+      toast.error(error.response?.data?.message || 'Login failed');
       return { 
         success: false, 
         error: error.response?.data?.message || 'Login failed' 
@@ -212,9 +220,11 @@ export const AuthProvider = ({ children }) => {
       // Для нового користувача створюємо порожні структури даних
       loadUserData(newUser.id);
       
+      toast.success('Registration successful!');
       return { success: true };
     } catch (error) {
       console.error('Registration failed:', error);
+      toast.error(error.response?.data?.message || 'Registration failed');
       return { 
         success: false, 
         error: error.response?.data?.message || 'Registration failed' 
@@ -230,6 +240,7 @@ export const AuthProvider = ({ children }) => {
       }
       
       await authAPI.logout();
+      toast.success('Logged out successfully');
     } catch (error) {
       console.error('Logout error:', error);
     } finally {
@@ -255,9 +266,11 @@ export const AuthProvider = ({ children }) => {
       
       const response = await authAPI.updateProfile(profileData);
       setUser(response.data.data);
+      toast.success('Profile updated successfully');
       return { success: true };
     } catch (error) {
       console.error('Profile update failed:', error);
+      toast.error(error.response?.data?.message || 'Profile update failed');
       return { 
         success: false, 
         error: error.response?.data?.message || 'Profile update failed' 

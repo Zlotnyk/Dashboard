@@ -5,6 +5,7 @@ import { useAuth } from '../hooks/useAuth'
 import LoginModal from './auth/LoginModal'
 import RegisterModal from './auth/RegisterModal'
 import UserSettings from './settings/UserSettings'
+import { toast } from 'react-hot-toast'
 
 const Navbar = () => {
   const { user, isAuthenticated, logout } = useAuth()
@@ -53,6 +54,7 @@ const Navbar = () => {
     localStorage.setItem('language', language)
     localStorage.setItem('notifications', JSON.stringify(notifications))
     setIsSettingsOpen(false)
+    toast.success('Settings saved successfully')
   }
 
   // Load settings from localStorage on component mount

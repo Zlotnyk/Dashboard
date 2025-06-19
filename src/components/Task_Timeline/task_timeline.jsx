@@ -4,6 +4,7 @@ import TaskDrawer from './task_drawer'
 import { useAuth } from '../../hooks/useAuth'
 import { tasksAPI } from '../../services/api'
 import { formatDateToYYYYMMDD, parseYYYYMMDDToDate } from './timeline_utils'
+import { toast } from 'react-hot-toast'
 
 const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask, height = '400px' }) => {
   const { isAuthenticated } = useAuth()
@@ -227,11 +228,13 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask, height = '
         onAddTask(createdTask)
         setDrawerTask(createdTask)
         setIsDrawerOpen(true)
+        toast.success('Task created successfully')
         
         // Update timeline height when adding a new task
         updateTimelineHeight()
       } catch (error) {
         console.error('Error creating task:', error)
+        toast.error('Failed to create task')
         const localTask = { ...newTask, id: crypto.randomUUID() }
         onAddTask(localTask)
         setDrawerTask(localTask)
@@ -309,11 +312,13 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask, height = '
             onAddTask(createdTask)
             setDrawerTask(createdTask)
             setIsDrawerOpen(true)
+            toast.success('Task created successfully')
             
             // Update timeline height when adding a new task
             updateTimelineHeight()
           } catch (error) {
             console.error('Error creating task:', error)
+            toast.error('Failed to create task')
             const localTask = { ...newTask, id: crypto.randomUUID() }
             onAddTask(localTask)
             setDrawerTask(localTask)
@@ -405,8 +410,10 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask, height = '
             startDate: formatDateToYYYYMMDD(dragState.draggedTask.start),
             endDate: formatDateToYYYYMMDD(dragState.draggedTask.end)
           })
+          toast.success('Task updated successfully')
         } catch (error) {
           console.error('Error updating task:', error)
+          toast.error('Failed to update task')
         }
       }
       
@@ -520,8 +527,10 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask, height = '
         }
         
         onUpdateTask(backendTask)
+        toast.success('Task updated successfully')
       } catch (error) {
         console.error('Error updating task:', error)
+        toast.error('Failed to update task')
         onUpdateTask(updatedTask)
       } finally {
         setLoading(false)
