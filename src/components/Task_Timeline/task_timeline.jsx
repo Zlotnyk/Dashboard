@@ -23,7 +23,7 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask, height = '
     statuses: ['Not started', 'In progress', 'Completed', 'On hold']
   })
   
-  // SIMPLIFIED DRAG STATE
+  // DRAG STATE
   const [dragState, setDragState] = useState({
     isDragging: false,
     draggedTask: null,

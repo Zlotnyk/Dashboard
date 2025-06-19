@@ -3,6 +3,7 @@ import { Dialog, DialogBackdrop, DialogPanel, DialogTitle } from '@headlessui/re
 import { X, Upload, Check, AlertCircle, Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { usersAPI } from '../../services/api';
+import { toast } from 'react-hot-toast';
 
 const UserSettings = ({ isOpen, onClose }) => {
   const { user, updateProfile } = useAuth();
@@ -225,12 +226,15 @@ const UserSettings = ({ isOpen, onClose }) => {
           newPassword: '',
           confirmPassword: ''
         });
+        toast.success('Password changed successfully');
       } else {
         setMessage({ type: 'error', text: data.message || 'Failed to change password' });
+        toast.error(data.message || 'Failed to change password');
       }
     } catch (error) {
       console.error('Error changing password:', error);
       setMessage({ type: 'error', text: 'An error occurred while changing password' });
+      toast.error('An error occurred while changing password');
     } finally {
       setLoading(false);
     }
@@ -262,6 +266,7 @@ const UserSettings = ({ isOpen, onClose }) => {
     
     // Show success message
     setMessage({ type: 'success', text: 'Theme settings saved successfully' });
+    toast.success('Theme settings saved successfully');
   };
 
   return (

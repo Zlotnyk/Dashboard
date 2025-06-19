@@ -9,6 +9,8 @@ const api = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
+  // Add timeout to prevent hanging requests
+  timeout: 10000
 });
 
 // Інтерцептор для додавання токена до запитів
@@ -29,12 +31,24 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response) => response,
   (error) => {
+    // Log the error for debugging
+    console.error('API Error:', error.message);
+    
     if (error.response?.status === 401) {
       // Якщо токен недійсний, видаляємо його
       localStorage.removeItem('token');
       // Не перенаправляємо автоматично, щоб не порушити UX
     }
-    return Promise.reject(error);
+    
+    // Provide more detailed error information
+    const enhancedError = {
+      ...error,
+      message: error.response?.data?.message || error.message,
+      status: error.response?.status,
+      data: error.response?.data
+    };
+    
+    return Promise.reject(enhancedError);
   }
 );
 
