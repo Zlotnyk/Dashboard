@@ -34,6 +34,7 @@ export const getNotes = async (req, res) => {
       data: notes
     });
   } catch (error) {
+    console.error('Error getting notes:', error);
     res.status(500).json({
       success: false,
       message: 'Server error getting notes',
@@ -64,6 +65,7 @@ export const getNote = async (req, res) => {
       data: note
     });
   } catch (error) {
+    console.error('Error getting note:', error);
     res.status(500).json({
       success: false,
       message: 'Server error getting note',
@@ -86,13 +88,18 @@ export const createNote = async (req, res) => {
       req.body.date = today;
     }
 
+    console.log('Creating note with data:', req.body);
+
     const note = await Note.create(req.body);
+
+    console.log('Created note:', note);
 
     res.status(201).json({
       success: true,
       data: note
     });
   } catch (error) {
+    console.error('Error creating note:', error);
     res.status(500).json({
       success: false,
       message: 'Server error creating note',
@@ -118,16 +125,22 @@ export const updateNote = async (req, res) => {
       });
     }
 
+    console.log('Updating note:', req.params.id);
+    console.log('Update data:', req.body);
+
     note = await Note.findByIdAndUpdate(req.params.id, req.body, {
       new: true,
       runValidators: true
     });
+
+    console.log('Updated note:', note);
 
     res.status(200).json({
       success: true,
       data: note
     });
   } catch (error) {
+    console.error('Error updating note:', error);
     res.status(500).json({
       success: false,
       message: 'Server error updating note',
@@ -153,6 +166,8 @@ export const deleteNote = async (req, res) => {
       });
     }
 
+    console.log('Deleting note:', req.params.id);
+
     await Note.findByIdAndDelete(req.params.id);
 
     res.status(200).json({
@@ -160,6 +175,7 @@ export const deleteNote = async (req, res) => {
       message: 'Note deleted successfully'
     });
   } catch (error) {
+    console.error('Error deleting note:', error);
     res.status(500).json({
       success: false,
       message: 'Server error deleting note',
@@ -173,7 +189,11 @@ export const deleteNote = async (req, res) => {
 // @access  Private
 export const getTodaysNotes = async (req, res) => {
   try {
+    console.log('Getting today\'s notes for user:', req.user.id);
+    
     const notes = await Note.getTodaysNotes(req.user.id);
+    
+    console.log('Found notes:', notes.length);
 
     res.status(200).json({
       success: true,
@@ -181,6 +201,7 @@ export const getTodaysNotes = async (req, res) => {
       data: notes
     });
   } catch (error) {
+    console.error('Error getting today\'s notes:', error);
     res.status(500).json({
       success: false,
       message: 'Server error getting today\'s notes',
@@ -203,6 +224,7 @@ export const getNotesByCategory = async (req, res) => {
       data: notes
     });
   } catch (error) {
+    console.error('Error getting notes by category:', error);
     res.status(500).json({
       success: false,
       message: 'Server error getting notes by category',
@@ -233,6 +255,7 @@ export const searchNotes = async (req, res) => {
       data: notes
     });
   } catch (error) {
+    console.error('Error searching notes:', error);
     res.status(500).json({
       success: false,
       message: 'Server error searching notes',
@@ -254,6 +277,7 @@ export const getPinnedNotes = async (req, res) => {
       data: notes
     });
   } catch (error) {
+    console.error('Error getting pinned notes:', error);
     res.status(500).json({
       success: false,
       message: 'Server error getting pinned notes',

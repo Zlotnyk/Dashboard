@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Dialog, DialogBackdrop, DialogPanel, DialogTitle } from '@headlessui/react';
-import { X, AlertCircle } from 'lucide-react';
+import { X, AlertCircle, Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 
 const RegisterModal = ({ isOpen, onClose, onSwitchToLogin }) => {
@@ -13,6 +13,8 @@ const RegisterModal = ({ isOpen, onClose, onSwitchToLogin }) => {
   });
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -82,6 +84,14 @@ const RegisterModal = ({ isOpen, onClose, onSwitchToLogin }) => {
   const handleGoogleRegister = () => {
     // Перенаправляємо на Google OAuth
     window.location.href = 'http://localhost:5000/api/auth/google';
+  };
+
+  const togglePasswordVisibility = () => {
+    setShowPassword(!showPassword);
+  };
+
+  const toggleConfirmPasswordVisibility = () => {
+    setShowConfirmPassword(!showConfirmPassword);
   };
 
   return (
@@ -156,16 +166,25 @@ const RegisterModal = ({ isOpen, onClose, onSwitchToLogin }) => {
 
                 <div>
                   <label className="block text-sm text-gray-300 mb-2">Password</label>
-                  <input
-                    type="password"
-                    name="password"
-                    value={formData.password}
-                    onChange={handleChange}
-                    className={`w-full px-3 py-3 bg-transparent text-white focus:outline-none focus:ring-2 focus:ring-accent border-b-2 transition-colors ${
-                      errors.password ? 'border-red-400' : 'border-gray-600 focus:border-transparent'
-                    }`}
-                    placeholder="Create a password"
-                  />
+                  <div className="relative">
+                    <input
+                      type={showPassword ? "text" : "password"}
+                      name="password"
+                      value={formData.password}
+                      onChange={handleChange}
+                      className={`w-full px-3 py-3 bg-transparent text-white focus:outline-none focus:ring-2 focus:ring-accent border-b-2 transition-colors ${
+                        errors.password ? 'border-red-400' : 'border-gray-600 focus:border-transparent'
+                      }`}
+                      placeholder="Create a password"
+                    />
+                    <button
+                      type="button"
+                      onClick={togglePasswordVisibility}
+                      className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white"
+                    >
+                      {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                    </button>
+                  </div>
                   {errors.password && (
                     <span className="text-red-400 text-sm mt-1">{errors.password}</span>
                   )}
@@ -173,16 +192,25 @@ const RegisterModal = ({ isOpen, onClose, onSwitchToLogin }) => {
 
                 <div>
                   <label className="block text-sm text-gray-300 mb-2">Confirm Password</label>
-                  <input
-                    type="password"
-                    name="confirmPassword"
-                    value={formData.confirmPassword}
-                    onChange={handleChange}
-                    className={`w-full px-3 py-3 bg-transparent text-white focus:outline-none focus:ring-2 focus:ring-accent border-b-2 transition-colors ${
-                      errors.confirmPassword ? 'border-red-400' : 'border-gray-600 focus:border-transparent'
-                    }`}
-                    placeholder="Confirm your password"
-                  />
+                  <div className="relative">
+                    <input
+                      type={showConfirmPassword ? "text" : "password"}
+                      name="confirmPassword"
+                      value={formData.confirmPassword}
+                      onChange={handleChange}
+                      className={`w-full px-3 py-3 bg-transparent text-white focus:outline-none focus:ring-2 focus:ring-accent border-b-2 transition-colors ${
+                        errors.confirmPassword ? 'border-red-400' : 'border-gray-600 focus:border-transparent'
+                      }`}
+                      placeholder="Confirm your password"
+                    />
+                    <button
+                      type="button"
+                      onClick={toggleConfirmPasswordVisibility}
+                      className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white"
+                    >
+                      {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                    </button>
+                  </div>
                   {errors.confirmPassword && (
                     <span className="text-red-400 text-sm mt-1">{errors.confirmPassword}</span>
                   )}

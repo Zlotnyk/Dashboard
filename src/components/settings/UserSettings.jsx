@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Dialog, DialogBackdrop, DialogPanel, DialogTitle } from '@headlessui/react';
-import { X, Upload, Check, AlertCircle } from 'lucide-react';
+import { X, Upload, Check, AlertCircle, Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 import { usersAPI } from '../../services/api';
 
@@ -17,6 +17,33 @@ const UserSettings = ({ isOpen, onClose }) => {
   });
   const [previewUrl, setPreviewUrl] = useState('');
   const fileInputRef = useRef(null);
+  
+  // Password change state
+  const [passwordForm, setPasswordForm] = useState({
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: ''
+  });
+  const [passwordErrors, setPasswordErrors] = useState({});
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  
+  // Theme settings state
+  const [themeSettings, setThemeSettings] = useState({
+    accentColor: '#97e7aa',
+    backgroundGif: 'Green.gif'
+  });
+
+  // Color options
+  const colorOptions = [
+    { name: 'Green', value: '#97e7aa', gif: 'Green.gif' },
+    { name: 'Purple', value: '#a855f7', gif: 'Purple.gif' },
+    { name: 'Blue', value: '#3b82f6', gif: 'Blue.gif' },
+    { name: 'Red', value: '#ef4444', gif: 'Red.gif' },
+    { name: 'Orange', value: '#f97316', gif: 'Orange.gif' },
+    { name: 'Pink', value: '#ec4899', gif: 'Pink.gif' }
+  ];
 
   // Load user data when modal opens
   useEffect(() => {
@@ -28,12 +55,30 @@ const UserSettings = ({ isOpen, onClose }) => {
         avatar: null
       });
       setPreviewUrl(user.avatar || '');
+      
+      // Load theme settings from localStorage or user preferences
+      const savedAccentColor = localStorage.getItem('accentColor') || user.preferences?.theme?.accentColor || '#97e7aa';
+      const savedBackgroundGif = localStorage.getItem('backgroundGif') || user.preferences?.theme?.backgroundGif || 'Green.gif';
+      
+      setThemeSettings({
+        accentColor: savedAccentColor,
+        backgroundGif: savedBackgroundGif
+      });
     }
   }, [user, isOpen]);
 
   const handleTabChange = (tab) => {
     setActiveTab(tab);
     setMessage({ type: '', text: '' });
+    
+    if (tab === 'security') {
+      setPasswordForm({
+        currentPassword: '',
+        newPassword: '',
+        confirmPassword: ''
+      });
+      setPasswordErrors({});
+    }
   };
 
   const handleChange = (e) => {
@@ -65,8 +110,8 @@ const UserSettings = ({ isOpen, onClose }) => {
     
     // Create preview URL
     const reader = new FileReader();
-    reader.onloadend = () => {
-      setPreviewUrl(reader.result);
+    reader.onload = e => {
+      setPreviewUrl(e.target.result);
     };
     reader.readAsDataURL(file);
   };
@@ -108,6 +153,115 @@ const UserSettings = ({ isOpen, onClose }) => {
     } finally {
       setLoading(false);
     }
+  };
+  
+  // Password change handlers
+  const handlePasswordChange = (e) => {
+    const { name, value } = e.target;
+    setPasswordForm(prev => ({ ...prev, [name]: value }));
+    
+    // Clear errors when typing
+    if (passwordErrors[name]) {
+      setPasswordErrors(prev => {
+        const newErrors = { ...prev };
+        delete newErrors[name];
+        return newErrors;
+      });
+    }
+  };
+  
+  const validatePasswordForm = () => {
+    const errors = {};
+    
+    if (!passwordForm.currentPassword) {
+      errors.currentPassword = 'Current password is required';
+    }
+    
+    if (!passwordForm.newPassword) {
+      errors.newPassword = 'New password is required';
+    } else if (passwordForm.newPassword.length < 6) {
+      errors.newPassword = 'Password must be at least 6 characters';
+    } else if (!/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(passwordForm.newPassword)) {
+      errors.newPassword = 'Password must contain at least one uppercase letter, one lowercase letter, and one number';
+    }
+    
+    if (!passwordForm.confirmPassword) {
+      errors.confirmPassword = 'Please confirm your new password';
+    } else if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+      errors.confirmPassword = 'Passwords do not match';
+    }
+    
+    setPasswordErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+  
+  const handlePasswordSubmit = async (e) => {
+    e.preventDefault();
+    
+    if (!validatePasswordForm()) return;
+    
+    setLoading(true);
+    setMessage({ type: '', text: '' });
+    
+    try {
+      const response = await fetch('http://localhost:5000/api/auth/password', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify({
+          currentPassword: passwordForm.currentPassword,
+          newPassword: passwordForm.newPassword
+        })
+      });
+      
+      const data = await response.json();
+      
+      if (response.ok) {
+        setMessage({ type: 'success', text: 'Password changed successfully' });
+        setPasswordForm({
+          currentPassword: '',
+          newPassword: '',
+          confirmPassword: ''
+        });
+      } else {
+        setMessage({ type: 'error', text: data.message || 'Failed to change password' });
+      }
+    } catch (error) {
+      console.error('Error changing password:', error);
+      setMessage({ type: 'error', text: 'An error occurred while changing password' });
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  // Theme settings handlers
+  const handleColorChange = (color, gif) => {
+    setThemeSettings({
+      accentColor: color,
+      backgroundGif: gif
+    });
+  };
+  
+  const saveThemeSettings = () => {
+    // Save to localStorage
+    localStorage.setItem('accentColor', themeSettings.accentColor);
+    localStorage.setItem('backgroundGif', themeSettings.backgroundGif);
+    
+    // Update CSS variable
+    document.documentElement.style.setProperty('--accent-color', themeSettings.accentColor);
+    
+    // Dispatch custom event to notify GifContainer
+    window.dispatchEvent(new CustomEvent('themeChange', { 
+      detail: { 
+        accentColor: themeSettings.accentColor, 
+        backgroundGif: themeSettings.backgroundGif 
+      } 
+    }));
+    
+    // Show success message
+    setMessage({ type: 'success', text: 'Theme settings saved successfully' });
   };
 
   return (
@@ -333,16 +487,121 @@ const UserSettings = ({ isOpen, onClose }) => {
                     <div>
                       <h3 className="text-white font-medium mb-6">Security Settings</h3>
                       
+                      {message.text && (
+                        <div className={`mb-4 p-3 rounded-lg ${
+                          message.type === 'success' 
+                            ? 'bg-green-900/20 border border-green-700/30 text-green-400' 
+                            : 'bg-red-900/20 border border-red-700/30 text-red-400'
+                        }`}>
+                          <div className="flex items-center gap-2">
+                            {message.type === 'success' ? (
+                              <Check size={16} />
+                            ) : (
+                              <AlertCircle size={16} />
+                            )}
+                            <span>{message.text}</span>
+                          </div>
+                        </div>
+                      )}
+                      
                       <div className="bg-[#2a2a2a] rounded-lg p-4 mb-6">
-                        <h4 className="text-white font-medium mb-2">Change Password</h4>
-                        <p className="text-gray-400 text-sm mb-4">
-                          Update your password to keep your account secure.
-                        </p>
-                        <button
-                          className="px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition-colors"
-                        >
-                          Change Password
-                        </button>
+                        <h4 className="text-white font-medium mb-4">Change Password</h4>
+                        
+                        <form onSubmit={handlePasswordSubmit} className="space-y-4">
+                          <div>
+                            <label className="block text-sm text-gray-300 mb-2">
+                              Current Password
+                            </label>
+                            <div className="relative">
+                              <input
+                                type={showCurrentPassword ? "text" : "password"}
+                                name="currentPassword"
+                                value={passwordForm.currentPassword}
+                                onChange={handlePasswordChange}
+                                className={`w-full px-3 py-2 bg-[#1a1a1a] border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent ${
+                                  passwordErrors.currentPassword ? 'border-red-400' : ''
+                                }`}
+                                placeholder="Enter your current password"
+                              />
+                              <button
+                                type="button"
+                                onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                                className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white"
+                              >
+                                {showCurrentPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                              </button>
+                            </div>
+                            {passwordErrors.currentPassword && (
+                              <span className="text-red-400 text-sm mt-1">{passwordErrors.currentPassword}</span>
+                            )}
+                          </div>
+                          
+                          <div>
+                            <label className="block text-sm text-gray-300 mb-2">
+                              New Password
+                            </label>
+                            <div className="relative">
+                              <input
+                                type={showNewPassword ? "text" : "password"}
+                                name="newPassword"
+                                value={passwordForm.newPassword}
+                                onChange={handlePasswordChange}
+                                className={`w-full px-3 py-2 bg-[#1a1a1a] border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent ${
+                                  passwordErrors.newPassword ? 'border-red-400' : ''
+                                }`}
+                                placeholder="Enter your new password"
+                              />
+                              <button
+                                type="button"
+                                onClick={() => setShowNewPassword(!showNewPassword)}
+                                className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white"
+                              >
+                                {showNewPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                              </button>
+                            </div>
+                            {passwordErrors.newPassword && (
+                              <span className="text-red-400 text-sm mt-1">{passwordErrors.newPassword}</span>
+                            )}
+                          </div>
+                          
+                          <div>
+                            <label className="block text-sm text-gray-300 mb-2">
+                              Confirm New Password
+                            </label>
+                            <div className="relative">
+                              <input
+                                type={showConfirmPassword ? "text" : "password"}
+                                name="confirmPassword"
+                                value={passwordForm.confirmPassword}
+                                onChange={handlePasswordChange}
+                                className={`w-full px-3 py-2 bg-[#1a1a1a] border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent ${
+                                  passwordErrors.confirmPassword ? 'border-red-400' : ''
+                                }`}
+                                placeholder="Confirm your new password"
+                              />
+                              <button
+                                type="button"
+                                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                                className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white"
+                              >
+                                {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                              </button>
+                            </div>
+                            {passwordErrors.confirmPassword && (
+                              <span className="text-red-400 text-sm mt-1">{passwordErrors.confirmPassword}</span>
+                            )}
+                          </div>
+                          
+                          <div className="pt-2">
+                            <button
+                              type="submit"
+                              disabled={loading}
+                              className="px-4 py-2 bg-accent text-white rounded-lg hover:bg-accent-80 transition-colors disabled:opacity-50"
+                            >
+                              {loading ? 'Changing Password...' : 'Change Password'}
+                            </button>
+                          </div>
+                        </form>
                       </div>
                       
                       <div className="bg-[#2a2a2a] rounded-lg p-4">
@@ -428,6 +687,23 @@ const UserSettings = ({ isOpen, onClose }) => {
                     <div>
                       <h3 className="text-white font-medium mb-6">Appearance Settings</h3>
                       
+                      {message.text && (
+                        <div className={`mb-4 p-3 rounded-lg ${
+                          message.type === 'success' 
+                            ? 'bg-green-900/20 border border-green-700/30 text-green-400' 
+                            : 'bg-red-900/20 border border-red-700/30 text-red-400'
+                        }`}>
+                          <div className="flex items-center gap-2">
+                            {message.type === 'success' ? (
+                              <Check size={16} />
+                            ) : (
+                              <AlertCircle size={16} />
+                            )}
+                            <span>{message.text}</span>
+                          </div>
+                        </div>
+                      )}
+                      
                       {/* Theme Section */}
                       <div className="mb-6">
                         <h4 className="text-white font-medium mb-3">Theme</h4>
@@ -461,18 +737,12 @@ const UserSettings = ({ isOpen, onClose }) => {
                       <div className="mb-6">
                         <h4 className="text-white font-medium mb-3">Accent Color & Background</h4>
                         <div className="grid grid-cols-3 gap-2">
-                          {[
-                            { name: 'Green', value: '#97e7aa', gif: 'Green.gif' },
-                            { name: 'Purple', value: '#a855f7', gif: 'Purple.gif' },
-                            { name: 'Blue', value: '#3b82f6', gif: 'Blue.gif' },
-                            { name: 'Red', value: '#ef4444', gif: 'Red.gif' },
-                            { name: 'Orange', value: '#f97316', gif: 'Orange.gif' },
-                            { name: 'Pink', value: '#ec4899', gif: 'Pink.gif' }
-                          ].map((color) => (
+                          {colorOptions.map((color) => (
                             <button
                               key={color.value}
+                              onClick={() => handleColorChange(color.value, color.gif)}
                               className={`flex items-center gap-2 p-3 rounded-lg border transition-all hover:scale-105 ${
-                                color.value === '#97e7aa'
+                                themeSettings.accentColor === color.value 
                                   ? 'border-white bg-gray-800 shadow-lg' 
                                   : 'border-gray-600 hover:border-gray-500'
                               }`}
@@ -485,6 +755,9 @@ const UserSettings = ({ isOpen, onClose }) => {
                             </button>
                           ))}
                         </div>
+                        <div className="mt-3 text-sm text-gray-400">
+                          Current background: {themeSettings.backgroundGif}
+                        </div>
                       </div>
 
                       {/* Language Section */}
@@ -496,6 +769,15 @@ const UserSettings = ({ isOpen, onClose }) => {
                           <option value="English">English</option>
                           <option value="Ukrainian">Ukrainian (в розробці)</option>
                         </select>
+                      </div>
+                      
+                      <div className="mt-6">
+                        <button
+                          onClick={saveThemeSettings}
+                          className="px-4 py-2 bg-accent text-white rounded-lg hover:bg-accent-80 transition-colors"
+                        >
+                          Save Appearance Settings
+                        </button>
                       </div>
                     </div>
                   )}

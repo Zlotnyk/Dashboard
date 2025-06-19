@@ -55,7 +55,9 @@ const saveUserData = (userId) => {
     'trips',
     'manualBirthdays',
     'timetableSchedule',
-    'todaysNotes'
+    'todaysNotes',
+    'accentColor',
+    'backgroundGif'
   ];
   
   keysToSave.forEach(key => {
@@ -78,7 +80,9 @@ const loadUserData = (userId) => {
     'trips',
     'manualBirthdays',
     'timetableSchedule',
-    'todaysNotes'
+    'todaysNotes',
+    'accentColor',
+    'backgroundGif'
   ];
   
   keysToLoad.forEach(key => {
@@ -86,6 +90,11 @@ const loadUserData = (userId) => {
     if (userData) {
       // Завантажуємо дані користувача
       localStorage.setItem(key, userData);
+      
+      // Якщо це налаштування теми, застосовуємо їх
+      if (key === 'accentColor') {
+        document.documentElement.style.setProperty('--accent-color', userData);
+      }
     } else {
       // Якщо даних немає, створюємо порожні структури
       switch (key) {
@@ -109,11 +118,28 @@ const loadUserData = (userId) => {
         case 'todaysNotes':
           localStorage.setItem(key, JSON.stringify([]));
           break;
+        case 'accentColor':
+          localStorage.setItem(key, '#97e7aa');
+          document.documentElement.style.setProperty('--accent-color', '#97e7aa');
+          break;
+        case 'backgroundGif':
+          localStorage.setItem(key, 'Green.gif');
+          break;
         default:
           localStorage.setItem(key, JSON.stringify([]));
       }
     }
   });
+  
+  // Після завантаження даних, оновлюємо тему
+  const accentColor = localStorage.getItem('accentColor');
+  const backgroundGif = localStorage.getItem('backgroundGif');
+  
+  if (accentColor && backgroundGif) {
+    window.dispatchEvent(new CustomEvent('themeChange', { 
+      detail: { accentColor, backgroundGif } 
+    }));
+  }
 };
 
 // Провайдер аутентифікації
