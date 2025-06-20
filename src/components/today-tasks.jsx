@@ -2,8 +2,6 @@ import React, { useState } from 'react'
 import { Plus, FileText, Pencil } from 'lucide-react'
 import TaskDrawer from './Task_Timeline/task_drawer'
 import { useAuth } from '../hooks/useAuth'
-import { tasksAPI } from '../services/api'
-import { formatDateToYYYYMMDD, parseYYYYMMDDToDate } from './Task_Timeline/timeline_utils'
 import { toast } from 'react-hot-toast'
 
 const TodayTasks = ({ tasks = [], onAddTask, onUpdateTask, onDeleteTask }) => {
@@ -44,50 +42,19 @@ const TodayTasks = ({ tasks = [], onAddTask, onUpdateTask, onDeleteTask }) => {
       color: '#3B82F6',
     }
 
-    if (isAuthenticated) {
-      try {
-        setLoading(true)
-        const response = await tasksAPI.createTask({
-          title: newTodo.title,
-          startDate: formatDateToYYYYMMDD(newTodo.start),
-          endDate: formatDateToYYYYMMDD(newTodo.end),
-          status: newTodo.status,
-          priority: newTodo.priority,
-          description: newTodo.description
-        })
-        
-        // Convert backend response to frontend format
-        const createdTask = {
-          ...response.data.data,
-          id: response.data.data._id,
-          start: new Date(response.data.data.startDate),
-          end: new Date(response.data.data.endDate),
-          color: newTodo.color
-        }
-        
-        // First add the task to the state via the parent component
-        await onAddTask(createdTask)
-        
-        // Then open the drawer with the created task
-        setDrawerTask(createdTask)
-        setIsDrawerOpen(true)
-        toast.success('Task created successfully')
-      } catch (error) {
-        console.error('Error creating task:', error)
-        toast.error('Failed to create task')
-        // Fallback to local storage
-        const localTask = { ...newTodo, id: crypto.randomUUID() }
-        await onAddTask(localTask)
-        setDrawerTask(localTask)
-        setIsDrawerOpen(true)
-      } finally {
-        setLoading(false)
-      }
-    } else {
-      const localTask = { ...newTodo, id: crypto.randomUUID() }
-      await onAddTask(localTask)
-      setDrawerTask(localTask)
+    try {
+      setLoading(true)
+      
+      // Use the centralized task creation function from App.jsx
+      const createdTask = await onAddTask(newTodo)
+      
+      // Then open the drawer with the created task
+      setDrawerTask(createdTask)
       setIsDrawerOpen(true)
+    } catch (error) {
+      console.error('Error creating task:', error)
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -97,6 +64,27 @@ const TodayTasks = ({ tasks = [], onAddTask, onUpdateTask, onDeleteTask }) => {
     setEditingText(task.title)
     setEditingStart(formatDateToYYYYMMDD(task.start))
     setEditingEnd(formatDateToYYYYMMDD(task.end))
+  }
+
+  const formatDateToYYYYMMDD = (date) => {
+    if (!date) return '';
+    
+    const d = new Date(date);
+    const year = d.getFullYear();
+    // getMonth() is 0-indexed, so add 1 and pad with leading zero if needed
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    // getDate() returns the day of month, pad with leading zero if needed
+    const day = String(d.getDate()).padStart(2, '0');
+    
+    return `${year}-${month}-${day}`;
+  }
+
+  const parseYYYYMMDDToDate = (dateString) => {
+    if (!dateString) return new Date();
+    
+    const [year, month, day] = dateString.split('-').map(Number);
+    const date = new Date(year, month - 1, day);
+    return date;
   }
 
   const finishEditing = async () => {
@@ -115,35 +103,10 @@ const TodayTasks = ({ tasks = [], onAddTask, onUpdateTask, onDeleteTask }) => {
         end: parseYYYYMMDDToDate(editingEnd),
       }
 
-      if (isAuthenticated) {
-        try {
-          setLoading(true)
-          const response = await tasksAPI.updateTask(editingId, {
-            title: updatedTask.title,
-            startDate: formatDateToYYYYMMDD(updatedTask.start),
-            endDate: formatDateToYYYYMMDD(updatedTask.end)
-          })
-          
-          const backendTask = {
-            ...response.data.data,
-            id: response.data.data._id,
-            start: new Date(response.data.data.startDate),
-            end: new Date(response.data.data.endDate),
-            color: updatedTask.color
-          }
-          
-          await onUpdateTask(backendTask)
-          toast.success('Task updated successfully')
-        } catch (error) {
-          console.error('Error updating task:', error)
-          toast.error('Failed to update task')
-          // Fallback to local update
-          await onUpdateTask(updatedTask)
-        } finally {
-          setLoading(false)
-        }
-      } else {
+      try {
         await onUpdateTask(updatedTask)
+      } catch (error) {
+        console.error('Error updating task:', error)
       }
     }
     
@@ -159,42 +122,14 @@ const TodayTasks = ({ tasks = [], onAddTask, onUpdateTask, onDeleteTask }) => {
   }
 
   const handleDrawerSave = async (updatedTask) => {
-    if (isAuthenticated) {
-      try {
-        setLoading(true)
-        const taskId = updatedTask.id || updatedTask._id
-        const response = await tasksAPI.updateTask(taskId, {
-          title: updatedTask.title,
-          description: updatedTask.description,
-          startDate: formatDateToYYYYMMDD(updatedTask.start),
-          endDate: formatDateToYYYYMMDD(updatedTask.end),
-          status: updatedTask.status,
-          priority: updatedTask.priority
-        })
-        
-        const backendTask = {
-          ...response.data.data,
-          id: response.data.data._id,
-          start: new Date(response.data.data.startDate),
-          end: new Date(response.data.data.endDate),
-          color: updatedTask.color
-        }
-        
-        await onUpdateTask(backendTask)
-        toast.success('Task updated successfully')
-      } catch (error) {
-        console.error('Error updating task:', error)
-        toast.error('Failed to update task')
-        await onUpdateTask(updatedTask)
-      } finally {
-        setLoading(false)
-      }
-    } else {
+    try {
       await onUpdateTask(updatedTask)
+      
+      setIsDrawerOpen(false)
+      setDrawerTask(null)
+    } catch (error) {
+      console.error('Error updating task:', error)
     }
-    
-    setIsDrawerOpen(false)
-    setDrawerTask(null)
   }
 
   const handleDrawerClose = () => {
@@ -203,22 +138,10 @@ const TodayTasks = ({ tasks = [], onAddTask, onUpdateTask, onDeleteTask }) => {
   }
 
   const handleDeleteTask = async (taskId) => {
-    if (isAuthenticated) {
-      try {
-        setLoading(true)
-        await tasksAPI.deleteTask(taskId)
-        await onDeleteTask(taskId)
-        toast.success('Task deleted successfully')
-      } catch (error) {
-        console.error('Error deleting task:', error)
-        toast.error('Failed to delete task')
-        // Fallback to local delete
-        await onDeleteTask(taskId)
-      } finally {
-        setLoading(false)
-      }
-    } else {
+    try {
       await onDeleteTask(taskId)
+    } catch (error) {
+      console.error('Error deleting task:', error)
     }
   }
 

@@ -2,8 +2,7 @@ import React, { useState, useRef, useEffect } from 'react'
 import { ChevronLeft, ChevronRight, Calendar, Plus, Filter, X } from 'lucide-react'
 import TaskDrawer from './task_drawer'
 import { useAuth } from '../../hooks/useAuth'
-import { tasksAPI } from '../../services/api'
-import { formatDateToYYYYMMDD, parseYYYYMMDDToDate } from './timeline_utils'
+import { formatDateToYYYYMMDD } from './timeline_utils'
 import { toast } from 'react-hot-toast'
 
 const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask, height = '400px' }) => {
@@ -205,57 +204,22 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask, height = '
       color: 'var(--accent-color, #97e7aa)'
     }
 
-    if (isAuthenticated) {
-      try {
-        setLoading(true)
-        const response = await tasksAPI.createTask({
-          title: newTask.title,
-          startDate: formatDateToYYYYMMDD(newTask.start),
-          endDate: formatDateToYYYYMMDD(newTask.end),
-          status: newTask.status,
-          priority: newTask.priority,
-          description: newTask.description
-        })
-        
-        const createdTask = {
-          ...response.data.data,
-          id: response.data.data._id,
-          start: new Date(response.data.data.startDate),
-          end: new Date(response.data.data.endDate),
-          color: newTask.color
-        }
-        
-        // First add the task to the state via the parent component
-        await onAddTask(createdTask)
-        
-        // Then set the drawer task and open the drawer
-        setDrawerTask(createdTask)
-        setIsDrawerOpen(true)
-        toast.success('Task created successfully')
-        
-        // Update timeline height when adding a new task
-        updateTimelineHeight()
-      } catch (error) {
-        console.error('Error creating task:', error)
-        toast.error('Failed to create task')
-        const localTask = { ...newTask, id: crypto.randomUUID() }
-        onAddTask(localTask)
-        setDrawerTask(localTask)
-        setIsDrawerOpen(true)
-        
-        // Update timeline height when adding a new task
-        updateTimelineHeight()
-      } finally {
-        setLoading(false)
-      }
-    } else {
-      const localTask = { ...newTask, id: crypto.randomUUID() }
-      onAddTask(localTask)
-      setDrawerTask(localTask)
+    try {
+      setLoading(true)
+      
+      // Use the centralized task creation function from App.jsx
+      const createdTask = await onAddTask(newTask)
+      
+      // Then set the drawer task and open the drawer
+      setDrawerTask(createdTask)
       setIsDrawerOpen(true)
       
       // Update timeline height when adding a new task
       updateTimelineHeight()
+    } catch (error) {
+      console.error('Error creating task:', error)
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -292,57 +256,22 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask, height = '
           color: 'var(--accent-color, #97e7aa)'
         }
 
-        if (isAuthenticated) {
-          try {
-            setLoading(true)
-            const response = await tasksAPI.createTask({
-              title: newTask.title,
-              startDate: formatDateToYYYYMMDD(newTask.start),
-              endDate: formatDateToYYYYMMDD(newTask.end),
-              status: newTask.status,
-              priority: newTask.priority,
-              description: newTask.description
-            })
-            
-            const createdTask = {
-              ...response.data.data,
-              id: response.data.data._id,
-              start: new Date(response.data.data.startDate),
-              end: new Date(response.data.data.endDate),
-              color: newTask.color
-            }
-            
-            // First add the task to the state via the parent component
-            await onAddTask(createdTask)
-            
-            // Then set the drawer task and open the drawer
-            setDrawerTask(createdTask)
-            setIsDrawerOpen(true)
-            toast.success('Task created successfully')
-            
-            // Update timeline height when adding a new task
-            updateTimelineHeight()
-          } catch (error) {
-            console.error('Error creating task:', error)
-            toast.error('Failed to create task')
-            const localTask = { ...newTask, id: crypto.randomUUID() }
-            onAddTask(localTask)
-            setDrawerTask(localTask)
-            setIsDrawerOpen(true)
-            
-            // Update timeline height when adding a new task
-            updateTimelineHeight()
-          } finally {
-            setLoading(false)
-          }
-        } else {
-          const localTask = { ...newTask, id: crypto.randomUUID() }
-          onAddTask(localTask)
-          setDrawerTask(localTask)
+        try {
+          setLoading(true)
+          
+          // Use the centralized task creation function from App.jsx
+          const createdTask = await onAddTask(newTask)
+          
+          // Then set the drawer task and open the drawer
+          setDrawerTask(createdTask)
           setIsDrawerOpen(true)
           
           // Update timeline height when adding a new task
           updateTimelineHeight()
+        } catch (error) {
+          console.error('Error creating task:', error)
+        } finally {
+          setLoading(false)
         }
       }
     }
@@ -426,15 +355,10 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask, height = '
             
             // Make the API call to update the task
             if (isAuthenticated) {
-              await tasksAPI.updateTask(taskId, {
-                startDate: formatDateToYYYYMMDD(dragState.draggedTask.start),
-                endDate: formatDateToYYYYMMDD(dragState.draggedTask.end)
-              })
-              toast.success('Task updated successfully')
+              await onUpdateTask(dragState.draggedTask)
             }
           } catch (error) {
             console.error('Error updating task:', error)
-            toast.error('Failed to update task')
           }
         }
       }
@@ -527,42 +451,19 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask, height = '
   }, [tasks, viewMode, currentDate])
 
   const handleDrawerSave = async (updatedTask) => {
-    if (isAuthenticated) {
-      try {
-        setLoading(true)
-        const taskId = updatedTask.id || updatedTask._id
-        const response = await tasksAPI.updateTask(taskId, {
-          title: updatedTask.title,
-          description: updatedTask.description,
-          startDate: formatDateToYYYYMMDD(updatedTask.start),
-          endDate: formatDateToYYYYMMDD(updatedTask.end),
-          status: updatedTask.status,
-          priority: updatedTask.priority
-        })
-        
-        const backendTask = {
-          ...response.data.data,
-          id: response.data.data._id,
-          start: new Date(response.data.data.startDate),
-          end: new Date(response.data.data.endDate),
-          color: updatedTask.color
-        }
-        
-        onUpdateTask(backendTask)
-        toast.success('Task updated successfully')
-      } catch (error) {
-        console.error('Error updating task:', error)
-        toast.error('Failed to update task')
-        onUpdateTask(updatedTask)
-      } finally {
-        setLoading(false)
-      }
-    } else {
-      onUpdateTask(updatedTask)
+    try {
+      setLoading(true)
+      
+      // Use the centralized task update function from App.jsx
+      await onUpdateTask(updatedTask)
+      
+      setIsDrawerOpen(false)
+      setDrawerTask(null)
+    } catch (error) {
+      console.error('Error updating task:', error)
+    } finally {
+      setLoading(false)
     }
-    
-    setIsDrawerOpen(false)
-    setDrawerTask(null)
   }
 
   const handleDrawerClose = () => {
