@@ -53,7 +53,7 @@ export const validateTask = [
     .isISO8601()
     .withMessage('Please enter a valid end date')
     .custom((value, { req }) => {
-      if (new Date(value) <= new Date(req.body.startDate)) {
+      if (new Date(value) < new Date(req.body.startDate)) {
         throw new Error('End date must be after start date');
       }
       return true;
@@ -133,7 +133,7 @@ export const validateTrip = [
     .isISO8601()
     .withMessage('Please enter a valid end date')
     .custom((value, { req }) => {
-      if (new Date(value) <= new Date(req.body.startDate)) {
+      if (new Date(value) < new Date(req.body.startDate)) {
         throw new Error('End date must be after start date');
       }
       return true;
