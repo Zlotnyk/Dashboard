@@ -89,8 +89,9 @@ export default function TodoList({
 		})
 		
 		if (taskToUpdate) {
+			// Create updated task with all original properties preserved
 			const updatedTask = {
-				...taskToUpdate,
+				...taskToUpdate, // Keep all original properties including _id, id, user, color
 				title: editingText,
 				start: parseYYYYMMDDToDate(editingStart),
 				end: parseYYYYMMDDToDate(editingEnd),

@@ -100,8 +100,9 @@ const TaskDrawer = ({ isOpen, task, onSave, onClose, onDelete }) => {
     if (!validateForm() || !task) return;
 
     try {
+      // Create updated task with all original properties preserved
       const updatedTask = {
-        ...task,
+        ...task, // Keep all original properties including _id, id, user, color
         title: formData.title,
         description: formData.description,
         start: parseYYYYMMDDToDate(formData.start),
