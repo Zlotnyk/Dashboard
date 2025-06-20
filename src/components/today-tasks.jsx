@@ -51,8 +51,10 @@ const TodayTasks = ({ tasks = [], onAddTask, onUpdateTask, onDeleteTask }) => {
       // Then open the drawer with the created task
       setDrawerTask(createdTask)
       setIsDrawerOpen(true)
+      toast.success('Task created successfully')
     } catch (error) {
       console.error('Error creating task:', error)
+      toast.error('Failed to create task')
     } finally {
       setLoading(false)
     }
@@ -104,9 +106,13 @@ const TodayTasks = ({ tasks = [], onAddTask, onUpdateTask, onDeleteTask }) => {
       }
 
       try {
-        await onUpdateTask(updatedTask)
+        const success = await onUpdateTask(updatedTask)
+        if (success) {
+          toast.success('Task updated successfully')
+        }
       } catch (error) {
         console.error('Error updating task:', error)
+        toast.error('Failed to update task')
       }
     }
     
@@ -123,12 +129,16 @@ const TodayTasks = ({ tasks = [], onAddTask, onUpdateTask, onDeleteTask }) => {
 
   const handleDrawerSave = async (updatedTask) => {
     try {
-      await onUpdateTask(updatedTask)
+      const success = await onUpdateTask(updatedTask)
+      if (success) {
+        toast.success('Task updated successfully')
+      }
       
       setIsDrawerOpen(false)
       setDrawerTask(null)
     } catch (error) {
       console.error('Error updating task:', error)
+      toast.error('Failed to update task')
     }
   }
 
@@ -139,9 +149,13 @@ const TodayTasks = ({ tasks = [], onAddTask, onUpdateTask, onDeleteTask }) => {
 
   const handleDeleteTask = async (taskId) => {
     try {
-      await onDeleteTask(taskId)
+      const success = await onDeleteTask(taskId)
+      if (success) {
+        toast.success('Task completed successfully')
+      }
     } catch (error) {
       console.error('Error deleting task:', error)
+      toast.error('Failed to complete task')
     }
   }
 

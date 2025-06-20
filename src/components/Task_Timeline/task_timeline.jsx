@@ -216,8 +216,11 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask, height = '
       
       // Update timeline height when adding a new task
       updateTimelineHeight()
+      
+      toast.success('Task created successfully')
     } catch (error) {
       console.error('Error creating task:', error)
+      toast.error('Failed to create task')
     } finally {
       setLoading(false)
     }
@@ -268,8 +271,11 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask, height = '
           
           // Update timeline height when adding a new task
           updateTimelineHeight()
+          
+          toast.success('Task created successfully')
         } catch (error) {
           console.error('Error creating task:', error)
+          toast.error('Failed to create task')
         } finally {
           setLoading(false)
         }
@@ -355,10 +361,14 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask, height = '
             
             // Make the API call to update the task
             if (isAuthenticated) {
-              await onUpdateTask(dragState.draggedTask)
+              const success = await onUpdateTask(dragState.draggedTask)
+              if (success) {
+                toast.success('Task updated successfully')
+              }
             }
           } catch (error) {
             console.error('Error updating task:', error)
+            toast.error('Failed to update task')
           }
         }
       }
@@ -455,12 +465,17 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask, height = '
       setLoading(true)
       
       // Use the centralized task update function from App.jsx
-      await onUpdateTask(updatedTask)
+      const success = await onUpdateTask(updatedTask)
+      
+      if (success) {
+        toast.success('Task updated successfully')
+      }
       
       setIsDrawerOpen(false)
       setDrawerTask(null)
     } catch (error) {
       console.error('Error updating task:', error)
+      toast.error('Failed to update task')
     } finally {
       setLoading(false)
     }
@@ -872,7 +887,16 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask, height = '
           if (drawerTask) {
             const taskId = drawerTask.id || drawerTask._id
             onDeleteTask(taskId)
-            handleDrawerClose()
+              .then(success => {
+                if (success) {
+                  toast.success('Task deleted successfully')
+                }
+                handleDrawerClose()
+              })
+              .catch(error => {
+                console.error('Error deleting task:', error)
+                toast.error('Failed to delete task')
+              })
           }
         }}
       />

@@ -42,8 +42,10 @@ export default function TodoList({
 			// Then open the drawer with the created task
 			setDrawerTask(createdTask)
 			setIsDrawerOpen(true)
+			toast.success('Task created successfully')
 		} catch (error) {
 			console.error('Error creating task:', error)
+			toast.error('Failed to create task')
 		} finally {
 			setLoading(false)
 		}
@@ -95,9 +97,13 @@ export default function TodoList({
 			}
 
 			try {
-				await onUpdateTask(updatedTask)
+				const success = await onUpdateTask(updatedTask)
+				if (success) {
+					toast.success('Task updated successfully')
+				}
 			} catch (error) {
 				console.error('Error updating task:', error)
+				toast.error('Failed to update task')
 			}
 		}
 		
@@ -116,21 +122,30 @@ export default function TodoList({
 		if (!updatedTask.id && !updatedTask._id) {
 			// This is a new task
 			try {
-				await onAddTask(updatedTask)
+				const createdTask = await onAddTask(updatedTask)
+				if (createdTask) {
+					toast.success('Task created successfully')
+				}
+				setIsDrawerOpen(false)
+				setDrawerTask(null)
 			} catch (error) {
 				console.error('Error creating task:', error)
+				toast.error('Failed to create task')
 			}
 		} else {
 			// This is an existing task
 			try {
-				await onUpdateTask(updatedTask)
+				const success = await onUpdateTask(updatedTask)
+				if (success) {
+					toast.success('Task updated successfully')
+				}
+				setIsDrawerOpen(false)
+				setDrawerTask(null)
 			} catch (error) {
 				console.error('Error updating task:', error)
+				toast.error('Failed to update task')
 			}
 		}
-		
-		setIsDrawerOpen(false)
-		setDrawerTask(null)
 	}
 
 	const handleDrawerClose = () => {
@@ -140,9 +155,13 @@ export default function TodoList({
 
 	const handleDeleteTask = async (taskId) => {
 		try {
-			await onDeleteTask(taskId)
+			const success = await onDeleteTask(taskId)
+			if (success) {
+				toast.success('Task completed successfully')
+			}
 		} catch (error) {
 			console.error('Error deleting task:', error)
+			toast.error('Failed to complete task')
 		}
 	}
 
@@ -167,88 +186,94 @@ export default function TodoList({
 				<div className="w-full h-px bg-gray-700 mb-4"></div>
 
 				<div className='space-y-2'>
-					{tasks.map(task => {
-						const isUrgent = task.priority === 'urgent'
-						const taskId = task.id || task._id
-						
-						return (
-							<div
-								key={taskId}
-								className='bg-transparent rounded-lg p-3 hover:bg-gray-800/30 transition-colors group'
-							>
-								<div className='flex items-center justify-between'>
-									<div className='flex items-center gap-2 flex-1'>
-										<FileText size={16} className='text-gray-400' />
-										{editingId === taskId ? (
-											<div className='flex flex-col gap-2 w-full'>
-												<input
-													autoFocus
-													type='text'
-													value={editingText}
-													onChange={e => setEditingText(e.target.value)}
-													onBlur={finishEditing}
-													onKeyDown={e => {
-														if (e.key === 'Enter') finishEditing()
-													}}
-													className='bg-transparent outline-none text-white w-full text-sm'
-													disabled={loading}
-												/>
-												<input
-													type='date'
-													value={editingStart}
-													onChange={e => setEditingStart(e.target.value)}
-													className='bg-transparent outline-none text-gray-400 text-xs'
-													disabled={loading}
-												/>
-												<input
-													type='date'
-													value={editingEnd}
-													onChange={e => setEditingEnd(e.target.value)}
-													className='bg-transparent outline-none text-gray-400 text-xs'
-													disabled={loading}
-												/>
-											</div>
-										) : (
-											<div className='flex flex-col flex-1'>
-												<div className='flex items-center gap-2'>
-													{isUrgent && <span className="text-orange-500">🔥</span>}
-													<span className='text-white text-sm font-medium'>{task.title}</span>
+					{tasks.length === 0 ? (
+						<div className="text-gray-500 text-center py-4">
+							No tasks yet. Click "New" to add your first task.
+						</div>
+					) : (
+						tasks.map(task => {
+							const isUrgent = task.priority === 'urgent'
+							const taskId = task.id || task._id
+							
+							return (
+								<div
+									key={taskId}
+									className='bg-transparent rounded-lg p-3 hover:bg-gray-800/30 transition-colors group'
+								>
+									<div className='flex items-center justify-between'>
+										<div className='flex items-center gap-2 flex-1'>
+											<FileText size={16} className='text-gray-400' />
+											{editingId === taskId ? (
+												<div className='flex flex-col gap-2 w-full'>
+													<input
+														autoFocus
+														type='text'
+														value={editingText}
+														onChange={e => setEditingText(e.target.value)}
+														onBlur={finishEditing}
+														onKeyDown={e => {
+															if (e.key === 'Enter') finishEditing()
+														}}
+														className='bg-transparent outline-none text-white w-full text-sm'
+														disabled={loading}
+													/>
+													<input
+														type='date'
+														value={editingStart}
+														onChange={e => setEditingStart(e.target.value)}
+														className='bg-transparent outline-none text-gray-400 text-xs'
+														disabled={loading}
+													/>
+													<input
+														type='date'
+														value={editingEnd}
+														onChange={e => setEditingEnd(e.target.value)}
+														className='bg-transparent outline-none text-gray-400 text-xs'
+														disabled={loading}
+													/>
 												</div>
-												<div className='text-gray-400 text-xs'>
-													{task.start.toLocaleDateString()}
+											) : (
+												<div className='flex flex-col flex-1'>
+													<div className='flex items-center gap-2'>
+														{isUrgent && <span className="text-orange-500">🔥</span>}
+														<span className='text-white text-sm font-medium'>{task.title}</span>
+													</div>
+													<div className='text-gray-400 text-xs'>
+														{task.start.toLocaleDateString()}
+													</div>
+													<div className='text-gray-400 text-xs'>
+														Status: {task.status || 'Not started'}
+													</div>
 												</div>
-												<div className='text-gray-400 text-xs'>
-													Status: {task.status || 'Not started'}
-												</div>
-											</div>
-										)}
-									</div>
+											)}
+										</div>
 
-									{/* Edit button and checkbox with proper spacing */}
-									<div className='flex items-center gap-[10px]'>
-										{editingId !== taskId && (
-											<button
-												onClick={() => openTaskDrawer(task)}
-												className='opacity-0 group-hover:opacity-100 border border-gray-500 rounded p-1 hover:bg-gray-600 transition-all w-6 h-6 flex items-center justify-center'
-												title='Edit Task Details'
+										{/* Edit button and checkbox with proper spacing */}
+										<div className='flex items-center gap-[10px]'>
+											{editingId !== taskId && (
+												<button
+													onClick={() => openTaskDrawer(task)}
+													className='opacity-0 group-hover:opacity-100 border border-gray-500 rounded p-1 hover:bg-gray-600 transition-all w-6 h-6 flex items-center justify-center'
+													title='Edit Task Details'
+													disabled={loading}
+												>
+													<Pencil size={12} className='text-gray-400' />
+												</button>
+											)}
+
+											<input
+												type='checkbox'
+												onChange={() => handleDeleteTask(taskId)}
+												className='w-6 h-6 cursor-pointer bg-transparent appearance-none border border-gray-400 rounded checked:bg-blue-500 checked:border-transparent'
+												title='Complete Task'
 												disabled={loading}
-											>
-												<Pencil size={12} className='text-gray-400' />
-											</button>
-										)}
-
-										<input
-											type='checkbox'
-											onChange={() => handleDeleteTask(taskId)}
-											className='w-6 h-6 cursor-pointer bg-transparent appearance-none border border-gray-400 rounded checked:bg-blue-500 checked:border-transparent'
-											title='Complete Task'
-											disabled={loading}
-										/>
+											/>
+										</div>
 									</div>
 								</div>
-							</div>
-						)
-					})}
+							)
+						})
+					)}
 
 					{/* New page button */}
 					<button

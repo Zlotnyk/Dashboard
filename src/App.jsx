@@ -16,7 +16,7 @@ import TaskTimeline from './components/Task_Timeline/task_timeline'
 import { generateMockTasks } from './components/Task_Timeline/timeline_utils'
 import { useAuth } from './hooks/useAuth'
 import { tasksAPI, eventsAPI, notesAPI } from './services/api'
-import { Toaster, toast } from 'react-hot-toast'
+import { Toaster } from 'react-hot-toast'
 
 function App() {
 	const { isAuthenticated, user } = useAuth()
@@ -81,7 +81,6 @@ function App() {
 				})
 				console.log('Processed tasks:', backendTasks)
 				setTasks(backendTasks)
-				toast.success('Tasks loaded successfully')
 			} else {
 				console.log('No tasks data in response')
 				setTasks([])
@@ -96,7 +95,6 @@ function App() {
 					date: new Date(event.date)
 				}))
 				setEvents(backendEvents)
-				toast.success('Events loaded successfully')
 			} else {
 				setEvents([])
 			}
@@ -109,7 +107,6 @@ function App() {
 					content: note.content
 				}))
 				setNotes(backendNotes)
-				toast.success('Notes loaded successfully')
 			} else {
 				// Don't initialize with empty notes if none found
 				setNotes([])
@@ -117,7 +114,6 @@ function App() {
 
 		} catch (error) {
 			console.error('Error loading user data:', error)
-			toast.error('Failed to load data from server')
 			// Fallback to localStorage
 			loadLocalData()
 		} finally {
@@ -233,11 +229,9 @@ function App() {
 					return newTasks
 				})
 				
-				toast.success('Task created successfully')
 				return createdTask
 			} catch (error) {
 				console.error('Error creating task via API:', error)
-				toast.error('Failed to create task')
 				// Fallback to local add
 				const newTask = { ...task, id: task.id || crypto.randomUUID() }
 				setTasks(prevTasks => {
@@ -291,10 +285,9 @@ function App() {
 					return newTasks
 				})
 				
-				toast.success('Task updated successfully')
+				return true
 			} catch (error) {
 				console.error('Error updating task via API:', error)
-				toast.error('Failed to update task')
 				// Fallback to local update
 				setTasks(prevTasks => {
 					const newTasks = prevTasks.map(task => {
@@ -305,6 +298,7 @@ function App() {
 					console.log('Updated tasks state (local fallback):', newTasks)
 					return newTasks
 				})
+				return false
 			} finally {
 				setLoading(false)
 			}
@@ -319,6 +313,7 @@ function App() {
 				console.log('Updated tasks state (local):', newTasks)
 				return newTasks
 			})
+			return false
 		}
 	}
 
@@ -341,10 +336,9 @@ function App() {
 					return newTasks
 				})
 				
-				toast.success('Task deleted successfully')
+				return true
 			} catch (error) {
 				console.error('Error deleting task via API:', error)
-				toast.error('Failed to delete task')
 				// Fallback to local delete
 				setTasks(prevTasks => {
 					const newTasks = prevTasks.filter(task => {
@@ -354,6 +348,7 @@ function App() {
 					console.log('Updated tasks state (local fallback):', newTasks)
 					return newTasks
 				})
+				return false
 			} finally {
 				setLoading(false)
 			}
@@ -364,6 +359,7 @@ function App() {
 				console.log('Updated tasks state (local):', newTasks)
 				return newTasks
 			})
+			return false
 		}
 	}
 
@@ -387,15 +383,16 @@ function App() {
 				}
 				
 				setEvents(prevEvents => [...prevEvents, backendEvent])
-				toast.success('Event created successfully')
+				return true
 			} catch (error) {
 				console.error('Error creating event:', error)
-				toast.error('Failed to create event')
 				// Fallback to local storage
 				setEvents(prevEvents => [...prevEvents, event])
+				return false
 			}
 		} else {
 			setEvents(prevEvents => [...prevEvents, event])
+			return true
 		}
 	}
 
@@ -407,18 +404,19 @@ function App() {
 					const currentEventId = event.id || event._id
 					return currentEventId !== eventId
 				}))
-				toast.success('Event deleted successfully')
+				return true
 			} catch (error) {
 				console.error('Error deleting event:', error)
-				toast.error('Failed to delete event')
 				// Fallback to local deletion
 				setEvents(prevEvents => prevEvents.filter(event => {
 					const currentEventId = event.id || event._id
 					return currentEventId !== eventId
 				}))
+				return false
 			}
 		} else {
 			setEvents(prevEvents => prevEvents.filter(event => event.id !== eventId))
+			return true
 		}
 	}
 	
@@ -442,15 +440,16 @@ function App() {
 				}
 				
 				setNotes(prevNotes => [...prevNotes, createdNote])
-				toast.success('Note created successfully')
+				return createdNote
 			} catch (error) {
 				console.error('Error creating note:', error)
-				toast.error('Failed to create note')
 				// Fallback to local storage
 				setNotes(prevNotes => [...prevNotes, newNote])
+				return newNote
 			}
 		} else {
 			setNotes(prevNotes => [...prevNotes, newNote])
+			return newNote
 		}
 	}
 	
@@ -470,7 +469,7 @@ function App() {
 						note.id === id ? { id: response.data.data._id, content } : note
 					))
 					
-					toast.success('Note saved to server')
+					return true
 				} else {
 					// Update existing note
 					await notesAPI.updateNote(id, { content })
@@ -480,21 +479,22 @@ function App() {
 						note.id === id ? { ...note, content } : note
 					))
 					
-					toast.success('Note updated successfully')
+					return true
 				}
 			} catch (error) {
 				console.error('Error updating note:', error)
-				toast.error('Failed to update note')
 				// Fallback to local update
 				setNotes(prevNotes => prevNotes.map(note => 
 					note.id === id ? { ...note, content } : note
 				))
+				return false
 			}
 		} else {
 			// For non-authenticated users, update locally
 			setNotes(prevNotes => prevNotes.map(note => 
 				note.id === id ? { ...note, content } : note
 			))
+			return true
 		}
 	}
 	
@@ -503,16 +503,17 @@ function App() {
 			try {
 				await notesAPI.deleteNote(id)
 				setNotes(prevNotes => prevNotes.filter(note => note.id !== id))
-				toast.success('Note deleted successfully')
+				return true
 			} catch (error) {
 				console.error('Error deleting note:', error)
-				toast.error('Failed to delete note')
 				// Fallback to local delete
 				setNotes(prevNotes => prevNotes.filter(note => note.id !== id))
+				return false
 			}
 		} else {
 			// For non-authenticated users or temporary notes, delete locally
 			setNotes(prevNotes => prevNotes.filter(note => note.id !== id))
+			return true
 		}
 	}
 
@@ -603,7 +604,7 @@ function App() {
 				</main>
 			</div>
 			<Toaster 
-				position="top-right"
+				position="bottom-right"
 				toastOptions={{
 					duration: 3000,
 					style: {

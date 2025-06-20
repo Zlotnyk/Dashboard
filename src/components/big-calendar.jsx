@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { ChevronLeft, ChevronRight, Plus, X, Calendar, MapPin, Clock, ChevronDown, AlertCircle, Filter, Tag } from 'lucide-react'
 import { Dialog, DialogBackdrop, DialogPanel, DialogTitle } from '@headlessui/react'
+import { toast } from 'react-hot-toast'
 
 const BigCalendar = ({ events = [], onAddEvent, onDeleteEvent }) => {
   const [currentDate, setCurrentDate] = useState(new Date())
@@ -188,60 +189,81 @@ const BigCalendar = ({ events = [], onAddEvent, onDeleteEvent }) => {
     setIsModalOpen(true)
   }
 
-  const handleSaveEvent = () => {
+  const handleSaveEvent = async () => {
     if (!validateForm()) {
       return
     }
 
-    if (selectedEvent) {
-      // Update existing event
-      const updatedEvent = {
-        ...selectedEvent,
-        title: eventForm.title,
-        date: new Date(eventForm.date), // Create proper Date object
-        time: eventForm.time,
-        location: eventForm.location,
-        category: eventForm.category,
-        // Keep birthday flag if it was a birthday
-        isBirthday: selectedEvent.isBirthday || eventForm.category === 'birthday',
-        // Keep original birth year for age calculation
-        originalBirthYear: selectedEvent.originalBirthYear || (eventForm.category === 'birthday' ? new Date(eventForm.date).getFullYear() : null)
+    try {
+      if (selectedEvent) {
+        // Update existing event
+        const updatedEvent = {
+          ...selectedEvent,
+          title: eventForm.title,
+          date: new Date(eventForm.date), // Create proper Date object
+          time: eventForm.time,
+          location: eventForm.location,
+          category: eventForm.category,
+          // Keep birthday flag if it was a birthday
+          isBirthday: selectedEvent.isBirthday || eventForm.category === 'birthday',
+          // Keep original birth year for age calculation
+          originalBirthYear: selectedEvent.originalBirthYear || (eventForm.category === 'birthday' ? new Date(eventForm.date).getFullYear() : null)
+        }
+        
+        const success = await onAddEvent(updatedEvent) // This should be onUpdateEvent, but using onAddEvent for now
+        if (success) {
+          toast.success('Event updated successfully')
+        }
+      } else {
+        // Create new event
+        const newEvent = {
+          id: crypto.randomUUID(),
+          title: eventForm.title,
+          date: new Date(eventForm.date), // Create proper Date object
+          time: eventForm.time,
+          location: eventForm.location,
+          category: eventForm.category,
+          // Mark as birthday if category is birthday
+          isBirthday: eventForm.category === 'birthday',
+          // Store original birth year for age calculation
+          originalBirthYear: eventForm.category === 'birthday' ? new Date(eventForm.date).getFullYear() : null
+        }
+        
+        const success = await onAddEvent(newEvent)
+        if (success) {
+          toast.success('Event created successfully')
+        }
       }
-      onAddEvent(updatedEvent) // This should be onUpdateEvent, but using onAddEvent for now
-    } else {
-      // Create new event
-      const newEvent = {
-        id: crypto.randomUUID(),
-        title: eventForm.title,
-        date: new Date(eventForm.date), // Create proper Date object
-        time: eventForm.time,
-        location: eventForm.location,
-        category: eventForm.category,
-        // Mark as birthday if category is birthday
-        isBirthday: eventForm.category === 'birthday',
-        // Store original birth year for age calculation
-        originalBirthYear: eventForm.category === 'birthday' ? new Date(eventForm.date).getFullYear() : null
-      }
-      onAddEvent(newEvent)
+      
+      setIsModalOpen(false)
+      setValidationErrors({})
+      setEventForm({
+        title: '',
+        date: '',
+        time: '',
+        location: '',
+        category: 'meeting'
+      })
+      setSelectedEvent(null)
+    } catch (error) {
+      console.error('Error saving event:', error)
+      toast.error('Failed to save event')
     }
-    
-    setIsModalOpen(false)
-    setValidationErrors({})
-    setEventForm({
-      title: '',
-      date: '',
-      time: '',
-      location: '',
-      category: 'meeting'
-    })
-    setSelectedEvent(null)
   }
 
-  const handleDeleteEvent = () => {
+  const handleDeleteEvent = async () => {
     if (selectedEvent) {
-      onDeleteEvent(selectedEvent.id)
-      setIsModalOpen(false)
-      setSelectedEvent(null)
+      try {
+        const success = await onDeleteEvent(selectedEvent.id)
+        if (success) {
+          toast.success('Event deleted successfully')
+        }
+        setIsModalOpen(false)
+        setSelectedEvent(null)
+      } catch (error) {
+        console.error('Error deleting event:', error)
+        toast.error('Failed to delete event')
+      }
     }
   }
 

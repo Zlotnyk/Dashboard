@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import { Edit, Trash2 } from 'lucide-react'
+import { toast } from 'react-hot-toast'
 
 export default function Notes({ notes = [], onAddNote, onUpdateNote, onDeleteNote }) {
 	const [loading, setLoading] = useState(false)
@@ -10,12 +11,28 @@ export default function Notes({ notes = [], onAddNote, onUpdateNote, onDeleteNot
 	// This was causing the issue with notes being added when navigating
 
 	const handleContentChange = async (id, value) => {
-		onUpdateNote(id, value)
+		try {
+			const success = await onUpdateNote(id, value)
+			if (success) {
+				// Don't show toast for every keystroke
+			}
+		} catch (error) {
+			console.error('Error updating note:', error)
+			toast.error('Failed to update note')
+		}
 	}
 
 	const handleKeyDown = async (id, content, e) => {
 		if (e.key === 'Backspace' && content.trim() === '') {
-			onDeleteNote(id)
+			try {
+				const success = await onDeleteNote(id)
+				if (success) {
+					toast.success('Note deleted successfully')
+				}
+			} catch (error) {
+				console.error('Error deleting note:', error)
+				toast.error('Failed to delete note')
+			}
 			e.preventDefault()
 		}
 	}
@@ -25,17 +42,56 @@ export default function Notes({ notes = [], onAddNote, onUpdateNote, onDeleteNot
 		setEditingContent(content)
 	}
 
-	const saveEditing = () => {
+	const saveEditing = async () => {
 		if (editingId) {
-			onUpdateNote(editingId, editingContent)
-			setEditingId(null)
-			setEditingContent('')
+			try {
+				setLoading(true)
+				const success = await onUpdateNote(editingId, editingContent)
+				if (success) {
+					toast.success('Note updated successfully')
+				}
+			} catch (error) {
+				console.error('Error updating note:', error)
+				toast.error('Failed to update note')
+			} finally {
+				setLoading(false)
+				setEditingId(null)
+				setEditingContent('')
+			}
 		}
 	}
 
-	const handleDelete = (id, e) => {
+	const handleDelete = async (id, e) => {
 		e.stopPropagation()
-		onDeleteNote(id)
+		try {
+			setLoading(true)
+			const success = await onDeleteNote(id)
+			if (success) {
+				toast.success('Note deleted successfully')
+			}
+		} catch (error) {
+			console.error('Error deleting note:', error)
+			toast.error('Failed to delete note')
+		} finally {
+			setLoading(false)
+		}
+	}
+
+	const handleAddNote = async () => {
+		try {
+			setLoading(true)
+			const newNote = await onAddNote()
+			if (newNote) {
+				toast.success('Note created successfully')
+				// Automatically start editing the new note
+				startEditing(newNote.id, newNote.content)
+			}
+		} catch (error) {
+			console.error('Error adding note:', error)
+			toast.error('Failed to create note')
+		} finally {
+			setLoading(false)
+		}
 	}
 
 	if (loading) {
@@ -53,8 +109,9 @@ export default function Notes({ notes = [], onAddNote, onUpdateNote, onDeleteNot
 					Today's Notes
 				</h2>
 				<button
-					onClick={onAddNote}
+					onClick={handleAddNote}
 					className='px-3 py-1 bg-accent text-white rounded hover:bg-accent-80 text-sm'
+					disabled={loading}
 				>
 					Add a new note
 				</button>
