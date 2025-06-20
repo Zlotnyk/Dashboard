@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Dialog, DialogBackdrop, DialogPanel, DialogTitle, TransitionChild } from '@headlessui/react';
 import { X, Calendar, FileText, Flag, Clock, AlertCircle } from 'lucide-react';
 import { formatDateToYYYYMMDD, parseYYYYMMDDToDate } from './timeline_utils';
+import { toast } from 'react-hot-toast';
 
 const TaskDrawer = ({ isOpen, task, onSave, onClose, onDelete }) => {
   const [formData, setFormData] = useState({
@@ -70,7 +71,7 @@ const TaskDrawer = ({ isOpen, task, onSave, onClose, onDelete }) => {
     return Object.keys(errors).length === 0;
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!task) return;
     
@@ -80,18 +81,25 @@ const TaskDrawer = ({ isOpen, task, onSave, onClose, onDelete }) => {
     
     setLoading(true);
 
-    const updatedTask = {
-      ...task,
-      title: formData.title,
-      description: formData.description,
-      start: parseYYYYMMDDToDate(formData.start),
-      end: parseYYYYMMDDToDate(formData.end),
-      status: formData.status,
-      priority: formData.priority,
-    };
+    try {
+      const updatedTask = {
+        ...task,
+        title: formData.title,
+        description: formData.description,
+        start: parseYYYYMMDDToDate(formData.start),
+        end: parseYYYYMMDDToDate(formData.end),
+        status: formData.status,
+        priority: formData.priority,
+      };
 
-    onSave(updatedTask);
-    setLoading(false);
+      await onSave(updatedTask);
+      // Toast notification is handled by the parent component
+    } catch (error) {
+      console.error('Error saving task:', error);
+      toast.error('Failed to save task');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleChange = (field, value) => {
@@ -107,6 +115,21 @@ const TaskDrawer = ({ isOpen, task, onSave, onClose, onDelete }) => {
         delete newErrors[field];
         return newErrors;
       });
+    }
+  };
+
+  const handleDeleteTask = async () => {
+    if (!task) return;
+    
+    setLoading(true);
+    try {
+      await onDelete();
+      // Toast notification is handled by the parent component
+    } catch (error) {
+      console.error('Error deleting task:', error);
+      toast.error('Failed to delete task');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -277,8 +300,8 @@ const TaskDrawer = ({ isOpen, task, onSave, onClose, onDelete }) => {
                   <div className="px-4 sm:px-6 py-4 border-t border-gray-700 flex gap-3">
                     <button
                       type="button"
-                      onClick={onDelete}
-                      className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                      onClick={handleDeleteTask}
+                      className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors disabled:opacity-50"
                       disabled={loading}
                     >
                       {loading ? 'Deleting...' : 'Delete'}
