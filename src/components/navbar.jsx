@@ -8,13 +8,11 @@ import UserSettings from './settings/UserSettings'
 import { toast } from 'react-hot-toast'
 
 const Navbar = () => {
-  const { user, isAuthenticated, logout } = useAuth()
+  const { user, isAuthenticated, logout, theme, updateThemeSettings } = useAuth()
   const [isSettingsOpen, setIsSettingsOpen] = useState(false)
   const [isLoginOpen, setIsLoginOpen] = useState(false)
   const [isRegisterOpen, setIsRegisterOpen] = useState(false)
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false)
-  const [accentColor, setAccentColor] = useState('#97e7aa')
-  const [backgroundGif, setBackgroundGif] = useState('Green.gif')
   const [language, setLanguage] = useState('English')
   const [notifications, setNotifications] = useState({
     examReminders: true,
@@ -30,27 +28,18 @@ const Navbar = () => {
     { name: 'Pink', value: '#ec4899', gif: 'Pink.gif' }
   ]
 
-  // Set CSS variable and notify other components about theme change
-  useEffect(() => {
-    document.documentElement.style.setProperty('--accent-color', accentColor)
-    // Dispatch custom event to notify GifContainer about the change
-    window.dispatchEvent(new CustomEvent('themeChange', { 
-      detail: { accentColor, backgroundGif } 
-    }))
-  }, [accentColor, backgroundGif])
-
   const handleColorChange = (color) => {
     const selectedOption = colorOptions.find(option => option.value === color)
     if (selectedOption) {
-      setAccentColor(color)
-      setBackgroundGif(selectedOption.gif)
+      updateThemeSettings({
+        accentColor: color,
+        backgroundGif: selectedOption.gif
+      })
     }
   }
 
   const handleSaveSettings = () => {
-    // Save settings to localStorage
-    localStorage.setItem('accentColor', accentColor)
-    localStorage.setItem('backgroundGif', backgroundGif)
+    // Save language and notifications to localStorage
     localStorage.setItem('language', language)
     localStorage.setItem('notifications', JSON.stringify(notifications))
     setIsSettingsOpen(false)
@@ -59,20 +48,9 @@ const Navbar = () => {
 
   // Load settings from localStorage on component mount
   useEffect(() => {
-    const savedAccentColor = localStorage.getItem('accentColor')
-    const savedBackgroundGif = localStorage.getItem('backgroundGif')
     const savedLanguage = localStorage.getItem('language')
     const savedNotifications = localStorage.getItem('notifications')
 
-    if (savedAccentColor) {
-      setAccentColor(savedAccentColor)
-      // Find corresponding GIF for saved color
-      const savedOption = colorOptions.find(option => option.value === savedAccentColor)
-      if (savedOption) {
-        setBackgroundGif(savedOption.gif)
-      }
-    }
-    if (savedBackgroundGif) setBackgroundGif(savedBackgroundGif)
     if (savedLanguage) setLanguage(savedLanguage)
     if (savedNotifications) setNotifications(JSON.parse(savedNotifications))
   }, [])
@@ -253,7 +231,7 @@ const Navbar = () => {
                             key={color.value}
                             onClick={() => handleColorChange(color.value)}
                             className={`flex items-center gap-2 p-3 rounded-lg border transition-all hover:scale-105 ${
-                              accentColor === color.value 
+                              theme.accentColor === color.value 
                                 ? 'border-white bg-gray-800 shadow-lg' 
                                 : 'border-gray-600 hover:border-gray-500'
                             }`}
@@ -267,7 +245,7 @@ const Navbar = () => {
                         ))}
                       </div>
                       <div className="mt-3 text-sm text-gray-400">
-                        Current background: {backgroundGif}
+                        Current background: {theme.backgroundGif}
                       </div>
                     </div>
 

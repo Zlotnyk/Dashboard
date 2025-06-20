@@ -93,11 +93,6 @@ const loadUserData = (userId) => {
     if (userData) {
       // Завантажуємо дані користувача
       localStorage.setItem(key, userData);
-      
-      // Якщо це налаштування теми, застосовуємо їх
-      if (key === 'accentColor') {
-        document.documentElement.style.setProperty('--accent-color', userData);
-      }
     } else {
       // Якщо даних немає, створюємо порожні структури
       switch (key) {
@@ -153,6 +148,15 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [theme, setTheme] = useState({
+    accentColor: localStorage.getItem('accentColor') || '#97e7aa',
+    backgroundGif: localStorage.getItem('backgroundGif') || 'Green.gif'
+  });
+
+  // Встановлюємо CSS змінну при ініціалізації
+  useEffect(() => {
+    document.documentElement.style.setProperty('--accent-color', theme.accentColor);
+  }, []);
 
   // Перевіряємо аутентифікацію при завантаженні
   useEffect(() => {
@@ -170,18 +174,85 @@ export const AuthProvider = ({ children }) => {
         
         // Завантажуємо дані користувача
         loadUserData(userData.id);
+        
+        // Оновлюємо тему з даних користувача
+        updateThemeFromStorage();
       } else {
         // Якщо токена немає, очищуємо всі дані
         clearAllLocalData();
+        
+        // Але зберігаємо поточні налаштування теми
+        const currentAccentColor = localStorage.getItem('accentColor') || '#97e7aa';
+        const currentBackgroundGif = localStorage.getItem('backgroundGif') || 'Green.gif';
+        
+        localStorage.setItem('accentColor', currentAccentColor);
+        localStorage.setItem('backgroundGif', currentBackgroundGif);
+        
+        setTheme({
+          accentColor: currentAccentColor,
+          backgroundGif: currentBackgroundGif
+        });
       }
     } catch (error) {
       console.error('Auth check failed:', error);
       localStorage.removeItem('token');
       setIsAuthenticated(false);
       clearAllLocalData();
+      
+      // Зберігаємо поточні налаштування теми
+      const currentAccentColor = localStorage.getItem('accentColor') || '#97e7aa';
+      const currentBackgroundGif = localStorage.getItem('backgroundGif') || 'Green.gif';
+      
+      localStorage.setItem('accentColor', currentAccentColor);
+      localStorage.setItem('backgroundGif', currentBackgroundGif);
+      
+      setTheme({
+        accentColor: currentAccentColor,
+        backgroundGif: currentBackgroundGif
+      });
     } finally {
       setLoading(false);
     }
+  };
+
+  const updateThemeFromStorage = () => {
+    const accentColor = localStorage.getItem('accentColor') || '#97e7aa';
+    const backgroundGif = localStorage.getItem('backgroundGif') || 'Green.gif';
+    
+    setTheme({
+      accentColor,
+      backgroundGif
+    });
+    
+    document.documentElement.style.setProperty('--accent-color', accentColor);
+  };
+
+  const updateThemeSettings = (newTheme) => {
+    // Оновлюємо стан
+    setTheme(newTheme);
+    
+    // Зберігаємо в localStorage
+    localStorage.setItem('accentColor', newTheme.accentColor);
+    localStorage.setItem('backgroundGif', newTheme.backgroundGif);
+    
+    // Якщо користувач авторизований, зберігаємо з префіксом
+    if (isAuthenticated && user?.id) {
+      localStorage.setItem(getUserKey(user.id, 'accentColor'), newTheme.accentColor);
+      localStorage.setItem(getUserKey(user.id, 'backgroundGif'), newTheme.backgroundGif);
+    }
+    
+    // Оновлюємо CSS змінну
+    document.documentElement.style.setProperty('--accent-color', newTheme.accentColor);
+    
+    // Надсилаємо подію для GifContainer
+    window.dispatchEvent(new CustomEvent('themeChange', { 
+      detail: { 
+        accentColor: newTheme.accentColor, 
+        backgroundGif: newTheme.backgroundGif 
+      } 
+    }));
+    
+    return true;
   };
 
   const login = async (credentials) => {
@@ -248,8 +319,18 @@ export const AuthProvider = ({ children }) => {
       setUser(null);
       setIsAuthenticated(false);
       
+      // Зберігаємо поточні налаштування теми
+      const currentTheme = { ...theme };
+      
       // Очищуємо всі дані
       clearAllLocalData();
+      
+      // Відновлюємо налаштування теми
+      localStorage.setItem('accentColor', currentTheme.accentColor);
+      localStorage.setItem('backgroundGif', currentTheme.backgroundGif);
+      
+      // Оновлюємо CSS змінну
+      document.documentElement.style.setProperty('--accent-color', currentTheme.accentColor);
     }
   };
 
@@ -307,7 +388,9 @@ export const AuthProvider = ({ children }) => {
     register,
     logout,
     updateProfile,
-    checkAuth
+    checkAuth,
+    theme,
+    updateThemeSettings
   };
 
   return (

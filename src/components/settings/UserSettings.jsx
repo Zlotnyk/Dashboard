@@ -6,7 +6,7 @@ import { usersAPI } from '../../services/api';
 import { toast } from 'react-hot-toast';
 
 const UserSettings = ({ isOpen, onClose }) => {
-  const { user, updateProfile } = useAuth();
+  const { user, updateProfile, theme, updateThemeSettings } = useAuth();
   const [activeTab, setActiveTab] = useState('general');
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState({ type: '', text: '' });
@@ -30,12 +30,6 @@ const UserSettings = ({ isOpen, onClose }) => {
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   
-  // Theme settings state
-  const [themeSettings, setThemeSettings] = useState({
-    accentColor: '#97e7aa',
-    backgroundGif: 'Green.gif'
-  });
-
   // Color options
   const colorOptions = [
     { name: 'Green', value: '#97e7aa', gif: 'Green.gif' },
@@ -56,15 +50,6 @@ const UserSettings = ({ isOpen, onClose }) => {
         avatar: null
       });
       setPreviewUrl(user.avatar || '');
-      
-      // Load theme settings from localStorage or user preferences
-      const savedAccentColor = localStorage.getItem('accentColor') || user.preferences?.theme?.accentColor || '#97e7aa';
-      const savedBackgroundGif = localStorage.getItem('backgroundGif') || user.preferences?.theme?.backgroundGif || 'Green.gif';
-      
-      setThemeSettings({
-        accentColor: savedAccentColor,
-        backgroundGif: savedBackgroundGif
-      });
     }
   }, [user, isOpen]);
 
@@ -242,31 +227,12 @@ const UserSettings = ({ isOpen, onClose }) => {
   
   // Theme settings handlers
   const handleColorChange = (color, gif) => {
-    setThemeSettings({
+    updateThemeSettings({
       accentColor: color,
       backgroundGif: gif
     });
-  };
-  
-  const saveThemeSettings = () => {
-    // Save to localStorage
-    localStorage.setItem('accentColor', themeSettings.accentColor);
-    localStorage.setItem('backgroundGif', themeSettings.backgroundGif);
     
-    // Update CSS variable
-    document.documentElement.style.setProperty('--accent-color', themeSettings.accentColor);
-    
-    // Dispatch custom event to notify GifContainer
-    window.dispatchEvent(new CustomEvent('themeChange', { 
-      detail: { 
-        accentColor: themeSettings.accentColor, 
-        backgroundGif: themeSettings.backgroundGif 
-      } 
-    }));
-    
-    // Show success message
-    setMessage({ type: 'success', text: 'Theme settings saved successfully' });
-    toast.success('Theme settings saved successfully');
+    setMessage({ type: 'success', text: 'Theme updated successfully' });
   };
 
   return (
@@ -747,7 +713,7 @@ const UserSettings = ({ isOpen, onClose }) => {
                               key={color.value}
                               onClick={() => handleColorChange(color.value, color.gif)}
                               className={`flex items-center gap-2 p-3 rounded-lg border transition-all hover:scale-105 ${
-                                themeSettings.accentColor === color.value 
+                                theme.accentColor === color.value 
                                   ? 'border-white bg-gray-800 shadow-lg' 
                                   : 'border-gray-600 hover:border-gray-500'
                               }`}
@@ -761,7 +727,7 @@ const UserSettings = ({ isOpen, onClose }) => {
                           ))}
                         </div>
                         <div className="mt-3 text-sm text-gray-400">
-                          Current background: {themeSettings.backgroundGif}
+                          Current background: {theme.backgroundGif}
                         </div>
                       </div>
 
@@ -774,15 +740,6 @@ const UserSettings = ({ isOpen, onClose }) => {
                           <option value="English">English</option>
                           <option value="Ukrainian">Ukrainian (в розробці)</option>
                         </select>
-                      </div>
-                      
-                      <div className="mt-6">
-                        <button
-                          onClick={saveThemeSettings}
-                          className="px-4 py-2 bg-accent text-white rounded-lg hover:bg-accent-80 transition-colors"
-                        >
-                          Save Appearance Settings
-                        </button>
                       </div>
                     </div>
                   )}
