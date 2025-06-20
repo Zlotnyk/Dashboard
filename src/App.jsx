@@ -234,6 +234,7 @@ function App() {
 				})
 				
 				toast.success('Task created successfully')
+				return createdTask
 			} catch (error) {
 				console.error('Error creating task via API:', error)
 				toast.error('Failed to create task')
@@ -244,6 +245,7 @@ function App() {
 					console.log('Updated tasks state (local fallback):', newTasks)
 					return newTasks
 				})
+				return newTask
 			} finally {
 				setLoading(false)
 			}
@@ -255,6 +257,7 @@ function App() {
 				console.log('Updated tasks state (local):', newTasks)
 				return newTasks
 			})
+			return newTask
 		}
 	}
 
