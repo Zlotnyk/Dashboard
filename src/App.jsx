@@ -210,8 +210,8 @@ function App() {
 				const taskData = {
 					title: task.title,
 					description: task.description || '',
-					startDate: task.start.toISOString(),
-					endDate: task.end.toISOString(),
+					startDate: task.start.toISOString(), // Send as ISO string
+					endDate: task.end.toISOString(), // Send as ISO string
 					status: task.status || 'Not started',
 					priority: task.priority || 'normal'
 				}
@@ -239,7 +239,7 @@ function App() {
 			} catch (error) {
 				console.error('Error creating task via API:', error)
 				// Fallback to local add
-				const newTask = { ...task, id: task.id || crypto.randomUUID() }
+				const newTask = { ...task, id: crypto.randomUUID() }
 				setTasks(prevTasks => {
 					const newTasks = [...prevTasks, newTask]
 					console.log('Updated tasks state (local fallback):', newTasks)
@@ -251,7 +251,7 @@ function App() {
 			}
 		} else {
 			// For non-authenticated users, add locally
-			const newTask = { ...task, id: task.id || crypto.randomUUID() }
+			const newTask = { ...task, id: crypto.randomUUID() }
 			setTasks(prevTasks => {
 				const newTasks = [...prevTasks, newTask]
 				console.log('Updated tasks state (local):', newTasks)
@@ -278,8 +278,8 @@ function App() {
 				const taskData = {
 					title: updatedTask.title,
 					description: updatedTask.description || '',
-					startDate: updatedTask.start.toISOString(),
-					endDate: updatedTask.end.toISOString(),
+					startDate: updatedTask.start.toISOString(), // Send as ISO string
+					endDate: updatedTask.end.toISOString(), // Send as ISO string
 					status: updatedTask.status || 'Not started',
 					priority: updatedTask.priority || 'normal'
 				}
