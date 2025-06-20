@@ -17,6 +17,7 @@ import { generateMockTasks } from './components/Task_Timeline/timeline_utils'
 import { useAuth } from './hooks/useAuth'
 import { tasksAPI, eventsAPI, notesAPI } from './services/api'
 import { Toaster } from 'react-hot-toast'
+import { toast } from 'react-hot-toast'
 
 function App() {
 	const { isAuthenticated, user } = useAuth()
@@ -114,6 +115,7 @@ function App() {
 
 		} catch (error) {
 			console.error('Error loading user data:', error)
+			toast.error('Failed to load data from server')
 			// Fallback to localStorage
 			loadLocalData()
 		} finally {
@@ -238,6 +240,7 @@ function App() {
 				return createdTask
 			} catch (error) {
 				console.error('Error creating task via API:', error)
+				toast.error(error.message || 'Failed to create task')
 				// Fallback to local add
 				const newTask = { ...task, id: crypto.randomUUID() }
 				setTasks(prevTasks => {
@@ -303,6 +306,7 @@ function App() {
 				return true
 			} catch (error) {
 				console.error('Error updating task via API:', error)
+				toast.error(error.message || 'Failed to update task')
 				// Fallback to local update
 				setTasks(prevTasks => {
 					const newTasks = prevTasks.map(task => {
@@ -354,6 +358,7 @@ function App() {
 				return true
 			} catch (error) {
 				console.error('Error deleting task via API:', error)
+				toast.error(error.message || 'Failed to delete task')
 				// Fallback to local delete
 				setTasks(prevTasks => {
 					const newTasks = prevTasks.filter(task => {
@@ -401,6 +406,7 @@ function App() {
 				return true
 			} catch (error) {
 				console.error('Error creating event:', error)
+				toast.error(error.message || 'Failed to create event')
 				// Fallback to local storage
 				setEvents(prevEvents => [...prevEvents, event])
 				return false
@@ -422,6 +428,7 @@ function App() {
 				return true
 			} catch (error) {
 				console.error('Error deleting event:', error)
+				toast.error(error.message || 'Failed to delete event')
 				// Fallback to local deletion
 				setEvents(prevEvents => prevEvents.filter(event => {
 					const currentEventId = event.id || event._id
@@ -436,7 +443,7 @@ function App() {
 	}
 	
 	// Notes handlers
-	const handleNoteAdd = async () => {
+	const handleAddNote = async () => {
 		const newNote = {
 			id: crypto.randomUUID(),
 			content: 'New note',
@@ -458,6 +465,7 @@ function App() {
 				return createdNote
 			} catch (error) {
 				console.error('Error creating note:', error)
+				toast.error(error.message || 'Failed to create note')
 				// Fallback to local storage
 				setNotes(prevNotes => [...prevNotes, newNote])
 				return newNote
@@ -498,6 +506,7 @@ function App() {
 				}
 			} catch (error) {
 				console.error('Error updating note:', error)
+				toast.error(error.message || 'Failed to update note')
 				// Fallback to local update
 				setNotes(prevNotes => prevNotes.map(note => 
 					note.id === id ? { ...note, content } : note
@@ -521,6 +530,7 @@ function App() {
 				return true
 			} catch (error) {
 				console.error('Error deleting note:', error)
+				toast.error(error.message || 'Failed to delete note')
 				// Fallback to local delete
 				setNotes(prevNotes => prevNotes.filter(note => note.id !== id))
 				return false
@@ -587,7 +597,7 @@ function App() {
 							/>
 							<Notes
 								notes={notes}
-								onAddNote={handleNoteAdd}
+								onAddNote={handleAddNote}
 								onUpdateNote={handleNoteUpdate}
 								onDeleteNote={handleNoteDelete}
 								selectedDate={selectedDate}

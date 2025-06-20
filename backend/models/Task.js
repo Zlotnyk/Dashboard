@@ -41,6 +41,16 @@ const TaskSchema = new mongoose.Schema({
         const startDate = this.startDate;
         const endDate = value;
         
+        // Check if startDate is valid before proceeding
+        if (!startDate || !(startDate instanceof Date) || isNaN(startDate.getTime())) {
+          return false;
+        }
+        
+        // Check if endDate is valid
+        if (!endDate || !(endDate instanceof Date) || isNaN(endDate.getTime())) {
+          return false;
+        }
+        
         // Set both to midnight UTC
         const startUTC = Date.UTC(startDate.getFullYear(), startDate.getMonth(), startDate.getDate());
         const endUTC = Date.UTC(endDate.getFullYear(), endDate.getMonth(), endDate.getDate());

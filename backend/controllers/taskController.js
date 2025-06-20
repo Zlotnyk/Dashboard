@@ -103,6 +103,10 @@ export const createTask = async (req, res) => {
       endDate: req.body.endDate ? new Date(req.body.endDate) : new Date()
     };
 
+    // Log the dates for debugging
+    console.log('Start date:', taskData.startDate);
+    console.log('End date:', taskData.endDate);
+
     // Validate dates
     if (taskData.endDate < taskData.startDate) {
       return res.status(400).json({
@@ -162,9 +166,11 @@ export const updateTask = async (req, res) => {
     const updateData = { ...req.body };
     if (updateData.startDate) {
       updateData.startDate = new Date(updateData.startDate);
+      console.log('Parsed startDate:', updateData.startDate);
     }
     if (updateData.endDate) {
       updateData.endDate = new Date(updateData.endDate);
+      console.log('Parsed endDate:', updateData.endDate);
     }
 
     // Validate dates if both are provided
@@ -189,6 +195,9 @@ export const updateTask = async (req, res) => {
         });
       }
     }
+
+    // Log the final update data before sending to database
+    console.log('Final update data:', updateData);
 
     task = await Task.findByIdAndUpdate(req.params.id, updateData, {
       new: true,
