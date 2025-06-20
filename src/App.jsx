@@ -199,6 +199,10 @@ function App() {
 	const handleTaskAdd = async (task) => {
 		console.log('Adding task:', task)
 		
+		// Log the start and end dates to verify they are valid Date objects
+		console.log('Task start date:', task.start, 'Type:', typeof task.start, 'Is Date:', task.start instanceof Date)
+		console.log('Task end date:', task.end, 'Type:', typeof task.end, 'Is Date:', task.end instanceof Date)
+		
 		if (isAuthenticated) {
 			try {
 				setLoading(true)
@@ -211,6 +215,8 @@ function App() {
 					status: task.status || 'Not started',
 					priority: task.priority || 'normal'
 				}
+				
+				console.log('Sending task data to API:', taskData)
 				
 				const response = await tasksAPI.createTask(taskData)
 				
@@ -258,11 +264,17 @@ function App() {
 	const handleTaskUpdate = async (updatedTask) => {
 		console.log('Updating task:', updatedTask)
 		
+		// Log the start and end dates to verify they are valid Date objects
+		console.log('Updated task start date:', updatedTask.start, 'Type:', typeof updatedTask.start, 'Is Date:', updatedTask.start instanceof Date)
+		console.log('Updated task end date:', updatedTask.end, 'Type:', typeof updatedTask.end, 'Is Date:', updatedTask.end instanceof Date)
+		
 		if (isAuthenticated) {
 			try {
 				setLoading(true)
 				// For authenticated users, update task via API
 				const taskId = updatedTask.id || updatedTask._id
+				
+				// Create a clean task data object for the API
 				const taskData = {
 					title: updatedTask.title,
 					description: updatedTask.description || '',
@@ -272,7 +284,10 @@ function App() {
 					priority: updatedTask.priority || 'normal'
 				}
 				
-				await tasksAPI.updateTask(taskId, taskData)
+				console.log('Sending task update data to API:', taskData)
+				console.log('Task ID:', taskId)
+				
+				const response = await tasksAPI.updateTask(taskId, taskData)
 				
 				// Update the task in state
 				setTasks(prevTasks => {
