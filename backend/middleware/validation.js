@@ -53,8 +53,16 @@ export const validateTask = [
     .isISO8601()
     .withMessage('Please enter a valid end date')
     .custom((value, { req }) => {
-      if (new Date(value) < new Date(req.body.startDate)) {
-        throw new Error('End date must be after start date');
+      // Normalize dates to midnight UTC for comparison
+      const startDate = new Date(req.body.startDate);
+      const endDate = new Date(value);
+      
+      // Set both to midnight UTC
+      const startUTC = Date.UTC(startDate.getFullYear(), startDate.getMonth(), startDate.getDate());
+      const endUTC = Date.UTC(endDate.getFullYear(), endDate.getMonth(), endDate.getDate());
+      
+      if (endUTC < startUTC) {
+        throw new Error('End date must be on or after the start date');
       }
       return true;
     }),
@@ -133,8 +141,16 @@ export const validateTrip = [
     .isISO8601()
     .withMessage('Please enter a valid end date')
     .custom((value, { req }) => {
-      if (new Date(value) < new Date(req.body.startDate)) {
-        throw new Error('End date must be after start date');
+      // Normalize dates to midnight UTC for comparison
+      const startDate = new Date(req.body.startDate);
+      const endDate = new Date(value);
+      
+      // Set both to midnight UTC
+      const startUTC = Date.UTC(startDate.getFullYear(), startDate.getMonth(), startDate.getDate());
+      const endUTC = Date.UTC(endDate.getFullYear(), endDate.getMonth(), endDate.getDate());
+      
+      if (endUTC < startUTC) {
+        throw new Error('End date must be on or after the start date');
       }
       return true;
     }),

@@ -37,9 +37,18 @@ const TaskSchema = new mongoose.Schema({
     required: [true, 'Please add an end date'],
     validate: {
       validator: function(value) {
-        return value >= this.startDate;
+        // Normalize dates to midnight UTC for comparison
+        const startDate = this.startDate;
+        const endDate = value;
+        
+        // Set both to midnight UTC
+        const startUTC = Date.UTC(startDate.getFullYear(), startDate.getMonth(), startDate.getDate());
+        const endUTC = Date.UTC(endDate.getFullYear(), endDate.getMonth(), endDate.getDate());
+        
+        // End date must be on or after start date
+        return endUTC >= startUTC;
       },
-      message: 'End date must be after or equal to start date'
+      message: 'End date must be on or after the start date'
     }
   },
   completedAt: {
