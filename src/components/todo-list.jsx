@@ -4,6 +4,7 @@ import TaskDrawer from './Task_Timeline/task_drawer'
 import { useAuth } from '../hooks/useAuth'
 import { tasksAPI } from '../services/api'
 import { formatDateToYYYYMMDD, parseYYYYMMDDToDate } from './Task_Timeline/timeline_utils'
+import { toast } from 'react-hot-toast'
 
 export default function TodoList({
 	onAddTask,
@@ -21,8 +22,8 @@ export default function TodoList({
 	const [drawerTask, setDrawerTask] = useState(null)
 	const [loading, setLoading] = useState(false)
 
-	const addTodo = () => {
-		// Open drawer for new task creation
+	const addTodo = async () => {
+		// Create a new task object
 		const newTodo = {
 			title: 'New Task',
 			start: new Date(selectedDate),
@@ -34,8 +35,53 @@ export default function TodoList({
 			color: '#3B82F6',
 		}
 		
-		setDrawerTask(newTodo)
-		setIsDrawerOpen(true)
+		if (isAuthenticated) {
+			try {
+				setLoading(true)
+				const response = await tasksAPI.createTask({
+					title: newTodo.title,
+					startDate: formatDateToYYYYMMDD(newTodo.start),
+					endDate: formatDateToYYYYMMDD(newTodo.end),
+					status: newTodo.status,
+					priority: newTodo.priority,
+					description: newTodo.description
+				})
+				
+				// Convert backend response to frontend format
+				const createdTask = {
+					...response.data.data,
+					id: response.data.data._id,
+					start: new Date(response.data.data.startDate),
+					end: new Date(response.data.data.endDate),
+					color: newTodo.color
+				}
+				
+				// First add the task to the state via the parent component
+				await onAddTask(createdTask)
+				
+				// Then open the drawer with the created task
+				setDrawerTask(createdTask)
+				setIsDrawerOpen(true)
+				toast.success('Task created successfully')
+			} catch (error) {
+				console.error('Error creating task:', error)
+				toast.error('Failed to create task')
+				
+				// Fallback to local creation
+				const localTask = { ...newTodo, id: crypto.randomUUID() }
+				onAddTask(localTask)
+				setDrawerTask(localTask)
+				setIsDrawerOpen(true)
+			} finally {
+				setLoading(false)
+			}
+		} else {
+			// For non-authenticated users
+			const localTask = { ...newTodo, id: crypto.randomUUID() }
+			onAddTask(localTask)
+			setDrawerTask(localTask)
+			setIsDrawerOpen(true)
+		}
 	}
 
 	const startEditing = task => {
@@ -80,8 +126,10 @@ export default function TodoList({
 					}
 					
 					onUpdateTask(backendTask)
+					toast.success('Task updated successfully')
 				} catch (error) {
 					console.error('Error updating task:', error)
+					toast.error('Failed to update task')
 					onUpdateTask(updatedTask)
 				} finally {
 					setLoading(false)
@@ -125,17 +173,19 @@ export default function TodoList({
 						color: updatedTask.color
 					}
 					
-					onAddTask(backendTask)
+					await onAddTask(backendTask)
+					toast.success('Task created successfully')
 				} catch (error) {
 					console.error('Error creating task:', error)
+					toast.error('Failed to create task')
 					const localTask = { ...updatedTask, id: crypto.randomUUID() }
-					onAddTask(localTask)
+					await onAddTask(localTask)
 				} finally {
 					setLoading(false)
 				}
 			} else {
 				const localTask = { ...updatedTask, id: crypto.randomUUID() }
-				onAddTask(localTask)
+				await onAddTask(localTask)
 			}
 		} else {
 			// This is an existing task
@@ -160,15 +210,17 @@ export default function TodoList({
 						color: updatedTask.color
 					}
 					
-					onUpdateTask(backendTask)
+					await onUpdateTask(backendTask)
+					toast.success('Task updated successfully')
 				} catch (error) {
 					console.error('Error updating task:', error)
-					onUpdateTask(updatedTask)
+					toast.error('Failed to update task')
+					await onUpdateTask(updatedTask)
 				} finally {
 					setLoading(false)
 				}
 			} else {
-				onUpdateTask(updatedTask)
+				await onUpdateTask(updatedTask)
 			}
 		}
 		
@@ -186,15 +238,17 @@ export default function TodoList({
 			try {
 				setLoading(true)
 				await tasksAPI.deleteTask(taskId)
-				onDeleteTask(taskId)
+				await onDeleteTask(taskId)
+				toast.success('Task deleted successfully')
 			} catch (error) {
 				console.error('Error deleting task:', error)
-				onDeleteTask(taskId)
+				toast.error('Failed to delete task')
+				await onDeleteTask(taskId)
 			} finally {
 				setLoading(false)
 			}
 		} else {
-			onDeleteTask(taskId)
+			await onDeleteTask(taskId)
 		}
 	}
 

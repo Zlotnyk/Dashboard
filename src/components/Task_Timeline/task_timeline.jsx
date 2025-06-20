@@ -225,7 +225,10 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask, height = '
           color: newTask.color
         }
         
-        onAddTask(createdTask)
+        // First add the task to the state via the parent component
+        await onAddTask(createdTask)
+        
+        // Then set the drawer task and open the drawer
         setDrawerTask(createdTask)
         setIsDrawerOpen(true)
         toast.success('Task created successfully')
@@ -309,7 +312,10 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask, height = '
               color: newTask.color
             }
             
-            onAddTask(createdTask)
+            // First add the task to the state via the parent component
+            await onAddTask(createdTask)
+            
+            // Then set the drawer task and open the drawer
             setDrawerTask(createdTask)
             setIsDrawerOpen(true)
             toast.success('Task created successfully')
@@ -393,27 +399,43 @@ const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask, height = '
         }
       }
       
+      // Create a new task object with updated dates
       const updatedTask = {
         ...draggedTask,
         start: newStart,
         end: newEnd
       }
       
+      // Update the task in the local state only during dragging
+      // We'll send the API update on mouse up
+      setDragState(prev => ({
+        ...prev,
+        draggedTask: updatedTask
+      }))
+      
+      // Update the visual representation without calling the API yet
       onUpdateTask(updatedTask)
     }
     
     const handleMouseUp = async (e) => {
-      if (dragState.isDragging && dragState.draggedTask && isAuthenticated) {
-        try {
-          const taskId = dragState.draggedTask.id || dragState.draggedTask._id
-          await tasksAPI.updateTask(taskId, {
-            startDate: formatDateToYYYYMMDD(dragState.draggedTask.start),
-            endDate: formatDateToYYYYMMDD(dragState.draggedTask.end)
-          })
-          toast.success('Task updated successfully')
-        } catch (error) {
-          console.error('Error updating task:', error)
-          toast.error('Failed to update task')
+      if (dragState.isDragging && dragState.draggedTask) {
+        // Only update the backend if the task was actually moved
+        if (dragState.hasMoved) {
+          try {
+            const taskId = dragState.draggedTask.id || dragState.draggedTask._id
+            
+            // Make the API call to update the task
+            if (isAuthenticated) {
+              await tasksAPI.updateTask(taskId, {
+                startDate: formatDateToYYYYMMDD(dragState.draggedTask.start),
+                endDate: formatDateToYYYYMMDD(dragState.draggedTask.end)
+              })
+              toast.success('Task updated successfully')
+            }
+          } catch (error) {
+            console.error('Error updating task:', error)
+            toast.error('Failed to update task')
+          }
         }
       }
       

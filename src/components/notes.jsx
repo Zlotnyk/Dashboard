@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState } from 'react'
 import { Edit, Trash2 } from 'lucide-react'
 
 export default function Notes({ notes = [], onAddNote, onUpdateNote, onDeleteNote }) {
