@@ -1,4 +1,5 @@
 import { body, validationResult } from 'express-validator';
+import { validateDateRange } from '../utils/dateUtils.js';
 
 // Validation middleware
 export const validate = (req, res, next) => {
@@ -53,15 +54,12 @@ export const validateTask = [
     .isISO8601()
     .withMessage('Please enter a valid end date')
     .custom((value, { req }) => {
-      // Normalize dates to midnight UTC for comparison
+      // Parse dates for validation
       const startDate = new Date(req.body.startDate);
       const endDate = new Date(value);
       
-      // Set both to midnight UTC
-      const startUTC = Date.UTC(startDate.getFullYear(), startDate.getMonth(), startDate.getDate());
-      const endUTC = Date.UTC(endDate.getFullYear(), endDate.getMonth(), endDate.getDate());
-      
-      if (endUTC < startUTC) {
+      // Validate using our utility function
+      if (!validateDateRange(startDate, endDate)) {
         throw new Error('End date must be on or after the start date');
       }
       return true;
@@ -141,15 +139,12 @@ export const validateTrip = [
     .isISO8601()
     .withMessage('Please enter a valid end date')
     .custom((value, { req }) => {
-      // Normalize dates to midnight UTC for comparison
+      // Parse dates for validation
       const startDate = new Date(req.body.startDate);
       const endDate = new Date(value);
       
-      // Set both to midnight UTC
-      const startUTC = Date.UTC(startDate.getFullYear(), startDate.getMonth(), startDate.getDate());
-      const endUTC = Date.UTC(endDate.getFullYear(), endDate.getMonth(), endDate.getDate());
-      
-      if (endUTC < startUTC) {
+      // Validate using our utility function
+      if (!validateDateRange(startDate, endDate)) {
         throw new Error('End date must be on or after the start date');
       }
       return true;

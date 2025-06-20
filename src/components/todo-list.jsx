@@ -3,6 +3,7 @@ import { Plus, FileText, Pencil } from 'lucide-react'
 import TaskDrawer from './Task_Timeline/task_drawer'
 import { useAuth } from '../hooks/useAuth'
 import { toast } from 'react-hot-toast'
+import { formatDateToYYYYMMDD, parseYYYYMMDDToDate } from '../utils/dateUtils'
 
 export default function TodoList({
 	onAddTask,
@@ -57,27 +58,6 @@ export default function TodoList({
 		setEditingText(task.title)
 		setEditingStart(formatDateToYYYYMMDD(task.start))
 		setEditingEnd(formatDateToYYYYMMDD(task.end))
-	}
-
-	const formatDateToYYYYMMDD = (date) => {
-		if (!date) return '';
-		
-		const d = new Date(date);
-		const year = d.getFullYear();
-		// getMonth() is 0-indexed, so add 1 and pad with leading zero if needed
-		const month = String(d.getMonth() + 1).padStart(2, '0');
-		// getDate() returns the day of month, pad with leading zero if needed
-		const day = String(d.getDate()).padStart(2, '0');
-		
-		return `${year}-${month}-${day}`;
-	}
-
-	const parseYYYYMMDDToDate = (dateString) => {
-		if (!dateString) return new Date();
-		
-		const [year, month, day] = dateString.split('-').map(Number);
-		const date = new Date(year, month - 1, day);
-		return date;
 	}
 
 	const finishEditing = async () => {

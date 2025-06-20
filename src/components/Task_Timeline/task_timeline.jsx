@@ -2,8 +2,8 @@ import React, { useState, useRef, useEffect } from 'react'
 import { ChevronLeft, ChevronRight, Calendar, Plus, Filter, X } from 'lucide-react'
 import TaskDrawer from './task_drawer'
 import { useAuth } from '../../hooks/useAuth'
-import { formatDateToYYYYMMDD } from './timeline_utils'
 import { toast } from 'react-hot-toast'
+import { formatDateToYYYYMMDD } from '../../utils/dateUtils'
 
 const TaskTimeline = ({ tasks, onAddTask, onUpdateTask, onDeleteTask, height = '400px' }) => {
   const { isAuthenticated } = useAuth()

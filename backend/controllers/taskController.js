@@ -1,4 +1,5 @@
 import Task from '../models/Task.js';
+import { formatDateToYYYYMMDD, parseYYYYMMDDToDate, validateDateRange } from '../utils/dateUtils.js';
 
 // @desc    Get all tasks for authenticated user
 // @route   GET /api/tasks
@@ -98,20 +99,20 @@ export const createTask = async (req, res) => {
       status: req.body.status || 'Not started',
       priority: req.body.priority || 'normal',
       description: req.body.description || '',
-      // Ensure dates are properly formatted
-      startDate: req.body.startDate ? new Date(req.body.startDate) : new Date(),
-      endDate: req.body.endDate ? new Date(req.body.endDate) : new Date()
+      // Parse dates using our utility function
+      startDate: parseYYYYMMDDToDate(req.body.startDate),
+      endDate: parseYYYYMMDDToDate(req.body.endDate)
     };
 
     // Log the dates for debugging
-    console.log('Start date:', taskData.startDate);
-    console.log('End date:', taskData.endDate);
+    console.log('Parsed start date:', taskData.startDate);
+    console.log('Parsed end date:', taskData.endDate);
 
     // Validate dates
-    if (taskData.endDate < taskData.startDate) {
+    if (!validateDateRange(taskData.startDate, taskData.endDate)) {
       return res.status(400).json({
         success: false,
-        message: 'End date cannot be before start date'
+        message: 'End date must be on or after the start date'
       });
     }
 
@@ -165,30 +166,17 @@ export const updateTask = async (req, res) => {
     // Handle date updates
     const updateData = { ...req.body };
     if (updateData.startDate) {
-      updateData.startDate = new Date(updateData.startDate);
+      updateData.startDate = parseYYYYMMDDToDate(updateData.startDate);
       console.log('Parsed startDate:', updateData.startDate);
     }
     if (updateData.endDate) {
-      updateData.endDate = new Date(updateData.endDate);
+      updateData.endDate = parseYYYYMMDDToDate(updateData.endDate);
       console.log('Parsed endDate:', updateData.endDate);
     }
 
     // Validate dates if both are provided
     if (updateData.startDate && updateData.endDate) {
-      // Normalize dates to midnight UTC for comparison
-      const startUTC = Date.UTC(
-        updateData.startDate.getFullYear(), 
-        updateData.startDate.getMonth(), 
-        updateData.startDate.getDate()
-      );
-      
-      const endUTC = Date.UTC(
-        updateData.endDate.getFullYear(), 
-        updateData.endDate.getMonth(), 
-        updateData.endDate.getDate()
-      );
-      
-      if (endUTC < startUTC) {
+      if (!validateDateRange(updateData.startDate, updateData.endDate)) {
         return res.status(400).json({
           success: false,
           message: 'End date must be on or after the start date'

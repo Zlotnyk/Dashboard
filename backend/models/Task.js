@@ -1,4 +1,5 @@
 import mongoose from 'mongoose';
+import { validateDateRange } from '../utils/dateUtils.js';
 
 const TaskSchema = new mongoose.Schema({
   user: {
@@ -51,12 +52,8 @@ const TaskSchema = new mongoose.Schema({
           return false;
         }
         
-        // Set both to midnight UTC
-        const startUTC = Date.UTC(startDate.getFullYear(), startDate.getMonth(), startDate.getDate());
-        const endUTC = Date.UTC(endDate.getFullYear(), endDate.getMonth(), endDate.getDate());
-        
-        // End date must be on or after start date
-        return endUTC >= startUTC;
+        // Use our utility function to validate the date range
+        return validateDateRange(startDate, endDate);
       },
       message: 'End date must be on or after the start date'
     }
@@ -132,7 +129,7 @@ const TaskSchema = new mongoose.Schema({
     type: Date,
     validate: {
       validator: function(value) {
-        return !this.isRecurring || (value && value > this.endDate);
+        return !this.isRecurring || (value && validateDateRange(this.endDate, value));
       },
       message: 'Recurring end date must be after task end date'
     }

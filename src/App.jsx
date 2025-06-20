@@ -18,6 +18,7 @@ import { useAuth } from './hooks/useAuth'
 import { tasksAPI, eventsAPI, notesAPI } from './services/api'
 import { Toaster } from 'react-hot-toast'
 import { toast } from 'react-hot-toast'
+import { formatDateToYYYYMMDD, parseYYYYMMDDToDate } from './utils/dateUtils'
 
 function App() {
 	const { isAuthenticated, user } = useAuth()
@@ -212,8 +213,8 @@ function App() {
 				const taskData = {
 					title: task.title,
 					description: task.description || '',
-					startDate: task.start.toISOString(), // Send as ISO string
-					endDate: task.end.toISOString(), // Send as ISO string
+					startDate: formatDateToYYYYMMDD(task.start), // Use YYYY-MM-DD format
+					endDate: formatDateToYYYYMMDD(task.end), // Use YYYY-MM-DD format
 					status: task.status || 'Not started',
 					priority: task.priority || 'normal'
 				}
@@ -281,8 +282,8 @@ function App() {
 				const taskData = {
 					title: updatedTask.title,
 					description: updatedTask.description || '',
-					startDate: updatedTask.start.toISOString(), // Send as ISO string
-					endDate: updatedTask.end.toISOString(), // Send as ISO string
+					startDate: formatDateToYYYYMMDD(updatedTask.start), // Use YYYY-MM-DD format
+					endDate: formatDateToYYYYMMDD(updatedTask.end), // Use YYYY-MM-DD format
 					status: updatedTask.status || 'Not started',
 					priority: updatedTask.priority || 'normal'
 				}

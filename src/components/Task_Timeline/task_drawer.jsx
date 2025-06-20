@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Dialog, DialogBackdrop, DialogPanel, DialogTitle, TransitionChild } from '@headlessui/react';
 import { X, Calendar, FileText, Flag, Clock, AlertCircle } from 'lucide-react';
 import { toast } from 'react-hot-toast';
+import { formatDateToYYYYMMDD, parseYYYYMMDDToDate, isDateBeforeOrEqual } from '../../utils/dateUtils';
 
 const TaskDrawer = ({ isOpen, task, onSave, onClose, onDelete }) => {
   const [formData, setFormData] = useState({
@@ -42,27 +43,6 @@ const TaskDrawer = ({ isOpen, task, onSave, onClose, onDelete }) => {
     }
   }, [task]);
 
-  const formatDateToYYYYMMDD = (date) => {
-    if (!date) return '';
-    
-    const d = new Date(date);
-    const year = d.getFullYear();
-    // getMonth() is 0-indexed, so add 1 and pad with leading zero if needed
-    const month = String(d.getMonth() + 1).padStart(2, '0');
-    // getDate() returns the day of month, pad with leading zero if needed
-    const day = String(d.getDate()).padStart(2, '0');
-    
-    return `${year}-${month}-${day}`;
-  }
-
-  const parseYYYYMMDDToDate = (dateString) => {
-    if (!dateString) return new Date();
-    
-    const [year, month, day] = dateString.split('-').map(Number);
-    const date = new Date(year, month - 1, day);
-    return date;
-  }
-
   const validateForm = () => {
     const newErrors = {};
     
@@ -82,11 +62,7 @@ const TaskDrawer = ({ isOpen, task, onSave, onClose, onDelete }) => {
       const startDate = parseYYYYMMDDToDate(formData.start);
       const endDate = parseYYYYMMDDToDate(formData.end);
       
-      // Normalize dates to midnight UTC for comparison
-      const startUTC = Date.UTC(startDate.getFullYear(), startDate.getMonth(), startDate.getDate());
-      const endUTC = Date.UTC(endDate.getFullYear(), endDate.getMonth(), endDate.getDate());
-      
-      if (endUTC < startUTC) {
+      if (!isDateBeforeOrEqual(startDate, endDate)) {
         newErrors.end = 'End date must be on or after the start date';
       }
     }
