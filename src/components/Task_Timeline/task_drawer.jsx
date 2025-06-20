@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogBackdrop, DialogPanel, DialogTitle, TransitionChild } from '@headlessui/react';
-import { X, Calendar, FileText, Flag, Clock } from 'lucide-react';
+import { X, Calendar, FileText, Flag, Clock, AlertCircle } from 'lucide-react';
 import { formatDateToYYYYMMDD, parseYYYYMMDDToDate } from './timeline_utils';
 
 const TaskDrawer = ({ isOpen, task, onSave, onClose, onDelete }) => {
@@ -12,6 +12,8 @@ const TaskDrawer = ({ isOpen, task, onSave, onClose, onDelete }) => {
     status: 'Not started',
     priority: 'normal',
   });
+  const [validationErrors, setValidationErrors] = useState({});
+  const [loading, setLoading] = useState(false);
 
   // Save scroll position without fixing body position
   useEffect(() => {
@@ -35,12 +37,48 @@ const TaskDrawer = ({ isOpen, task, onSave, onClose, onDelete }) => {
         status: task.status || 'Not started',
         priority: task.priority || 'normal',
       });
+      // Clear validation errors when task changes
+      setValidationErrors({});
     }
   }, [task]);
+
+  const validateForm = () => {
+    const errors = {};
+    
+    if (!formData.title.trim()) {
+      errors.title = 'Title is required';
+    }
+    
+    if (!formData.start) {
+      errors.start = 'Start date is required';
+    }
+    
+    if (!formData.end) {
+      errors.end = 'End date is required';
+    }
+    
+    if (formData.start && formData.end) {
+      const startDate = new Date(formData.start);
+      const endDate = new Date(formData.end);
+      
+      if (endDate < startDate) {
+        errors.end = 'End date must be after or equal to start date';
+      }
+    }
+    
+    setValidationErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!task) return;
+    
+    if (!validateForm()) {
+      return;
+    }
+    
+    setLoading(true);
 
     const updatedTask = {
       ...task,
@@ -53,6 +91,7 @@ const TaskDrawer = ({ isOpen, task, onSave, onClose, onDelete }) => {
     };
 
     onSave(updatedTask);
+    setLoading(false);
   };
 
   const handleChange = (field, value) => {
@@ -60,6 +99,15 @@ const TaskDrawer = ({ isOpen, task, onSave, onClose, onDelete }) => {
       ...prev,
       [field]: value,
     }));
+    
+    // Clear validation error for this field when user starts typing
+    if (validationErrors[field]) {
+      setValidationErrors(prev => {
+        const newErrors = { ...prev };
+        delete newErrors[field];
+        return newErrors;
+      });
+    }
   };
 
   return (
@@ -107,10 +155,15 @@ const TaskDrawer = ({ isOpen, task, onSave, onClose, onDelete }) => {
                         type="text"
                         value={formData.title}
                         onChange={(e) => handleChange('title', e.target.value)}
-                        className="w-full px-3 py-3 bg-transparent border-none outline-none text-white placeholder-gray-400 focus:outline-none transition-colors"
+                        className={`w-full px-3 py-3 bg-transparent border-2 border-solid ${validationErrors.title ? 'border-red-400' : 'border-gray-600'} rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition-colors`}
                         placeholder="Enter task title..."
-                        required
                       />
+                      {validationErrors.title && (
+                        <div className="flex items-center gap-2 mt-1 text-red-400 text-sm">
+                          <AlertCircle size={14} />
+                          <span>{validationErrors.title}</span>
+                        </div>
+                      )}
                     </div>
 
                     {/* Description */}
@@ -123,7 +176,7 @@ const TaskDrawer = ({ isOpen, task, onSave, onClose, onDelete }) => {
                         value={formData.description}
                         onChange={(e) => handleChange('description', e.target.value)}
                         rows={4}
-                        className="w-full px-3 py-3 bg-transparent border-none outline-none text-white placeholder-gray-400 focus:outline-none transition-colors resize-none"
+                        className="w-full px-3 py-3 bg-transparent border-2 border-solid border-gray-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition-colors resize-none"
                         placeholder="Enter task description..."
                       />
                     </div>
@@ -139,9 +192,14 @@ const TaskDrawer = ({ isOpen, task, onSave, onClose, onDelete }) => {
                           type="date"
                           value={formData.start}
                           onChange={(e) => handleChange('start', e.target.value)}
-                          className="w-full px-3 py-3 bg-transparent border-none outline-none text-white focus:outline-none transition-colors"
-                          required
+                          className={`w-full px-3 py-3 bg-transparent border-2 border-solid ${validationErrors.start ? 'border-red-400' : 'border-gray-600'} rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition-colors`}
                         />
+                        {validationErrors.start && (
+                          <div className="flex items-center gap-2 mt-1 text-red-400 text-sm">
+                            <AlertCircle size={14} />
+                            <span>{validationErrors.start}</span>
+                          </div>
+                        )}
                       </div>
                       <div>
                         <label className="flex items-center gap-2 text-sm font-medium text-gray-300 mb-2">
@@ -153,9 +211,14 @@ const TaskDrawer = ({ isOpen, task, onSave, onClose, onDelete }) => {
                           value={formData.end}
                           onChange={(e) => handleChange('end', e.target.value)}
                           min={formData.start}
-                          className="w-full px-3 py-3 bg-transparent border-none outline-none text-white focus:outline-none transition-colors"
-                          required
+                          className={`w-full px-3 py-3 bg-transparent border-2 border-solid ${validationErrors.end ? 'border-red-400' : 'border-gray-600'} rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition-colors`}
                         />
+                        {validationErrors.end && (
+                          <div className="flex items-center gap-2 mt-1 text-red-400 text-sm">
+                            <AlertCircle size={14} />
+                            <span>{validationErrors.end}</span>
+                          </div>
+                        )}
                       </div>
                     </div>
 
@@ -168,12 +231,12 @@ const TaskDrawer = ({ isOpen, task, onSave, onClose, onDelete }) => {
                       <select
                         value={formData.status}
                         onChange={(e) => handleChange('status', e.target.value)}
-                        className="w-full px-3 py-3 bg-[#2a2a2a] border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent"
+                        className="w-full px-3 py-3 bg-[#2a2a2a] border-2 border-solid border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent"
                       >
-                        <option value="Not started">Not started</option>
-                        <option value="In progress">In progress</option>
-                        <option value="Completed">Completed</option>
-                        <option value="On hold">On hold</option>
+                        <option value="Not started" className="bg-[#2a2a2a]">Not started</option>
+                        <option value="In progress" className="bg-[#2a2a2a]">In progress</option>
+                        <option value="Completed" className="bg-[#2a2a2a]">Completed</option>
+                        <option value="On hold" className="bg-[#2a2a2a]">On hold</option>
                       </select>
                     </div>
 
@@ -216,21 +279,24 @@ const TaskDrawer = ({ isOpen, task, onSave, onClose, onDelete }) => {
                       type="button"
                       onClick={onDelete}
                       className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                      disabled={loading}
                     >
-                      Delete
+                      {loading ? 'Deleting...' : 'Delete'}
                     </button>
                     <button
                       type="button"
                       onClick={onClose}
                       className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
+                      disabled={loading}
                     >
                       Cancel
                     </button>
                     <button
                       type="submit"
-                      className="flex-1 px-4 py-2 bg-accent text-white rounded-lg hover:bg-accent-80 transition-colors"
+                      className="flex-1 px-4 py-2 bg-accent text-white rounded-lg hover:bg-accent-80 transition-colors disabled:opacity-50"
+                      disabled={loading}
                     >
-                      Save Changes
+                      {loading ? 'Saving...' : 'Save Changes'}
                     </button>
                   </div>
                 </form>
