@@ -168,11 +168,26 @@ export const updateTask = async (req, res) => {
     }
 
     // Validate dates if both are provided
-    if (updateData.startDate && updateData.endDate && updateData.endDate < updateData.startDate) {
-      return res.status(400).json({
-        success: false,
-        message: 'End date cannot be before start date'
-      });
+    if (updateData.startDate && updateData.endDate) {
+      // Normalize dates to midnight UTC for comparison
+      const startUTC = Date.UTC(
+        updateData.startDate.getFullYear(), 
+        updateData.startDate.getMonth(), 
+        updateData.startDate.getDate()
+      );
+      
+      const endUTC = Date.UTC(
+        updateData.endDate.getFullYear(), 
+        updateData.endDate.getMonth(), 
+        updateData.endDate.getDate()
+      );
+      
+      if (endUTC < startUTC) {
+        return res.status(400).json({
+          success: false,
+          message: 'End date must be on or after the start date'
+        });
+      }
     }
 
     task = await Task.findByIdAndUpdate(req.params.id, updateData, {

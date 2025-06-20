@@ -72,3 +72,35 @@ export const parseYYYYMMDDToDate = (dateString) => {
 	const date = new Date(year, month - 1, day);
 	return date;
 }
+
+// Normalize date for comparison (set to midnight UTC)
+export const normalizeDateForComparison = (date) => {
+  const d = new Date(date);
+  return Date.UTC(d.getFullYear(), d.getMonth(), d.getDate());
+}
+
+// Compare two dates (ignoring time)
+export const areDatesEqual = (date1, date2) => {
+  const d1 = new Date(date1);
+  const d2 = new Date(date2);
+  
+  return d1.getFullYear() === d2.getFullYear() && 
+         d1.getMonth() === d2.getMonth() && 
+         d1.getDate() === d2.getDate();
+}
+
+// Check if date1 is before or equal to date2 (ignoring time)
+export const isDateBeforeOrEqual = (date1, date2) => {
+  const d1UTC = normalizeDateForComparison(date1);
+  const d2UTC = normalizeDateForComparison(date2);
+  
+  return d1UTC <= d2UTC;
+}
+
+// Check if date1 is after or equal to date2 (ignoring time)
+export const isDateAfterOrEqual = (date1, date2) => {
+  const d1UTC = normalizeDateForComparison(date1);
+  const d2UTC = normalizeDateForComparison(date2);
+  
+  return d1UTC >= d2UTC;
+}

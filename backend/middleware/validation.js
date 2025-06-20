@@ -72,7 +72,7 @@ export const validateTask = [
     .withMessage('Invalid status'),
   body('priority')
     .optional()
-    .isIn(['normal', 'urgent'])
+    .isIn(['low', 'normal', 'high', 'urgent'])
     .withMessage('Invalid priority')
 ];
 
